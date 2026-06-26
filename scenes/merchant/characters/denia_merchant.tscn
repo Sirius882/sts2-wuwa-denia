@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://images/packed/character_select/denia_pink.png" id="1"]
+
+[node type="Control" name="DeniaMerchant"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node type="TextureRect" parent="." name="Texture"]
+layout_mode = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource("1")
+expand_mode = 1
+stretch_mode = 5

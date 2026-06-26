@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://ddeniabgscene01"]
+
+[ext_resource type="Texture2D" uid="uid://ddeniabgimg01" path="res://images/char_select/denia_bg.jpg" id="1_bg"]
+
+[node name="DeniaBg" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -960.0
+offset_top = -521.0
+offset_right = 1600.0
+offset_bottom = 679.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(1280, 600)
+
+[node name="TextureRect" type="TextureRect" parent="."]
+layout_mode = 0
+offset_left = -437.0
+offset_top = -107.0
+offset_right = 2197.0
+offset_bottom = 1129.0
+texture = ExtResource("1_bg")
+expand_mode = 2
+stretch_mode = 5
