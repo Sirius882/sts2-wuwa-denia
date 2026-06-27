@@ -38,7 +38,7 @@ public sealed class DeniaRadianceDissolved : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "光辉，自此消融",
-        Description: "消耗y[gold]虚质[/gold]和z黯核。对全体敌人造成{Damage:diff()}*x点伤害y/2+4z次。若处于黑色形态，切换到粉色并获得1点能量。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
+        Description: "消耗y[gold]虚质[/gold]和z黯核。对全体敌人造成2*x+buff点伤害y/2+4z次。若处于黑色形态，切换到粉色并获得1点能量。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

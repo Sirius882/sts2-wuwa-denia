@@ -107,8 +107,6 @@ public static class DeniaFormHelper
         var power = creature.GetPower<DeniaFormPower>();
         if (power == null || power.Amount <= 0) return;
 
-        // 记录切换前的虚质（用于“黑变粉≥7虚质时抽牌回能”基础机制）
-        int vmBeforeSwitch = DeniaResourceState.GetVirtualMatter(creature);
 
         await PowerCmd.ModifyAmount(_throwing, power, -1m, applier, source);
 
@@ -140,13 +138,6 @@ public static class DeniaFormHelper
         _forgiveMeStrength.Remove(creature);
         _forgiveMeTrajectory.Remove(creature);
         DeniaFormPatch.RefreshForCreature(creature);
-
-        // 基础机制：黑变粉时，若切换前虚质≥7，抽1张牌并恢复1能量
-        if (vmBeforeSwitch >= 7)
-        {
-            await CardPileCmd.Draw(_throwing, 1, creature.Player);
-            await PlayerCmd.GainEnergy(1m, creature.Player);
-        }
 
         await ApplyFormSwitchEffects(creature, applier, source);
     }

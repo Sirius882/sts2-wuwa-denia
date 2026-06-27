@@ -19,7 +19,7 @@ public static class DeniaHoverTipHelper
 
     public static HoverTip CreateVirtualMatterHoverTip()
     {
-        string description = $"由粉色切换到黑色时，获得10点{VirtualMatterIcon}。粉色形态下，打出攻击牌或触发熔解/聚爆引爆时，获得2点。由黑色切换到粉色时归零；若切换前拥有7点{VirtualMatterIcon}，抽1张牌并恢复1点能量。{VirtualMatterIcon}最多不超过20。";
+        string description = $"由粉色切换到黑色时，获得10点{VirtualMatterIcon}。粉色形态下，打出攻击牌或触发熔解/聚爆引爆时，获得2点。由黑色切换到粉色时归零；若切换前拥有7点{VirtualMatterIcon}，抽1张牌。{VirtualMatterIcon}最多不超过20。";
         return new HoverTip(new LocString("denia_ui", "virtualMatterTitle"), description);
     }
 

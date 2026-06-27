@@ -13,7 +13,7 @@ using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
-/// <summary>卡纽 — Uncommon Power, 3e. 每次切换形态获得1能量。升级: +4力量+20聚爆轨迹。</summary>
+/// <summary>卡纽 — Rare Power, 3e. 每次切换形态获得1能量。升级: +2力量+20聚爆轨迹。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaKaNiu : DeniaCard
 {
@@ -25,7 +25,7 @@ public sealed class DeniaKaNiu : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "卡纽",
-        Description: "每次切换形态时，获得1点能量。{IfUpgraded:show:获得4点[gold]力量[/gold]和20层[gold]聚爆轨迹[/gold]。|}");
+        Description: "每次切换形态时，获得1点能量。{IfUpgraded:show:获得2点[gold]力量[/gold]和20层[gold]聚爆轨迹[/gold]。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -33,7 +33,7 @@ public sealed class DeniaKaNiu : DeniaCard
 
         if (IsUpgraded)
         {
-            await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, 4m, Owner.Creature, this);
+            await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, 2m, Owner.Creature, this);
             await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(ctx, Owner.Creature, 20m, Owner.Creature, this);
         }
     }

@@ -27,7 +27,7 @@ public sealed class DeniaGiveItBack : DeniaCard
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_give_it_back.png";
 
     public DeniaGiveItBack()
-        : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "还给你",

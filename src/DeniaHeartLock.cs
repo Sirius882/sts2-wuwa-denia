@@ -16,9 +16,7 @@ namespace Denia;
 public sealed class DeniaHeartLock : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        IsUpgraded
-            ? new[] { CardKeyword.Retain }
-            : new[] { CardKeyword.Exhaust, CardKeyword.Retain };
+        new[] { CardKeyword.Exhaust, CardKeyword.Retain };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_heart_lock.png";
@@ -28,7 +26,7 @@ public sealed class DeniaHeartLock : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "心锁",
-        Description: "若处于[gold]黑色[/gold]形态，获得6[gold]虚质[/gold]；若处于[gold]粉色[/gold]形态，获得1点能量。");
+        Description: "若处于[gold]黑色[/gold]形态，获得6[gold]虚质[/gold]；若处于[gold]粉色[/gold]形态，获得1点能量。{IfUpgraded:show:抽1张牌。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -36,10 +34,10 @@ public sealed class DeniaHeartLock : DeniaCard
             await DeniaResourceState.GainVirtualMatter(Owner.Creature, 6, Owner.Creature, this);
         else
             await PlayerCmd.GainEnergy(1m, Owner);
+
+        if (IsUpgraded)
+            await CardPileCmd.Draw(ctx, 1, Owner);
     }
 
-    protected override void OnUpgrade()
-    {
-        RemoveKeyword(CardKeyword.Exhaust);
-    }
+    protected override void OnUpgrade() { }
 }

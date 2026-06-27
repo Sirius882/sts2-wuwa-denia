@@ -22,7 +22,7 @@ public sealed class DeniaBackToPink : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "好女孩？",
-        Description: "只在[gold]黑色[/gold]形态下有效。\n给随机敌人附加5点[gold]聚爆[/gold]。\n切换到[gold]粉色[/gold]形态。{IfUpgraded:show:获得1黯核。|}\n黯核强化：恢复1点能量。");
+        Description: "只在[gold]黑色[/gold]形态下有效。\n给随机敌人附加5点[gold]聚爆[/gold]。\n切换到[gold]粉色[/gold]形态。{IfUpgraded:show:获得1黯核。|}\n黯核强化：先对该敌人附加3聚爆上限，再附加聚爆。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -38,8 +38,12 @@ public sealed class DeniaBackToPink : DeniaCard
         {
             // 黯核强化：先附加聚爆上限，再附加聚爆（同一目标）
             if (darkCore)
+            {
                 await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 3, Owner.Creature, this);
-            await AemeathFusionBurstState.TryAddFusionBurst(enemy, 5, Owner.Creature, this);
+                await AemeathFusionBurstState.TryAddFusionBurst(enemy, 8, Owner.Creature, this);
+            }
+            else
+                await AemeathFusionBurstState.TryAddFusionBurst(enemy, 5, Owner.Creature, this);
         }
 
         await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);

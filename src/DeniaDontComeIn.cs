@@ -21,16 +21,13 @@ public sealed class DeniaDontComeIn : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "不要···进来",
-        Description: "获得1黯核。若处于[gold]粉色[/gold]形态，切换到[gold]黑色[/gold]形态，额外获得6[gold]虚质[/gold]，获得「怜悯我」和「直视我」。");
+        Description: "若处于[gold]粉色[/gold]形态，切换到[gold]黑色[/gold]形态，额外获得6[gold]虚质[/gold]，获得「怜悯我」和「直视我」。{IfUpgraded:show:获得1黯核。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
-
         if (DeniaFormHelper.IsPink(Owner.Creature))
         {
             await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
-            // SwitchToBlack already gives 10 VM, add 6 more = 16 total
             await DeniaResourceState.GainVirtualMatter(Owner.Creature, 6, Owner.Creature, this);
 
             var cb = Owner.Creature.CombatState;
@@ -39,10 +36,10 @@ public sealed class DeniaDontComeIn : DeniaCard
             await CardPileCmd.AddGeneratedCardToCombat(
                 cb.CreateCard<DeniaLookAtMe>(Owner), PileType.Hand, Owner);
         }
+
+        if (IsUpgraded)
+            await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
     }
 
-    protected override void OnUpgrade()
-    {
-        EnergyCost.UpgradeBy(-1);
-    }
+    protected override void OnUpgrade() { }
 }

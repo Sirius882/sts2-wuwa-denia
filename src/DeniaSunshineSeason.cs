@@ -19,7 +19,7 @@ public sealed class DeniaSunshineSeason : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_sunshine_season.png";
 
     public DeniaSunshineSeason()
-        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
+        : base(2, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "阳光季节",

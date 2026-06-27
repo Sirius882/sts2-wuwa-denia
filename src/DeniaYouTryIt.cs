@@ -29,12 +29,13 @@ public sealed class DeniaYouTryIt : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "你也试试？",
-        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加3点[gold]聚爆上限[/gold]。");
+        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:4|3}点[gold]聚爆上限[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-        await PowerCmd.Apply<DeniaYouTryItPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
+        int amount = IsUpgraded ? 4 : 3;
+        await PowerCmd.Apply<DeniaYouTryItPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
         var power = Owner.Creature.GetPower<DeniaYouTryItPower>();
         if (power != null) power.Target = play.Target;
     }
@@ -52,8 +53,8 @@ public sealed class DeniaYouTryItPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "你也试试？",
-            Description: "本回合内每打出一张牌，给目标敌人附加3聚爆上限。",
-            SmartDescription: "本回合内每打出一张牌，给目标敌人附加3聚爆上限。");
+            Description: "本回合内每打出一张牌，给目标敌人附加聚爆上限。",
+            SmartDescription: "本回合内每打出一张牌，给目标敌人附加{Amount}聚爆上限。");
 
     public override Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
     {
@@ -67,6 +68,7 @@ public sealed class DeniaYouTryItPower : CustomPowerModel
         var creature = player.Creature;
         var power = creature.GetPower<DeniaYouTryItPower>();
         if (power?.Target == null || power.Target.IsDead) return;
-        _ = AemeathFusionBurstState.TryIncreaseFusionBurstCap(power.Target, 3, creature, null!);
+        int amount = power.Amount;
+        _ = AemeathFusionBurstState.TryIncreaseFusionBurstCap(power.Target, amount, creature, null!);
     }
 }

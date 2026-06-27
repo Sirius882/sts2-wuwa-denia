@@ -799,4 +799,46 @@ public static class DeniaKusabimaruDamagePatch
 // ---- Patch 21: 删除（合并到 Patch 10 中）----
 
 // ---- Patch 22: 删除（集谐系统已移除）----
-// ---- Patch 23: 删除（集谐系统已移除）----
+// ---- Patch 23: 达妮娅能量图标 → 纯文字 "能量" ----
+/// EnergyIconsFormatter 通过 [img] BBCode 嵌入能量图标，但 Godot RichTextLabel 不缩放 [img]。
+/// 达妮娅的能量图标过大，会撑破文字行。改为写入纯文字 "能量" / "2能量" 等。
+[HarmonyPatch(typeof(MegaCrit.Sts2.Core.Localization.Formatters.EnergyIconsFormatter), nameof(MegaCrit.Sts2.Core.Localization.Formatters.EnergyIconsFormatter.TryEvaluateFormat))]
+public static class DeniaEnergyIconTextPatch
+{
+    public static bool Prefix(SmartFormat.Core.Extensions.IFormattingInfo formattingInfo, ref bool __result)
+    {
+        // 提取 prefix
+        string? prefix = null;
+        if (formattingInfo.CurrentValue is MegaCrit.Sts2.Core.Localization.DynamicVars.EnergyVar ev)
+            prefix = ev.ColorPrefix;
+
+        if (string.IsNullOrEmpty(prefix))
+            prefix = formattingInfo.CurrentValue as string;
+
+        if (string.IsNullOrEmpty(prefix) || prefix == "colorless")
+            prefix = MegaCrit.Sts2.Core.Runs.RunManager.Instance.GetLocalCharacterEnergyIconPrefix();
+
+        // 非达妮娅 → 走原逻辑
+        if (prefix != "denia")
+            return true;
+
+        // 提取数量
+        int count = 1;
+        if (formattingInfo.CurrentValue is MegaCrit.Sts2.Core.Localization.DynamicVars.EnergyVar ev2)
+            count = Convert.ToInt32(ev2.PreviewValue);
+        else if (formattingInfo.CurrentValue is MegaCrit.Sts2.Core.Localization.DynamicVars.CalculatedVar cv)
+            count = Convert.ToInt32(cv.Calculate(null));
+        else if (formattingInfo.CurrentValue is int i)
+            count = i;
+        else if (formattingInfo.CurrentValue is decimal d)
+            count = (int)d;
+        else if (formattingInfo.CurrentValue is string s && int.TryParse(formattingInfo.FormatterOptions, out int parsed))
+            count = parsed;
+
+        // 输出纯文字
+        string text = count switch { 1 => "能量", 2 => "2能量", 3 => "3能量", _ => $"{count}能量" };
+        formattingInfo.Write(text);
+        __result = true;
+        return false;
+    }
+}

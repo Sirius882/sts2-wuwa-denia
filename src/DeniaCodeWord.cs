@@ -18,7 +18,7 @@ public sealed class DeniaCodeWord : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_code_word.png";
 
     public DeniaCodeWord()
-        : base(0, CardType.Skill, CardRarity.Common, TargetType.Self) { }
+        : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "暗号",
