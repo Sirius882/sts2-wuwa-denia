@@ -13,7 +13,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaSaline : CustomCardModel
 {
-    public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust };
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { CardKeyword.Exhaust, DeniaSpecialKeywords.TuneStrainResponse };
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_saline.png";
 

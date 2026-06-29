@@ -13,7 +13,7 @@ namespace Denia;
 
 public sealed class DeniaBackToPink : DeniaCard
 {
-    public override int CurrentDarkCoreCost => 1;
+    public override int CurrentVirtualMatterCost => 2;
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_back_to_pink.png";
 
@@ -22,28 +22,21 @@ public sealed class DeniaBackToPink : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "好女孩？",
-        Description: "只在[gold]黑色[/gold]形态下有效。\n给随机敌人附加5点[gold]聚爆[/gold]。\n切换到[gold]粉色[/gold]形态。{IfUpgraded:show:获得1黯核。|}\n黯核强化：先对该敌人附加3聚爆上限，再附加聚爆。");
+        Description: "只在[gold]黑色[/gold]形态下有效。\n给随机敌人附加5点[gold]聚爆[/gold]。\n切换到[gold]粉色[/gold]形态。{IfUpgraded:show:获得1黯核。|}\n虚质强化：额外附加3点[gold]聚爆[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         if (!DeniaFormHelper.IsBlack(Owner.Creature))
             return;
 
-        // 黯核强化判定必须在黑色形态下先完成，否则切粉后无法触发
-        bool darkCore = await TrySpendDarkCore(play);
+        bool virtualMatter = await TrySpendVirtualMatter(play);
 
         // 随机敌人
         var enemy = DeniaFormHelper.PickRandomEnemy(Owner);
         if (enemy != null)
         {
-            // 黯核强化：先附加聚爆上限，再附加聚爆（同一目标）
-            if (darkCore)
-            {
-                await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 3, Owner.Creature, this);
-                await AemeathFusionBurstState.TryAddFusionBurst(enemy, 8, Owner.Creature, this);
-            }
-            else
-                await AemeathFusionBurstState.TryAddFusionBurst(enemy, 5, Owner.Creature, this);
+            int burst = virtualMatter ? 8 : 5;
+            await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner.Creature, this);
         }
 
         await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);

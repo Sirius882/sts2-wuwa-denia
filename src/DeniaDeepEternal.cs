@@ -27,7 +27,7 @@ public sealed class DeniaDeepEternal : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_deep_eternal.png";
 
     public DeniaDeepEternal()
-        : base(2, CardType.Attack, CardRarity.Uncommon, TargetType.AllEnemies) { }
+        : base(2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "深黯、终末、恒常",
@@ -35,6 +35,8 @@ public sealed class DeniaDeepEternal : DeniaCard
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        ArgumentNullException.ThrowIfNull(play.Target);
+
         var enemies = Owner.Creature.CombatState.Enemies.Where(e => !e.IsDead).ToArray();
 
         // 1. 全体敌人+5聚爆上限
@@ -45,8 +47,7 @@ public sealed class DeniaDeepEternal : DeniaCard
         DeniaMeltingAway.IsMeltingAwayBurstFill = true;
         try
         {
-            foreach (var enemy in enemies)
-                await AemeathFusionBurstState.TryAddFusionBurst(enemy, 40, Owner.Creature, this);
+            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 40, Owner.Creature, this);
         }
         finally { DeniaMeltingAway.IsMeltingAwayBurstFill = false; }
 

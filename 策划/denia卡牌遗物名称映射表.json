@@ -75,7 +75,14 @@
     { "中文名": "继续逃啊？",         "内部ID": "DeniaKeepRunning",          "源文件": "DeniaKeepRunning.cs" },
     { "中文名": "你也试试？",         "内部ID": "DeniaYouTryIt",             "源文件": "DeniaYouTryIt.cs" },
     { "中文名": "还给你",             "内部ID": "DeniaGiveItBack",           "源文件": "DeniaGiveItBack.cs" },
-    { "中文名": "毕业寄语",           "内部ID": "DeniaGraduationMessage",     "源文件": "DeniaGraduationMessage.cs" }
+    { "中文名": "毕业寄语",           "内部ID": "DeniaGraduationMessage",     "源文件": "DeniaGraduationMessage.cs" },
+    { "中文名": "？！娅娅？！",       "内部ID": "DeniaYaya",                  "源文件": "DeniaYaya.cs" },
+    { "中文名": "这个真心推荐",       "内部ID": "DeniaHeartfeltRecommendation", "源文件": "DeniaHeartfeltRecommendation.cs" },
+    { "中文名": "共鸣模态·集谐",     "内部ID": "DeniaResonanceMode",        "源文件": "DeniaResonanceMode.cs" },
+    { "中文名": "想赢的人脸上是没有笑容的", "内部ID": "DeniaWinningFace",    "源文件": "DeniaWinningFace.cs" },
+    { "中文名": "人类的喜好",         "内部ID": "DeniaHumanPreference",      "源文件": "DeniaHumanPreference.cs" },
+    { "中文名": "玩什么？",           "内部ID": "DeniaPlayWhat",             "源文件": "DeniaPlayWhat.cs" },
+    { "中文名": "是啊，玩什么？",     "内部ID": "DeniaYesPlayWhat",          "源文件": "DeniaYesPlayWhat.cs" }
   ],
   "遗物": [
     { "中文名": "骗术师",       "内部ID": "DeniaTrickster",              "源文件": "DeniaTrickster.cs" },

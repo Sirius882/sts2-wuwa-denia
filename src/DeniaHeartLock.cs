@@ -16,7 +16,7 @@ namespace Denia;
 public sealed class DeniaHeartLock : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { CardKeyword.Exhaust, CardKeyword.Retain };
+        new[] { CardKeyword.Exhaust, CardKeyword.Retain, DeniaSpecialKeywords.TuneStrainResponse };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_heart_lock.png";

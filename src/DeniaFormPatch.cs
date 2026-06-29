@@ -199,24 +199,32 @@ public static class DeniaBurstHook
 [HarmonyPatch(typeof(MegaCrit.Sts2.Core.Hooks.Hook), nameof(MegaCrit.Sts2.Core.Hooks.Hook.AfterCardPlayed))]
 public static class DeniaBaseVMGainPatch
 {
-    public static void Postfix(ref Task __result, CardPlay cardPlay)
+    public static void Postfix(ref Task __result, PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         var owner = cardPlay.Card.Owner;
-        if (owner == null) return;
-        if (owner.Character is not Denia) return;
-        if (cardPlay.Card.Type != MegaCrit.Sts2.Core.Entities.Cards.CardType.Attack) return;
-        if (!DeniaFormHelper.IsPink(owner.Creature)) return;
-        __result = WrapVMGain(__result, owner.Creature);
+        bool shouldGainVm = owner?.Character is Denia
+            && cardPlay.Card.Type == MegaCrit.Sts2.Core.Entities.Cards.CardType.Attack
+            && DeniaFormHelper.IsPink(owner.Creature);
+        bool shouldTriggerTuneStrainResponse = cardPlay.Card.Keywords.Contains(DeniaSpecialKeywords.TuneStrainResponse);
+        if (!shouldGainVm && !shouldTriggerTuneStrainResponse) return;
+
+        __result = WrapAfterCardPlayed(__result, choiceContext, cardPlay, owner?.Creature, shouldGainVm, shouldTriggerTuneStrainResponse);
     }
 
-    private static async Task WrapVMGain(Task original, Creature creature)
+    private static async Task WrapAfterCardPlayed(Task original, PlayerChoiceContext choiceContext, CardPlay cardPlay, Creature? creature, bool gainVm, bool triggerTuneStrainResponse)
     {
         await (original ?? Task.CompletedTask);
-        int vmAmount = 2;
-        var candyPower = creature.GetPower<DeniaRainbowCandyJumpPower>();
-        if (candyPower != null && candyPower.Amount > 0)
-            vmAmount += 2 * candyPower.Amount;
-        await DeniaResourceState.GainVirtualMatter(creature, vmAmount, creature, null!);
+        if (gainVm && creature != null)
+        {
+            int vmAmount = 2;
+            var candyPower = creature.GetPower<DeniaRainbowCandyJumpPower>();
+            if (candyPower != null && candyPower.Amount > 0)
+                vmAmount += 2 * candyPower.Amount;
+            await DeniaResourceState.GainVirtualMatter(creature, vmAmount, creature, null!);
+        }
+
+        if (triggerTuneStrainResponse)
+            await DeniaTuneStrainResponseEffect.AfterCardPlayed(choiceContext, cardPlay);
     }
 }
 // ---- Patch 3: 遗物效果注册 ----
@@ -231,7 +239,7 @@ public static class DeniaRelicBurstHandler
         DeniaBurstEvents.OnBurstDone += OnBurst;
     }
 
-    // 引爆后：持有骗术师/赝作矮星时，为目标附加其上限一半的聚爆；粉色形态额外获得2虚质（基础机制）
+    // 引爆后：持有骗术师/赝作矮星时，为目标附加其上限四分之一的聚爆；粉色形态额外获得2虚质（基础机制）
     private static async Task OnBurst(Creature target, Creature applier, int cap)
     {
         if (target.IsDead) return;
@@ -239,12 +247,12 @@ public static class DeniaRelicBurstHandler
         var player = applier.Player;
         if (player == null) return;
 
-        // 引爆后补半层聚爆（需要遗物）
+        // 引爆后补四分之一聚爆（需要遗物）
         bool hasTeddy = player.GetRelic<DeniaTrickster>() != null;
         bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
         if (hasTeddy || hasDwarf)
         {
-            int add = cap / 2;
+            int add = cap / 4;
             if (add > 0)
                 await AemeathWw.Scripts.AemeathFusionBurstState.TryAddFusionBurstWithoutAutoBurst(
                     target, add, applier, null!);
@@ -498,7 +506,7 @@ public static class DeniaRelicTurnStartPatch
             // --- 大师之剑：Boss胜利后计数恢复40 ---
             // handled in OnCombatWon subscription via DeniaMasterSword.AfterObtained/AfterRoomEntered
 
-            // 骗术师/赝作矮星 Solo 轨迹（30）
+            // 骗术师/赝作矮星：敌方仅有一名目标时，维持一份30聚爆轨迹
             await RefreshSoloTrajectory(player, combatState);
         }
 
@@ -519,17 +527,19 @@ public static class DeniaRelicTurnStartPatch
         bool solo = combatState.Enemies.Count(e => !e.IsDead) == 1;
         bool was = _wasSolo.TryGetValue(player.Creature, out bool w) && w;
         if (solo == was) return;
-        _wasSolo[player.Creature] = solo;
 
-        if (solo)
-            await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
-                new ThrowingPlayerChoiceContext(), player.Creature, 30m, player.Creature, null!);
-        else
+        _wasSolo[player.Creature] = solo;
+        if (!solo)
         {
             var traj = player.Creature.GetPower<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>();
             if (traj != null && traj.Amount >= 30m)
-                await MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(new ThrowingPlayerChoiceContext(), traj, -30m, player.Creature, null!);
+                await MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(
+                    new ThrowingPlayerChoiceContext(), traj, -30m, player.Creature, null!);
+            return;
         }
+
+        await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
+            new ThrowingPlayerChoiceContext(), player.Creature, 30m, player.Creature, null!);
     }
 
     private static void KusabimaruCheck(MegaCrit.Sts2.Core.Combat.ICombatState combatState)
@@ -798,7 +808,7 @@ public static class DeniaKusabimaruDamagePatch
 
 // ---- Patch 21: 删除（合并到 Patch 10 中）----
 
-// ---- Patch 22: 删除（集谐系统已移除）----
+// ---- Patch 22: 删除（旧集谐系统逻辑已迁移）----
 // ---- Patch 23: 达妮娅能量图标 → 纯文字 "能量" ----
 /// EnergyIconsFormatter 通过 [img] BBCode 嵌入能量图标，但 Godot RichTextLabel 不缩放 [img]。
 /// 达妮娅的能量图标过大，会撑破文字行。改为写入纯文字 "能量" / "2能量" 等。

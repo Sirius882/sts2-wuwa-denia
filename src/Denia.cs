@@ -22,6 +22,14 @@ public sealed class Denia : PlaceholderCharacterModel
         "res://images/char_select/denia_icon.jpg";
     public override string? CustomCharacterSelectBg =>
         "res://scenes/screens/char_select/denia_bg.tscn";
+    public override string CustomArmPointingTexturePath =>
+        "res://images/ui/hands/denia_hand_point.png";
+    public override string CustomArmRockTexturePath =>
+        "res://images/ui/hands/denia_hand_rock.png";
+    public override string CustomArmPaperTexturePath =>
+        "res://images/ui/hands/denia_hand_paper.png";
+    public override string CustomArmScissorsTexturePath =>
+        "res://images/ui/hands/denia_hand_scissors.png";
     // 火堆/商店：需在 Godot 编辑器里创建带 NRestSiteCharacter/NMerchantCharacter 脚本的 tscn
     // public override string? CustomRestSiteAnimPath =>
     //     "res://scenes/rest_site/characters/denia_rest_site.tscn";
@@ -99,6 +107,11 @@ public sealed class Denia : PlaceholderCharacterModel
         "res://images/ui/combat/denia_virtual_matter_cost_icon.png",
         "res://images/ui/combat/denia_dark_core_cost_icon.png",
         "res://images/ui/combat/denia_dark_core_icon.png",
+        // 开宝箱/多人手势
+        "res://images/ui/hands/denia_hand_point.png",
+        "res://images/ui/hands/denia_hand_rock.png",
+        "res://images/ui/hands/denia_hand_paper.png",
+        "res://images/ui/hands/denia_hand_scissors.png",
         // 火堆/商店角色场景
         "res://scenes/rest_site/characters/denia_rest_site.tscn",
         "res://scenes/merchant/characters/denia_merchant.tscn",

@@ -6,7 +6,7 @@ namespace Denia;
 /// <summary>达妮娅自定义关键词注册。</summary>
 public static class DeniaSpecialKeywords
 {
-    [CustomEnum("RESONANCE_RESPONSE")]
+    [CustomEnum("TUNE_STRAIN_RESPONSE")]
     [KeywordProperties(AutoKeywordPosition.Before)]
-    public static CardKeyword ResonanceResponse = CardKeyword.None;
+    public static CardKeyword TuneStrainResponse = CardKeyword.None;
 }

@@ -131,7 +131,12 @@ public static class DeniaFormHelper
         }
 
         if (clearVM)
+        {
+            // 切换前拥有7虚质 → 抽1张牌
+            if (DeniaResourceState.GetVirtualMatter(creature) >= 7)
+                await CardPileCmd.Draw(_throwing, 1, creature.Player);
             await DeniaResourceState.ClearVirtualMatter(creature, applier, source);
+        }
         _buffKind[creature] = DeniaBlackBuffKind.None;
         _recordedStrength.Remove(creature);
         _recordedTrajectory.Remove(creature);

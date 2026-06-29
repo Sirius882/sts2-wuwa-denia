@@ -23,7 +23,7 @@ public sealed class DeniaTearWorship : DeniaCard
         new[] { new DamageVar(10m, ValueProp.Move) };
 
     public override string PortraitPath =>
-        "res://images/packed/card_portraits/denia/card_face.png";
+        "res://images/packed/card_portraits/denia/card_face_tear_worship.png";
 
     public DeniaTearWorship()
         : base(2, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies) { }

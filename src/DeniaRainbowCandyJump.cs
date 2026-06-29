@@ -16,7 +16,9 @@ namespace Denia;
 public sealed class DeniaRainbowCandyJump : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        IsUpgraded ? new[] { CardKeyword.Innate } : Array.Empty<CardKeyword>();
+        IsUpgraded
+            ? new[] { CardKeyword.Innate, DeniaSpecialKeywords.TuneStrainResponse }
+            : new[] { DeniaSpecialKeywords.TuneStrainResponse };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_rainbow_candy_jump.png";
