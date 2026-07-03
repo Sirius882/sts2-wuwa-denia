@@ -8,6 +8,7 @@ using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
+using TuneStrain;
 
 namespace Denia;
 
@@ -15,6 +16,9 @@ namespace Denia;
 public sealed class DeniaStageSetup : DeniaCard
 {
     public override int CurrentDarkCoreCost => 2;
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { TuneStrainKeywords.TuneStrainResponse };
+
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_stage_setup.png";
 

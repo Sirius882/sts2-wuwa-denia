@@ -67,12 +67,13 @@ public sealed class Denia : PlaceholderCharacterModel
     public override RelicPoolModel RelicPool => ModelDb.RelicPool<DeniaRelicPool>();
     public override PotionPoolModel PotionPool => ModelDb.PotionPool<DeniaPotionPool>();
 
-    public override IEnumerable<CardModel> StartingDeck => new CardModel[10]
+    public override IEnumerable<CardModel> StartingDeck => new CardModel[11]
     {
         ModelDb.Card<DeniaStrike>(),
         ModelDb.Card<DeniaStrike>(),
         ModelDb.Card<DeniaStrike>(),
         ModelDb.Card<DeniaStrike>(),
+        ModelDb.Card<DeniaSorrow>(),
         ModelDb.Card<DeniaDefend>(),
         ModelDb.Card<DeniaDefend>(),
         ModelDb.Card<DeniaDefend>(),

@@ -11,14 +11,11 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>吞没 — Uncommon Attack, 1e. 5/7 dmg x3 to single. VM: hits+1.</summary>
+/// <summary>吞没 — Uncommon Attack, 1e. 15/21 dmg. VM: +8 total.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaSwallow : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 3;
-
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new[] { new DamageVar(5m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_swallow.png";
@@ -28,26 +25,22 @@ public sealed class DeniaSwallow : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "吞没",
-        Description: "造成{Damage:diff()}点伤害3次。\n虚质强化：次数+1。");
+        Description: "造成{IfUpgraded:show:21|15}点伤害。\n虚质强化：伤害+8。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        decimal dmg = DynamicVars.Damage.BaseValue;
-        int hits = 3;
+        int baseDmg = IsUpgraded ? 21 : 15;
         if (await TrySpendVirtualMatter(play))
-            hits++;
+            baseDmg += 8;
 
-        await DamageCmd.Attack(dmg)
-            .WithHitCount(hits)
+        await DamageCmd.Attack(baseDmg)
+            .WithHitCount(1)
             .FromCard(this)
             .Targeting(play.Target)
             .Execute(ctx);
     }
 
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Damage.UpgradeValueBy(2m);
-    }
+    protected override void OnUpgrade() { }
 }

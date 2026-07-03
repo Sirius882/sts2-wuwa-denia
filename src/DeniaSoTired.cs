@@ -35,7 +35,7 @@ public sealed class DeniaSoTired : DeniaCard
 
         await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(block1, ValueProp.Move), play);
 
-        if (DeniaBuffTracker.BuffOrDebuffAppliedThisTurn)
+        if (DeniaBuffTracker.WasBuffOrDebuffAppliedThisTurn(Owner.Creature))
             await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(block2, ValueProp.Move), play);
     }
 

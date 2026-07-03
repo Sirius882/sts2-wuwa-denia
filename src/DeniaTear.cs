@@ -27,27 +27,27 @@ public sealed class DeniaTear : DeniaCard
 
     public override bool GainsBlock => true;
 
+    public override List<(string, string)>? Localization =>
+        new CardLoc(Title: "撕裂", Description: "获得{Block:diff()}点[gold]格挡[/gold]，造成{IfUpgraded:show:12|8}点伤害。\n虚质强化：伤害+4。");
+
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target, "play.Target");
 
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
 
-        int hits = IsUpgraded ? 3 : 2;
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .WithHitCount(hits)
+        bool vm = await TrySpendVirtualMatter(play);
+        int totalDmg = IsUpgraded ? 12 : 8;
+        if (vm) totalDmg += 4;
+
+        await DamageCmd.Attack(totalDmg)
+            .WithHitCount(1)
             .FromCard(this).Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
-
-        if (await TrySpendVirtualMatter(play))
-            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
     }
 
     protected override void OnUpgrade()
     {
         DynamicVars.Block.UpgradeValueBy(2m);
     }
-
-    public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "撕裂", Description: "获得{Block:diff()}点[gold]格挡[/gold]。造成{Damage:diff()}点伤害{IfUpgraded:show:3|2}次。\n虚质强化：[gold]熔解[/gold]1。");
 }

@@ -59,8 +59,8 @@ public sealed class DeniaMeltingAway : DeniaCard
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
 
             await PowerCmd.Apply<DeniaMeltingAwayPower>(ctx, Owner.Creature, baseAmount + dcBonus, Owner.Creature, this);
-            var appliedPower = Owner.Creature.GetPower<DeniaMeltingAwayPower>();
-            if (appliedPower != null) appliedPower.DarkCoreCapBonus += dcBonus;
+            if (dcBonus > 0)
+                await PowerCmd.Apply<DeniaMeltingAwayCapBonusPower>(ctx, Owner.Creature, dcBonus, Owner.Creature, this);
         }
     }
 
@@ -75,9 +75,6 @@ public sealed class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_melting_away_power.png";
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_melting_away_power.png";
 
-    /// <summary>黯核强化带来的额外聚爆上限提升量（0 或 2）。</summary>
-    public int DarkCoreCapBonus { get; set; }
-
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "熔毁殆尽", Description: "每回合开始时对所有敌人附加聚爆并提升上限。", SmartDescription: "每回合开始时对所有敌人附加聚爆并提升上限。");
 
@@ -85,7 +82,7 @@ public sealed class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
     {
         if (side != CombatSide.Player) return;
         int burst = (int)Amount;
-        int cap = 1 + DarkCoreCapBonus;
+        int cap = 1 + (Owner.GetPower<DeniaMeltingAwayCapBonusPower>()?.Amount ?? 0);
         var enemies = combatState.Enemies.Where(e => !e.IsDead).ToArray();
         foreach (var enemy in enemies)
         {

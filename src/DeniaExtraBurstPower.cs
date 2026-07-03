@@ -16,5 +16,5 @@ public sealed class DeniaExtraBurstPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_extra_burst_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "回到远方", Description: "所有附加聚爆效果额外附加1层。", SmartDescription: "所有附加聚爆效果额外附加1层。");
+        new PowerLoc(Title: "回到远方", Description: "所有附加聚爆效果额外附加{Amount}层。", SmartDescription: "所有附加聚爆效果额外附加{Amount}层。");
 }

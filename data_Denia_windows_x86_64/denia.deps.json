@@ -17,6 +17,7 @@
           "0Harmony": "2.4.2.0",
           "aemeath-ww": "1.0.0.0",
           "sts2": "0.1.0.0",
+          "tune_strain": "1.0.0.0",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "9.0.17"
         },
         "runtime": {
@@ -809,6 +810,14 @@
             "fileVersion": "0.1.0.0"
           }
         }
+      },
+      "tune_strain/1.0.0.0": {
+        "runtime": {
+          "tune_strain.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
       }
     }
   },
@@ -883,6 +892,11 @@
       "sha512": ""
     },
     "sts2/0.1.0.0": {
+      "type": "reference",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "tune_strain/1.0.0.0": {
       "type": "reference",
       "serviceable": false,
       "sha512": ""

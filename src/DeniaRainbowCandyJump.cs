@@ -8,6 +8,7 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
+using TuneStrain;
 
 namespace Denia;
 
@@ -17,8 +18,8 @@ public sealed class DeniaRainbowCandyJump : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         IsUpgraded
-            ? new[] { CardKeyword.Innate, DeniaSpecialKeywords.TuneStrainResponse }
-            : new[] { DeniaSpecialKeywords.TuneStrainResponse };
+            ? new[] { CardKeyword.Innate }
+            : Array.Empty<CardKeyword>();
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_rainbow_candy_jump.png";

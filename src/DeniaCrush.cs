@@ -1,8 +1,9 @@
-using System;using System.Collections.Generic;using System.Threading.Tasks;using AemeathWw.Scripts;using BaseLib.Abstracts;using BaseLib.Utils;using MegaCrit.Sts2.Core.Commands;using MegaCrit.Sts2.Core.Entities.Cards;using MegaCrit.Sts2.Core.GameActions.Multiplayer;using MegaCrit.Sts2.Core.Localization.DynamicVars;using MegaCrit.Sts2.Core.ValueProps;
+using System;using System.Collections.Generic;using System.Threading.Tasks;using AemeathWw.Scripts;using BaseLib.Abstracts;using BaseLib.Utils;using MegaCrit.Sts2.Core.Commands;using MegaCrit.Sts2.Core.Entities.Cards;using MegaCrit.Sts2.Core.GameActions.Multiplayer;using MegaCrit.Sts2.Core.Localization.DynamicVars;using MegaCrit.Sts2.Core.ValueProps;using TuneStrain;
 namespace Denia;
 public sealed class DeniaCrush : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 3;
+    public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { TuneStrainKeywords.TuneStrainResponse };
     protected override IEnumerable<DynamicVar> CanonicalVars => new[] { new DamageVar(9m, ValueProp.Move) };
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_crush.png";
     public DeniaCrush() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }

@@ -18,32 +18,29 @@ public sealed class DeniaVisit : DeniaCard
     public DeniaVisit() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "谨此致访",
-        Description: "提高聚爆上限{IfUpgraded:show:5|4}。\n触发{IfUpgraded:show:2|1}次[gold]熔解[/gold]。\n附加{IfUpgraded:show:8|6}点[gold]聚爆[/gold]。\n虚质强化：此牌的[gold]熔解[/gold]不消耗聚爆层数。");
+        Description: "提高聚爆上限{IfUpgraded:show:3|2}。\n触发{IfUpgraded:show:2|1}次[gold]熔解[/gold]。\n附加{IfUpgraded:show:6|4}点[gold]聚爆[/gold]。\n虚质强化：此牌的[gold]熔解[/gold]不消耗聚爆层数。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        int capInc = IsUpgraded ? 5 : 4;
-        int burst = IsUpgraded ? 8 : 6;
+        int capInc = IsUpgraded ? 3 : 2;
+        int burst = IsUpgraded ? 6 : 4;
         int meltTimes = IsUpgraded ? 2 : 1;
 
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, capInc, Owner.Creature, this);
 
         bool preserveBurst = await TrySpendVirtualMatter(play);
 
-        for (int i = 0; i < meltTimes; i++)
+        DeniaMeltProtectPatch.PreserveNextMelt = preserveBurst;
+        try
         {
-            int before = AemeathFusionBurstState.GetFusionBurst(play.Target);
-            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
-            if (preserveBurst && before > 0)
+            for (int i = 0; i < meltTimes; i++)
             {
-                int after = AemeathFusionBurstState.GetFusionBurst(play.Target);
-                int lost = before - after;
-                if (lost > 0)
-                    await AemeathFusionBurstState.TryAddFusionBurst(play.Target, lost, Owner.Creature, this);
+                await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
             }
         }
+        finally { DeniaMeltProtectPatch.PreserveNextMelt = false; }
 
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
     }

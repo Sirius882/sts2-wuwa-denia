@@ -11,6 +11,7 @@ using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Powers;
+using TuneStrain;
 
 namespace Denia;
 
@@ -19,7 +20,9 @@ namespace Denia;
 public sealed class DeniaTorchPineNut : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        IsUpgraded ? new[] { CardKeyword.Innate } : Array.Empty<CardKeyword>();
+        IsUpgraded
+            ? new[] { CardKeyword.Innate, TuneStrainKeywords.TuneStrainResponse }
+            : new[] { TuneStrainKeywords.TuneStrainResponse };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_torch_pine_nut.png";
@@ -39,6 +42,7 @@ public sealed class DeniaTorchPineNut : DeniaCard
     protected override void OnUpgrade()
     {
         AddKeyword(CardKeyword.Innate);
+        AddKeyword(TuneStrainKeywords.TuneStrainResponse);
     }
 }
 public sealed class DeniaTorchPineNutPower : CustomPowerModel
@@ -55,27 +59,19 @@ public sealed class DeniaTorchPineNutPower : CustomPowerModel
             Description: "获得聚爆轨迹时，同步获得该次获得层数1/5的力量。",
             SmartDescription: "获得聚爆轨迹时，同步获得该次获得层数1/5的力量。");
 
-    // ---- 累加器：BeforePowerAmountChanged 通知钩中累加，AfterCardPlayed 安全 flush ----
-    private static readonly Dictionary<Creature, int> _pendingStr = new();
-
     internal static void AccumulateStrength(Creature creature, int amount)
     {
         if (amount <= 0) return;
-        lock (_pendingStr)
-        {
-            _pendingStr.TryGetValue(creature, out int existing);
-            _pendingStr[creature] = existing + amount;
-        }
+        _ = PowerCmd.Apply<DeniaTorchPineNutPendingStrengthPower>(
+            new ThrowingPlayerChoiceContext(), creature, amount, creature, null!);
     }
 
     internal static async Task FlushStrengthAsync(Creature creature)
     {
-        int amount;
-        lock (_pendingStr)
-        {
-            if (!_pendingStr.TryGetValue(creature, out amount)) return;
-            _pendingStr.Remove(creature);
-        }
+        var pending = creature.GetPower<DeniaTorchPineNutPendingStrengthPower>();
+        if (pending == null) return;
+        int amount = pending.Amount;
+        await PowerCmd.Remove<DeniaTorchPineNutPendingStrengthPower>(creature);
         if (amount > 0)
             await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>(
                 new ThrowingPlayerChoiceContext(), creature, amount, creature, null!);

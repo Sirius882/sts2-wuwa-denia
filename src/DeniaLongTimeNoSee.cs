@@ -30,18 +30,17 @@ public sealed class DeniaLongTimeNoSee : DeniaCard
 
         if (await TrySpendDarkCore(play))
         {
-            var kind = DeniaFormHelper.GetBuffKind(Owner.Creature);
-            if (kind == DeniaBlackBuffKind.StrengthOnly || kind == DeniaBlackBuffKind.Both)
+            if (DeniaFormHelper.HasBlackFormStrengthChoice(Owner.Creature))
             {
                 await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, w, Owner.Creature, this);
-                DeniaFormHelper.RecordStrength(Owner.Creature, w);
+                await DeniaFormHelper.AddBlackFormStrengthDebt(Owner.Creature, w, Owner.Creature, this);
             }
-            if (kind == DeniaBlackBuffKind.TrajectoryOnly || kind == DeniaBlackBuffKind.Both)
+            if (DeniaFormHelper.HasBlackFormTrajectoryChoice(Owner.Creature))
             {
                 int traj = w * 10;
                 await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
                     ctx, Owner.Creature, traj, Owner.Creature, this);
-                DeniaFormHelper.RecordTrajectory(Owner.Creature, traj);
+                await DeniaFormHelper.AddBlackFormTrajectoryDebt(Owner.Creature, traj, Owner.Creature, this);
             }
         }
     }

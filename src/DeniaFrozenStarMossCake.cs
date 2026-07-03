@@ -11,28 +11,34 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>寒地星苔团 — Rare Attack, X cost, single enemy. VM强化: +hits based on VM amount.</summary>
+/// <summary>寒地星苔团 — Rare Attack, X cost, single enemy. VM强化: +hits based on VM amount, ceil((y-2)/4).</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaFrozenStarMossCake : DeniaCard
 {
     protected override bool HasEnergyCostX => true;
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new[] { new DamageVar(3m, ValueProp.Move) };
-
-    public override int CurrentVirtualMatterCost =>
-        DeniaResourceState.GetVirtualMatter(Owner?.Creature!) >= 3
-            ? DeniaResourceState.GetVirtualMatter(Owner?.Creature!) : 0;
+        new[] { new DamageVar(6m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_frozen_star_moss_cake.png";
+
+    public override int CurrentVirtualMatterCost
+    {
+        get
+        {
+            if (!TryGetOwner(out var owner)) return 0;
+            int virtualMatter = DeniaResourceState.GetVirtualMatter(owner!.Creature);
+            return virtualMatter >= 3 ? virtualMatter : 0;
+        }
+    }
 
     public DeniaFrozenStarMossCake()
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "寒地星苔团",
-        Description: "造成{Damage:diff()}点伤害2x次。\n虚质强化：若虚质≥3，额外造成{Damage:diff()}点伤害(y-2)/2次。");
+        Description: "造成{Damage:diff()}点伤害x次。\n虚质强化：若虚质≥3，额外造成{Damage:diff()}点伤害(y-2)/4次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -40,15 +46,14 @@ public sealed class DeniaFrozenStarMossCake : DeniaCard
 
         int x = ResolveEnergyXValue();
 
-        // 虚质强化：仅黑色形态，虚质>=3
         int vmBefore = DeniaResourceState.GetVirtualMatter(Owner.Creature);
         bool vmEnhanced = await TrySpendVirtualMatter(play);
 
         int vmExtraHits = 0;
         if (vmEnhanced && vmBefore >= 3)
-            vmExtraHits = (vmBefore - 2) / 2;
+            vmExtraHits = (int)Math.Ceiling((vmBefore - 2) / 4.0);
 
-        int totalHits = 2 * x + vmExtraHits;
+        int totalHits = x + vmExtraHits;
         if (totalHits <= 0) return;
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)

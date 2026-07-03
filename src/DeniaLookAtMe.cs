@@ -6,7 +6,6 @@ using BaseLib.Abstracts;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
@@ -28,12 +27,10 @@ public sealed class DeniaLookAtMe : DeniaCard
     {
         if (!DeniaFormHelper.IsBlack(Owner.Creature)) return;
 
-        int strGain = await TrySpendVirtualMatter(play) ? 2 : 0;
-        if (strGain > 0)
+        if (await TrySpendVirtualMatter(play))
         {
-            await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, strGain, Owner.Creature, this);
-            DeniaFormHelper.RecordLookAtMeStrength(Owner.Creature, strGain);
-            DeniaFormHelper.SetBuffKind(Owner.Creature, DeniaBlackBuffKind.StrengthOnly);
+            await PowerCmd.Apply<DeniaResonanceModePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
+            await DeniaFormHelper.MarkTemporaryResonanceMode(Owner.Creature, Owner.Creature, this);
         }
 
         // 消耗手牌中的"怜悯我"和所有"直视我"
@@ -45,5 +42,5 @@ public sealed class DeniaLookAtMe : DeniaCard
     }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "直视我", Description: "只能在[gold]黑色[/gold]形态下打出。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：获得2点[gold]力量[/gold]（退出黑色形态时失去）。");
+        new CardLoc(Title: "直视我", Description: "只能在[gold]黑色[/gold]形态下打出。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：进入[gold]共鸣模态·集谐[/gold]。退出黑色形态时，也退出[gold]共鸣模态·集谐[/gold]。");
 }

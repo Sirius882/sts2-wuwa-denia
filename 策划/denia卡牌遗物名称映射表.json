@@ -7,6 +7,7 @@
     { "中文名": "直视我",             "内部ID": "DeniaLookAtMe",             "源文件": "DeniaLookAtMe.cs" },
     { "中文名": "怜悯我",             "内部ID": "DeniaPityMe",               "源文件": "DeniaPityMe.cs" },
     { "中文名": "好女孩？",           "内部ID": "DeniaBackToPink",           "源文件": "DeniaBackToPink.cs" },
+    { "中文名": "哀",                 "内部ID": "DeniaSorrow",               "源文件": "DeniaSorrow.cs" },
     { "中文名": "熔毁殆尽",           "内部ID": "DeniaMeltingAway",          "源文件": "DeniaMeltingAway.cs" },
     { "中文名": "生理盐水",           "内部ID": "DeniaSaline",               "源文件": "DeniaSaline.cs" },
     { "中文名": "请您不要···宽恕我", "内部ID": "DeniaPleaseDoNotForgiveMe", "源文件": "DeniaPleaseDoNotForgiveMe.cs" },
@@ -61,7 +62,7 @@
     { "中文名": "泡泡机",             "内部ID": "DeniaBubbleMachine",        "源文件": "DeniaBubbleMachine.cs" },
     { "中文名": "生日蛋糕",           "内部ID": "DeniaBirthdayCake",         "源文件": "DeniaBirthdayCake.cs" },
     { "中文名": "谎言之实",           "内部ID": "DeniaFruitOfLies",          "源文件": "DeniaFruitOfLies.cs" },
-    { "中文名": "最初和最后的礼物",   "内部ID": "DeniaFirstLastGift",        "源文件": "DeniaFirstLastGift.cs" },
+    { "中文名": "我回来了！",         "内部ID": "DeniaFirstLastGift",        "源文件": "DeniaFirstLastGift.cs" },
     { "中文名": "虚质科学直觉",       "内部ID": "DeniaVirtualScienceIntuition", "源文件": "DeniaVirtualScienceIntuition.cs" },
     { "中文名": "夏耶",               "内部ID": "DeniaXiaYe",                "源文件": "DeniaXiaYe.cs" },
     { "中文名": "卡纽",               "内部ID": "DeniaKaNiu",                "源文件": "DeniaKaNiu.cs" },
@@ -82,7 +83,9 @@
     { "中文名": "想赢的人脸上是没有笑容的", "内部ID": "DeniaWinningFace",    "源文件": "DeniaWinningFace.cs" },
     { "中文名": "人类的喜好",         "内部ID": "DeniaHumanPreference",      "源文件": "DeniaHumanPreference.cs" },
     { "中文名": "玩什么？",           "内部ID": "DeniaPlayWhat",             "源文件": "DeniaPlayWhat.cs" },
-    { "中文名": "是啊，玩什么？",     "内部ID": "DeniaYesPlayWhat",          "源文件": "DeniaYesPlayWhat.cs" }
+    { "中文名": "是啊，玩什么？",     "内部ID": "DeniaYesPlayWhat",          "源文件": "DeniaYesPlayWhat.cs" },
+    { "中文名": "你看！",             "内部ID": "DeniaLookAtThis",           "源文件": "DeniaLookAtThis.cs" },
+    { "中文名": "最初和最后的礼物",   "内部ID": "DeniaFirstAndLastGift",     "源文件": "DeniaFirstAndLastGift.cs" }
   ],
   "遗物": [
     { "中文名": "骗术师",       "内部ID": "DeniaTrickster",              "源文件": "DeniaTrickster.cs" },

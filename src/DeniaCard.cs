@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.Entities.Players;
 
 namespace Denia;
 
@@ -29,6 +30,15 @@ public abstract class DeniaCard(
 
     /// <summary>黯核消耗量（用于卡牌左上角图标显示 & 消耗判定）。0 = 无黯核强化。</summary>
     public virtual int CurrentDarkCoreCost => 0;
+
+    protected bool TryGetOwner(out Player? owner)
+    {
+        owner = null;
+        if (!IsMutable) return false;
+
+        owner = Owner;
+        return owner != null;
+    }
 
     /// <summary>尝试消耗虚质。仅在黑色形态且虚质足够时返回 true 并实际扣除。</summary>
     protected async Task<bool> TrySpendVirtualMatter(CardPlay cardPlay)

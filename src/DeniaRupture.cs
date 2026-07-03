@@ -10,6 +10,7 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.ValueProps;
+using TuneStrain;
 
 namespace Denia;
 
@@ -18,6 +19,9 @@ namespace Denia;
 public sealed class DeniaRupture : DeniaCard
 {
     public override int CurrentDarkCoreCost => 1;
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { TuneStrainKeywords.TuneStrainResponse };
+
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_rupture.png";
 
@@ -26,13 +30,13 @@ public sealed class DeniaRupture : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "破裂",
-            Description: "对全体敌人造成10点伤害{IfUpgraded:show:4|3}次。\n额外造成一次等于全体敌人聚爆上限之和一半的伤害。\n黯核强化：每段基础伤害+5。");
+            Description: "对全体敌人造成15点伤害2次。\n额外造成一次等于全体敌人聚爆上限之和一半的伤害。\n黯核强化：每段基础伤害+5。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int dcBonus = await TrySpendDarkCore(play) ? 5 : 0;
-        int hitCount = IsUpgraded ? 4 : 3;
-        int baseDmg = 10 + dcBonus;
+        int hitCount = 2;
+        int baseDmg = 15 + dcBonus;
 
         var enemies = Owner.Creature.CombatState.Enemies.Where(e => !e.IsDead).ToArray();
 
@@ -57,5 +61,8 @@ public sealed class DeniaRupture : DeniaCard
         }
     }
 
-    protected override void OnUpgrade() { }
+    protected override void OnUpgrade()
+    {
+        EnergyCost.UpgradeBy(-1);
+    }
 }

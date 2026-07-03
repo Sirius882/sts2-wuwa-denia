@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using BaseLib.Abstracts;
@@ -28,15 +29,22 @@ public sealed class DeniaKeepRunning : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "继续逃啊？",
-        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:4|3}[gold]聚爆[/gold]。");
+        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:4|2}[gold]聚爆[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-        int amount = IsUpgraded ? 4 : 3;
+        int amount = IsUpgraded ? 4 : 2;
         await PowerCmd.Apply<DeniaKeepRunningPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
-        var power = Owner.Creature.GetPower<DeniaKeepRunningPower>();
-        if (power != null) power.Target = play.Target;
+        int targetIndex = Owner.Creature.CombatState.Enemies
+            .Select((enemy, index) => (enemy, index))
+            .FirstOrDefault(pair => ReferenceEquals(pair.enemy, play.Target)).index;
+        bool targetFound = Owner.Creature.CombatState.Enemies.Any(enemy => ReferenceEquals(enemy, play.Target));
+        if (targetFound)
+        {
+            await PowerCmd.Remove<DeniaKeepRunningTargetIndexPower>(Owner.Creature);
+            await PowerCmd.Apply<DeniaKeepRunningTargetIndexPower>(ctx, Owner.Creature, targetIndex + 1, Owner.Creature, this);
+        }
     }
 
     protected override void OnUpgrade() { }
@@ -48,8 +56,6 @@ public sealed class DeniaKeepRunningPower : CustomPowerModel
     public override PowerStackType StackType => PowerStackType.Counter;
     protected override bool IsVisibleInternal => false;
 
-    internal Creature? Target;
-
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "继续逃啊？",
             Description: "本回合内每打出一张牌，给目标敌人附加聚爆。",
@@ -58,16 +64,30 @@ public sealed class DeniaKeepRunningPower : CustomPowerModel
     public override Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
     {
         if (side == CombatSide.Player)
+        {
             _ = PowerCmd.Remove<DeniaKeepRunningPower>(Owner);
+            _ = PowerCmd.Remove<DeniaKeepRunningTargetIndexPower>(Owner);
+        }
         return Task.CompletedTask;
     }
 
-    public static void OnAnyCardPlayed(Player player, CardPlay cardPlay)
+    /// <summary>
+    /// 每打出一张牌时调用：给目标附加聚爆。
+    /// 必须 await（调用方在异步 Hook 包装链中 await），否则 fire-and-forget 会导致多人 desync。
+    /// </summary>
+    public static async Task OnAnyCardPlayed(Player player, CardPlay cardPlay)
     {
         var creature = player.Creature;
         var power = creature.GetPower<DeniaKeepRunningPower>();
-        if (power?.Target == null || power.Target.IsDead) return;
+        var targetIndexPower = creature.GetPower<DeniaKeepRunningTargetIndexPower>();
+        if (power == null || targetIndexPower == null || targetIndexPower.Amount <= 0) return;
+        if (cardPlay.Card is DeniaKeepRunning) return;
+        int targetIndex = targetIndexPower.Amount - 1;
+        var enemies = creature.CombatState.Enemies;
+        if (targetIndex < 0 || targetIndex >= enemies.Count) return;
+        var target = enemies[targetIndex];
+        if (target.IsDead) return;
         int amount = power.Amount;
-        _ = AemeathFusionBurstState.TryAddFusionBurst(power.Target, amount, creature, null!);
+        await AemeathFusionBurstState.TryAddFusionBurst(target, amount, creature, null!);
     }
 }

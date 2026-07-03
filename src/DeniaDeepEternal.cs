@@ -31,29 +31,23 @@ public sealed class DeniaDeepEternal : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "深黯、终末、恒常",
-            Description: "提升全体敌人5点聚爆上限。对目标触发一次无条件引爆。接下来{IfUpgraded:show:3|2}回合内，每回合对全体敌人附加5点聚爆并提升5聚爆上限。若处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态。\n黯核强化：持续回合数+1。");
+            Description: "提升全体敌人3点聚爆上限。对随机一名敌人触发一次无条件引爆。接下来2回合内，每回合对全体敌人附加3点聚爆并提升3聚爆上限。若处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态。\n黯核强化：持续回合数变为3。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        ArgumentNullException.ThrowIfNull(play.Target);
-
         var enemies = Owner.Creature.CombatState.Enemies.Where(e => !e.IsDead).ToArray();
+        if (enemies.Length <= 0) return;
 
-        // 1. 全体敌人+5聚爆上限
+        // 1. 全体敌人+3聚爆上限
         foreach (var enemy in enemies)
-            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 5, Owner.Creature, this);
+            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 3, Owner.Creature, this);
 
-        // 2. 无条件引爆（绕过联动效果）
-        DeniaMeltingAway.IsMeltingAwayBurstFill = true;
-        try
-        {
-            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 40, Owner.Creature, this);
-        }
-        finally { DeniaMeltingAway.IsMeltingAwayBurstFill = false; }
+        // 2. 无条件引爆
+        var randomEnemy = Owner.RunState.Rng.CombatTargets.NextItem(enemies);
+        await AemeathFusionBurstState.TryAddFusionBurst(randomEnemy, 40, Owner.Creature, this);
 
         // 3. 黯核强化（在切换形态前消耗）
-        int dcBonus = await TrySpendDarkCore(play) ? 1 : 0;
-        int duration = 2 + dcBonus;
+        int duration = await TrySpendDarkCore(play) ? 3 : 2;
         await PowerCmd.Apply<DeniaDeepEternalPower>(ctx, Owner.Creature, duration, Owner.Creature, this);
 
         // 4. 若处于黑色形态，切换到粉色（最后做）
@@ -78,8 +72,8 @@ public sealed class DeniaDeepEternalPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "深黯、终末、恒常",
-            Description: "每回合开始时，对所有敌人附加5点聚爆并提升5点聚爆上限。",
-            SmartDescription: "每回合开始时，对所有敌人附加5点聚爆并提升5点聚爆上限。");
+            Description: "每回合开始时，对所有敌人附加3点聚爆并提升3点聚爆上限。",
+            SmartDescription: "每回合开始时，对所有敌人附加3点聚爆并提升3点聚爆上限。");
 
     public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
     {
@@ -88,17 +82,11 @@ public sealed class DeniaDeepEternalPower : CustomPowerModel
 
         var enemies = combatState.Enemies.Where(e => !e.IsDead).ToArray();
 
-        // 使用 IsMeltingAwayBurstFill 绕过轻唤/熵变强化/回到远方等联动
-        DeniaMeltingAway.IsMeltingAwayBurstFill = true;
-        try
+        foreach (var enemy in enemies)
         {
-            foreach (var enemy in enemies)
-            {
-                await AemeathFusionBurstState.TryAddFusionBurst(enemy, 5, Owner, null!);
-                await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 5, Owner, null!);
-            }
+            await AemeathFusionBurstState.TryAddFusionBurst(enemy, 3, Owner, null!);
+            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 3, Owner, null!);
         }
-        finally { DeniaMeltingAway.IsMeltingAwayBurstFill = false; }
 
         // 递减持续回合
         await PowerCmd.ModifyAmount(new ThrowingPlayerChoiceContext(), this, -1m, Owner, null!);

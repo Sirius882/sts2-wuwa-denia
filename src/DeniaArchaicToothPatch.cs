@@ -11,7 +11,7 @@ using MegaCrit.Sts2.Core.Models.Relics;
 namespace Denia;
 
 /// <summary>
-/// Archaic Tooth 转化："请您不要···" → "最初和最后的礼物"。
+/// Archaic Tooth 转化："请您不要···" → "我回来了！"。
 /// 主要转化逻辑通过 ITranscendenceCard 接口（BaseLib 官方机制）处理。
 /// 此补丁额外接管 SetupForPlayer 和 AfterObtained，确保工具提示和转化动画正确。
 /// </summary>

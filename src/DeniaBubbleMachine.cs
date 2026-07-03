@@ -34,7 +34,7 @@ public sealed class DeniaBubbleMachine : DeniaCard
     {
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
 
-        if (DeniaFormHelper._formSwitchedThisTurn)
+        if (DeniaFormHelper.HasSwitchedFormThisTurn(Owner.Creature))
             await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
     }
 

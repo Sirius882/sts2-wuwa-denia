@@ -6,7 +6,7 @@ using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Models.Powers;
+using TuneStrain;
 
 namespace Denia;
 
@@ -14,7 +14,7 @@ namespace Denia;
 public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { DeniaSpecialKeywords.TuneStrainResponse };
+        new[] { TuneStrainKeywords.TuneStrainResponse };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_please_do_not_forgive_me.png";
@@ -24,7 +24,7 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "请您不要···宽恕我",
-        Description: "只在[gold]粉色[/gold]形态下有效。切换到[gold]黑色[/gold]形态，不获得「直视我」和「怜悯我」。获得2点[gold]力量[/gold]和20层[gold]聚爆轨迹[/gold]。退出黑色形态时，失去由此获得的力量和聚爆轨迹。");
+        Description: "在[gold]粉色[/gold]形态下，切换到[gold]黑色[/gold]形态，不获得\"直视我\"和\"怜悯我\"，获得20层[gold]聚爆轨迹[/gold]并进入[gold]共鸣模态·集谐[/gold]。退出黑色形态时，失去由此获得的聚爆轨迹并退出[gold]共鸣模态·集谐[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -32,13 +32,12 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
 
         await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
 
-        await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, 2, Owner.Creature, this);
         await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
             ctx, Owner.Creature, 20, Owner.Creature, this);
+        await PowerCmd.Apply<DeniaResonanceModePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
 
-        DeniaFormHelper.RecordForgiveMeStrength(Owner.Creature, 2);
-        DeniaFormHelper.RecordForgiveMeTrajectory(Owner.Creature, 20);
-        DeniaFormHelper.SetBuffKind(Owner.Creature, DeniaBlackBuffKind.Both);
+        await DeniaFormHelper.AddBlackFormTrajectoryDebt(Owner.Creature, 20, Owner.Creature, this);
+        await DeniaFormHelper.MarkTemporaryResonanceMode(Owner.Creature, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()

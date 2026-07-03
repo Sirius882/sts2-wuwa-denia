@@ -10,12 +10,16 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.ValueProps;
+using TuneStrain;
 
 namespace Denia;
 
 public sealed class DeniaStrike : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 2;
+
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { TuneStrainKeywords.TuneStrainResponse };
 
     protected override HashSet<CardTag> CanonicalTags => new() { CardTag.Strike };
 

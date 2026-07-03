@@ -25,26 +25,21 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
     public int ExtraBlock { get; set; }
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "熵变强化", Description: "每当自己获得增益或给敌人附加减益时，获得2点格挡。", SmartDescription: "每当自己获得增益或给敌人附加减益时，获得2点格挡。");
-
-    // 累加器模式（见经验总结 #63）
-    private static readonly System.Collections.Generic.Dictionary<Creature, int> _pendingBlock = new();
-    private static readonly object _lock = new();
+        new PowerLoc(Title: "熵变强化", Description: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。", SmartDescription: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。");
 
     public static void AccumulateBlock(Creature creature, int amount)
     {
         if (amount <= 0) return;
-        lock (_lock)
-            _pendingBlock[creature] = _pendingBlock.GetValueOrDefault(creature) + amount;
+        _ = PowerCmd.Apply<DeniaEntropyBoostPendingBlockPower>(
+            new ThrowingPlayerChoiceContext(), creature, amount, creature, null!);
     }
 
     public static async Task FlushBlockAsync(Creature creature)
     {
-        int total;
-        lock (_lock)
-        {
-            if (!_pendingBlock.Remove(creature, out total)) return;
-        }
+        var pending = creature.GetPower<DeniaEntropyBoostPendingBlockPower>();
+        if (pending == null) return;
+        int total = pending.Amount;
+        await PowerCmd.Remove<DeniaEntropyBoostPendingBlockPower>(creature);
         if (total > 0)
             await CreatureCmd.GainBlock(
                 creature, new BlockVar(total, ValueProp.Unpowered), null);

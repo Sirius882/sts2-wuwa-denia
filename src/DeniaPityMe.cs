@@ -32,8 +32,7 @@ public sealed class DeniaPityMe : DeniaCard
         {
             await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
                 ctx, Owner.Creature, trajGain, Owner.Creature, this);
-            DeniaFormHelper.RecordPityMeTrajectory(Owner.Creature, trajGain);
-            DeniaFormHelper.SetBuffKind(Owner.Creature, DeniaBlackBuffKind.TrajectoryOnly);
+            await DeniaFormHelper.AddBlackFormTrajectoryDebt(Owner.Creature, trajGain, Owner.Creature, this);
         }
 
         // 消耗手牌中的"直视我"和所有"怜悯我"

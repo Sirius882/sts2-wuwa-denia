@@ -7,6 +7,7 @@ using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models.Powers;
+using TuneStrain;
 
 namespace Denia;
 
@@ -14,7 +15,7 @@ namespace Denia;
 public sealed class DeniaSaline : CustomCardModel
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { CardKeyword.Exhaust, DeniaSpecialKeywords.TuneStrainResponse };
+        new[] { CardKeyword.Exhaust };
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_saline.png";
 
@@ -23,7 +24,7 @@ public sealed class DeniaSaline : CustomCardModel
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "生理盐水",
-        Description: "切换形态。\n获得{IfUpgraded:show:3|1}点[gold]力量[/gold]和{IfUpgraded:show:3|1}点[gold]敏捷[/gold]。\n获得1层[gold]易伤[/gold]。");
+        Description: "如果处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态；如果处于[gold]粉色[/gold]形态，切换到[gold]黑色[/gold]形态，并获得卡牌\"直视我\"和\"怜悯我\"。\n给自己附加1层[gold]易伤[/gold]。获得{IfUpgraded:show:3|1}点[gold]力量[/gold]和{IfUpgraded:show:3|1}点[gold]敏捷[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

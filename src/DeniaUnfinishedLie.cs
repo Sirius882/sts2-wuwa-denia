@@ -19,23 +19,24 @@ public sealed class DeniaUnfinishedLie : DeniaCard
     public DeniaUnfinishedLie() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "未竟的谎言",
-        Description: "提高聚爆上限{IfUpgraded:show:5|4}。\n附加{IfUpgraded:show:8|6}点[gold]聚爆[/gold]。\n若触发[gold]引爆[/gold]，获得1点能量。\n虚质强化：附加的[gold]聚爆[/gold]层数和上限各+2。");
+        Description: "提高聚爆上限{IfUpgraded:show:3|2}。\n附加{IfUpgraded:show:6|4}点[gold]聚爆[/gold]。\n若触发[gold]引爆[/gold]，获得1点能量。\n虚质强化：附加的[gold]聚爆[/gold]层数和上限各+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        int cap = AemeathFusionBurstState.GetFusionBurstCap(play.Target);
-        int cur = AemeathFusionBurstState.GetFusionBurst(play.Target);
-        int cu = IsUpgraded ? 5 : 4;
-        int bu = IsUpgraded ? 8 : 6;
+        int cu = IsUpgraded ? 3 : 2;
+        int bu = IsUpgraded ? 6 : 4;
 
         if (await TrySpendVirtualMatter(play)) { cu += 2; bu += 2; }
 
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, cu, Owner.Creature, this);
-        bool willBurst = cur + bu >= cap + cu;
+        int before = AemeathFusionBurstState.GetFusionBurst(play.Target);
+        int cap = AemeathFusionBurstState.GetFusionBurstCap(play.Target);
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, bu, Owner.Creature, this);
-        if (willBurst) await PlayerCmd.GainEnergy(1, Owner);
+        int after = AemeathFusionBurstState.GetFusionBurst(play.Target);
+        if (before + bu >= cap && after < before)
+            await PlayerCmd.GainEnergy(1, Owner);
     }
 
     protected override void OnUpgrade() { }

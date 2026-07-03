@@ -35,10 +35,10 @@ public sealed class DeniaDontComeIn : DeniaCard
                 cb.CreateCard<DeniaPityMe>(Owner), PileType.Hand, Owner);
             await CardPileCmd.AddGeneratedCardToCombat(
                 cb.CreateCard<DeniaLookAtMe>(Owner), PileType.Hand, Owner);
-        }
 
-        if (IsUpgraded)
-            await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
+            if (IsUpgraded)
+                await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
+        }
     }
 
     protected override void OnUpgrade() { }

@@ -30,7 +30,7 @@ public sealed class DeniaFruitOfLies : DeniaCard
     {
         await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
 
-        if (DeniaFormHelper._formSwitchedThisTurn)
+        if (DeniaFormHelper.HasSwitchedFormThisTurn(Owner.Creature))
             await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
     }
 

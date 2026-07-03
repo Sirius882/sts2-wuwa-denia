@@ -28,7 +28,7 @@ public sealed class DeniaRadianceDissolved : DeniaCard
     protected override bool HasEnergyCostX => true;
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new[] { new DamageVar(2m, ValueProp.Move) };
+        new[] { new DamageVar(0m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_radiance_dissolved.png";
@@ -38,7 +38,7 @@ public sealed class DeniaRadianceDissolved : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "光辉，自此消融",
-        Description: "消耗y[gold]虚质[/gold]和z黯核。对全体敌人造成2*x+buff点伤害y/2+4z次。若处于黑色形态，切换到粉色并获得1点能量。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
+        Description: "无论形态，消耗所有[gold]虚质[/gold]和黯核。对全体敌人造成y/2+4z+力量点伤害x次。若处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -57,9 +57,9 @@ public sealed class DeniaRadianceDissolved : DeniaCard
                 await PowerCmd.ModifyAmount(new ThrowingPlayerChoiceContext(), dcPower, -(decimal)dcSpent, Owner.Creature, this);
         }
 
-        int hits = vmSpent / 2 + 4 * dcSpent;
+        int hits = energyX;
 
-        decimal dmg = DynamicVars.Damage.BaseValue * energyX;
+        decimal dmg = vmSpent + 8 * dcSpent;
         if (hits > 0 && dmg > 0)
         {
             await DamageCmd.Attack(dmg)
@@ -72,7 +72,6 @@ public sealed class DeniaRadianceDissolved : DeniaCard
         if (DeniaFormHelper.IsBlack(Owner.Creature))
         {
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
-            await PlayerCmd.GainEnergy(1, Owner);
         }
 
         // 灾厄倒计时
@@ -97,9 +96,10 @@ public sealed class DeniaCataclysmTimerPower : CustomPowerModel
         if (side != CombatSide.Player) return;
         if (Amount <= 0) return;
 
+        decimal remaining = Amount - 1m;
         await PowerCmd.ModifyAmount(new ThrowingPlayerChoiceContext(), this, -1m, Owner, null!);
 
-        if (Amount <= 1m) // <=1 means the decrement brought it to 0
+        if (remaining <= 0m)
         {
             await PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.DoomPower>(new ThrowingPlayerChoiceContext(), Owner, 80, Owner, null!);
             await PowerCmd.Remove<DeniaCataclysmTimerPower>(Owner);

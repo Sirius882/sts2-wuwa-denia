@@ -22,6 +22,9 @@
     <Reference Include="aemeath-ww">
       <HintPath>E:\SteamLibrary\steamapps\workshop\content\2868840\3747597254\aemeath-ww.dll</HintPath>
     </Reference>
+    <Reference Include="tune_strain">
+      <HintPath>..\tune_strain\.godot\mono\temp\bin\Debug\tune_strain.dll</HintPath>
+    </Reference>
     <Reference Include="0Harmony">
       <HintPath>..\..\threeDLLs\0Harmony.dll</HintPath>
     </Reference>

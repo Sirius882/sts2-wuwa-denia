@@ -14,6 +14,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.ValueProps;
+using TuneStrain;
 
 namespace Denia;
 
@@ -21,6 +22,9 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaGiveItBack : DeniaCard
 {
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { TuneStrainKeywords.TuneStrainResponse };
+
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new[] { new DamageVar(7m, ValueProp.Move) };
 

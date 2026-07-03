@@ -8,6 +8,7 @@ using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
+using TuneStrain;
 
 namespace Denia;
 
@@ -16,7 +17,7 @@ namespace Denia;
 public sealed class DeniaHeartLock : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { CardKeyword.Exhaust, CardKeyword.Retain, DeniaSpecialKeywords.TuneStrainResponse };
+        new[] { CardKeyword.Exhaust, CardKeyword.Retain };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_heart_lock.png";

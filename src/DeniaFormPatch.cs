@@ -205,16 +205,15 @@ public static class DeniaBaseVMGainPatch
         bool shouldGainVm = owner?.Character is Denia
             && cardPlay.Card.Type == MegaCrit.Sts2.Core.Entities.Cards.CardType.Attack
             && DeniaFormHelper.IsPink(owner.Creature);
-        bool shouldTriggerTuneStrainResponse = cardPlay.Card.Keywords.Contains(DeniaSpecialKeywords.TuneStrainResponse);
-        if (!shouldGainVm && !shouldTriggerTuneStrainResponse) return;
+        if (!shouldGainVm) return;
 
-        __result = WrapAfterCardPlayed(__result, choiceContext, cardPlay, owner?.Creature, shouldGainVm, shouldTriggerTuneStrainResponse);
+        __result = WrapAfterCardPlayed(__result, choiceContext, cardPlay, owner?.Creature);
     }
 
-    private static async Task WrapAfterCardPlayed(Task original, PlayerChoiceContext choiceContext, CardPlay cardPlay, Creature? creature, bool gainVm, bool triggerTuneStrainResponse)
+    private static async Task WrapAfterCardPlayed(Task original, PlayerChoiceContext choiceContext, CardPlay cardPlay, Creature? creature)
     {
         await (original ?? Task.CompletedTask);
-        if (gainVm && creature != null)
+        if (creature != null)
         {
             int vmAmount = 2;
             var candyPower = creature.GetPower<DeniaRainbowCandyJumpPower>();
@@ -222,9 +221,6 @@ public static class DeniaBaseVMGainPatch
                 vmAmount += 2 * candyPower.Amount;
             await DeniaResourceState.GainVirtualMatter(creature, vmAmount, creature, null!);
         }
-
-        if (triggerTuneStrainResponse)
-            await DeniaTuneStrainResponseEffect.AfterCardPlayed(choiceContext, cardPlay);
     }
 }
 // ---- Patch 3: 遗物效果注册 ----
@@ -273,6 +269,8 @@ public static class DeniaRelicBurstHandler
 [HarmonyPatch]
 public static class DeniaMeltProtectPatch
 {
+    public static bool PreserveNextMelt;
+
     [HarmonyTargetMethod]
     public static MethodBase TargetMethod()
     {
@@ -283,6 +281,11 @@ public static class DeniaMeltProtectPatch
     public static void Postfix(ref bool __result, Creature applier)
     {
         if (__result) return;
+        if (PreserveNextMelt)
+        {
+            __result = true;
+            return;
+        }
         if (applier?.IsPlayer != true) return;
         if (applier.Player?.GetRelic<DeniaAlbum>() == null) return;
         if (!DeniaFormHelper.IsPink(applier)) return;
@@ -331,6 +334,7 @@ public static class DeniaExtraBurstCapPatch
 
     public static void Prefix(ref int amount, Creature applier)
     {
+        if (DeniaMeltingAway.IsMeltingAwayBurstFill) return;
         if (applier?.IsPlayer != true) return;
         var pwr = applier.GetPower<DeniaExtraBurstCapPower>();
         if (pwr != null) amount += (int)pwr.Amount;
@@ -374,7 +378,8 @@ public static class DeniaEntropyPowerAppliedHook
         if (amount <= 0) return;
         // 自己获得增益 OR 给敌人附加减益
         bool isSelfBuff = target.IsPlayer && power.Type == PowerType.Buff;
-        bool isEnemyDebuff = !target.IsPlayer && power.Type == PowerType.Debuff;
+        bool isEnemyDebuff = !target.IsPlayer && (power.Type == PowerType.Debuff
+            || power.GetType().Name.Contains("FusionBurstCap", StringComparison.Ordinal));
         if (!isSelfBuff && !isEnemyDebuff) return;
         // Buff时从 target取power；Debuff时从applier（施法的玩家）取power
         var owner = isSelfBuff ? target : applier;
@@ -391,20 +396,26 @@ public static class DeniaEntropyPowerAppliedHook
 public static class DeniaRelicTurnStartPatch
 {
     private static bool _painkillerFirst;
-    private static bool _swordFirst;
     internal static readonly HashSet<Creature> _hitThisCombat = new();
     private static readonly HashSet<Creature> _swordSetupDone = new();
     private static readonly Dictionary<Creature, bool> _wasSolo = new();
 
     static DeniaRelicTurnStartPatch()
     {
-        MegaCrit.Sts2.Core.Combat.CombatManager.Instance.CombatSetUp += _ =>
+        MegaCrit.Sts2.Core.Combat.CombatManager.Instance.CombatSetUp += combatState =>
         {
             _painkillerFirst = false;
-            _swordFirst = false;
             _hitThisCombat.Clear();
             _swordSetupDone.Clear();
             _wasSolo.Clear();
+            foreach (var player in combatState.Players)
+            {
+                var sacrificialSword = player.GetRelic<DeniaSacrificialSword>();
+                if (sacrificialSword == null) continue;
+                sacrificialSword.GrantedStrength = 0m;
+                sacrificialSword.GrantedTrajectory = 0m;
+                sacrificialSword.EffectRemoved = false;
+            }
         };
 
         MegaCrit.Sts2.Core.Combat.CombatManager.Instance.CombatWon += room =>
@@ -468,14 +479,18 @@ public static class DeniaRelicTurnStartPatch
                 await MegaCrit.Sts2.Core.Commands.CreatureCmd.GainBlock(
                     player.Creature, new MegaCrit.Sts2.Core.Localization.DynamicVars.BlockVar(6m, MegaCrit.Sts2.Core.ValueProps.ValueProp.Move), null);
 
-            // 献斗剑护符：战斗开始时+30聚爆轨迹+6力量（首次掉血后移除效果）
-            if (player.GetRelic<DeniaSacrificialSword>() != null)
+            // 献斗剑护符：战斗开始时+20聚爆轨迹+4力量（首次掉血后移除效果）
+            var sacrificialSword = player.GetRelic<DeniaSacrificialSword>();
+            if (sacrificialSword != null)
             {
-                if (!_swordFirst)
+                if (!sacrificialSword.EffectRemoved && sacrificialSword.GrantedStrength <= 0m && sacrificialSword.GrantedTrajectory <= 0m)
                 {
-                    _swordFirst = true;
-                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(new ThrowingPlayerChoiceContext(), player.Creature, 30m, player.Creature, null!);
-                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>(new ThrowingPlayerChoiceContext(), player.Creature, 6m, player.Creature, null!);
+                    const decimal swordTrajectory = 20m;
+                    const decimal swordStrength = 4m;
+                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(new ThrowingPlayerChoiceContext(), player.Creature, swordTrajectory, player.Creature, null!);
+                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>(new ThrowingPlayerChoiceContext(), player.Creature, swordStrength, player.Creature, null!);
+                    sacrificialSword.GrantedTrajectory = swordTrajectory;
+                    sacrificialSword.GrantedStrength = swordStrength;
                 }
             }
 
@@ -568,13 +583,53 @@ public static class DeniaRelicTurnStartPatch
 
 // ---- Patch 12: 删除（合并到 Patch 10 中）----
 // ---- Patch 14: 献斗遗物HP追踪——AfterCurrentHpChanged ----
+// 用 ref Task __result 包装 + await，因为献斗剑护符首次掉血时需要 await PowerCmd.ModifyAmount
+// 移除力量/聚爆轨迹，fire-and-forget 会导致多人 desync。
 [HarmonyPatch(typeof(MegaCrit.Sts2.Core.Hooks.Hook), nameof(MegaCrit.Sts2.Core.Hooks.Hook.AfterCurrentHpChanged))]
 public static class DeniaSacrificeHpTrackPatch
 {
-    private static void Postfix(MegaCrit.Sts2.Core.Entities.Creatures.Creature creature, decimal delta)
+    public static void Postfix(ref Task __result, MegaCrit.Sts2.Core.Entities.Creatures.Creature creature, decimal delta)
     {
         if (delta < 0 && creature.IsPlayer)
-            DeniaRelicTurnStartPatch._hitThisCombat.Add(creature);
+            __result = WrapHpLoss(__result, creature);
+    }
+
+    private static async Task WrapHpLoss(Task original, MegaCrit.Sts2.Core.Entities.Creatures.Creature creature)
+    {
+        await (original ?? Task.CompletedTask);
+        // 标记首次掉血（献斗盾护符用）
+        DeniaRelicTurnStartPatch._hitThisCombat.Add(creature);
+
+        // 献斗剑护符：首次掉血时移除本遗物授予的力量和聚爆轨迹
+        var player = creature.Player;
+        if (player == null) return;
+        var sword = player.GetRelic<DeniaSacrificialSword>();
+        if (sword == null || sword.EffectRemoved) return;
+        sword.EffectRemoved = true;
+
+        if (sword.GrantedStrength > 0m)
+        {
+            var str = creature.GetPower<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>();
+            if (str != null && str.Amount > 0m)
+            {
+                decimal strToRemove = System.Math.Min(str.Amount, sword.GrantedStrength);
+                await MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(
+                    new ThrowingPlayerChoiceContext(), str, -strToRemove, creature, null!);
+            }
+            sword.GrantedStrength = 0m;
+        }
+
+        if (sword.GrantedTrajectory > 0m)
+        {
+            var traj = creature.GetPower<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>();
+            if (traj != null && traj.Amount > 0m)
+            {
+                decimal trajToRemove = System.Math.Min(traj.Amount, sword.GrantedTrajectory);
+                await MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(
+                    new ThrowingPlayerChoiceContext(), traj, -trajToRemove, creature, null!);
+            }
+            sword.GrantedTrajectory = 0m;
+        }
     }
 }
 // ---- Patch 20: 卡面填充拉伸 ---- 覆盖 NCard._Ready 后设置 Portrait 填充父容器
@@ -698,30 +753,18 @@ public static class DeniaSafeAutoBurstPatch
 [HarmonyPatch(typeof(DeniaResourceState), nameof(DeniaResourceState.TrySpendVirtualMatter))]
 public static class DeniaVMIntuitionPatch
 {
-    private static void Postfix(Task<bool> __result, Creature creature, int amount)
+    private static void Postfix(ref Task<bool> __result, Creature creature, int amount)
     {
         if (amount <= 0) return;
-        _ = __result.ContinueWith(t =>
-        {
-            if (t.IsCompletedSuccessfully && t.Result)
-                DeniaVirtualScienceIntuitionPower.AccumulateVM(creature, amount);
-        }, System.Threading.Tasks.TaskContinuationOptions.OnlyOnRanToCompletion);
-    }
-}
-[HarmonyPatch(typeof(MegaCrit.Sts2.Core.Hooks.Hook), nameof(MegaCrit.Sts2.Core.Hooks.Hook.AfterCardPlayed))]
-public static class DeniaVMIntuitionFlushPatch
-{
-    public static void Postfix(ref Task __result, CardPlay cardPlay)
-    {
-        var player = cardPlay.Card.Owner;
-        if (player == null) return;
-        __result = WrapVMFlush(__result, player);
+        __result = Wrap(__result, creature, amount);
     }
 
-    private static async Task WrapVMFlush(Task original, MegaCrit.Sts2.Core.Entities.Players.Player player)
+    private static async Task<bool> Wrap(Task<bool> original, Creature creature, int amount)
     {
-        await original;
-        await DeniaVirtualScienceIntuitionPower.FlushEnergyAsync(player);
+        bool spent = await original;
+        if (spent)
+            await DeniaVirtualScienceIntuitionPower.AccumulateVM(creature, amount);
+        return spent;
     }
 }
 // ---- Patch 18: 尘封魔典补丁——兜底调用 SetupForPlayer（控制台发放等场景未调用）----
@@ -774,12 +817,23 @@ public static class DeniaMasterSwordPatch
         }
     }
     // Also handle 继续逃啊？/ 你也试试？
-    public static void Postfix(CardPlay cardPlay)
+    // 用 ref Task __result 包装 + await，避免 fire-and-forget 导致多人 desync（memory #45/#69）。
+    // DeniaBaseVMGainPatch 也对同一方法 Postfix 用了 ref Task __result 包装，两者各自再包装一层是安全的
+    // （每个 Postfix 都先 await original 再做自己的事，嵌套包装可交换）。
+    public static void Postfix(ref Task __result, CardPlay cardPlay)
     {
         var player = cardPlay.Card.Owner;
         if (player == null) return;
-        DeniaKeepRunningPower.OnAnyCardPlayed(player, cardPlay);
-        DeniaYouTryItPower.OnAnyCardPlayed(player, cardPlay);
+        __result = WrapKeepRunningAndYouTryIt(__result, player, cardPlay);
+    }
+
+    private static async Task WrapKeepRunningAndYouTryIt(Task original, Player player, CardPlay cardPlay)
+    {
+        await (original ?? Task.CompletedTask);
+        // await 顺序：先 KeepRunning（加聚爆），再 YouTryIt（加聚爆上限）。
+        // 两者都 await，确保 Host/Client 在同一 action 帧内完成 burst/cap 修改。
+        await DeniaKeepRunningPower.OnAnyCardPlayed(player, cardPlay);
+        await DeniaYouTryItPower.OnAnyCardPlayed(player, cardPlay);
     }
 }
 

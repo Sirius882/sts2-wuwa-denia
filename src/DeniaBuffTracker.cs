@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.Hooks;
 using MegaCrit.Sts2.Core.Models;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 namespace Denia;
 
@@ -16,9 +19,6 @@ namespace Denia;
 /// </summary>
 public static class DeniaBuffTracker
 {
-    /// <summary>本回合是否给玩家施加过增益或给敌人施加过减益。</summary>
-    public static bool BuffOrDebuffAppliedThisTurn;
-
     private static readonly HashSet<Creature> _subscribed = new();
 
     public static void Init()
@@ -26,19 +26,30 @@ public static class DeniaBuffTracker
         CombatManager.Instance.CombatSetUp += _ =>
         {
             BuffOrDebuffThisCombat();
-            DeniaFormHelper._formSwitchedThisTurn = false;
-        };
-        CombatManager.Instance.TurnStarted += _ =>
-        {
-            BuffOrDebuffAppliedThisTurn = false;
-            DeniaFormHelper._formSwitchedThisTurn = false;
         };
     }
 
     private static void BuffOrDebuffThisCombat()
     {
         _subscribed.Clear();
-        BuffOrDebuffAppliedThisTurn = false;
+    }
+
+    public static async Task ClearTurnMarkers(ICombatState combatState)
+    {
+        foreach (var player in combatState.Players)
+        {
+            await PowerCmd.Remove<DeniaBuffOrDebuffAppliedThisTurnPower>(player.Creature);
+            await PowerCmd.Remove<DeniaFormSwitchedThisTurnPower>(player.Creature);
+        }
+    }
+
+    public static bool WasBuffOrDebuffAppliedThisTurn(Creature creature) =>
+        creature.GetPower<DeniaBuffOrDebuffAppliedThisTurnPower>()?.Amount > 0;
+
+    public static void MarkBuffOrDebuffAppliedThisTurn(Creature creature)
+    {
+        if (creature.GetPower<DeniaBuffOrDebuffAppliedThisTurnPower>() != null) return;
+        _ = PowerCmd.Apply<DeniaBuffOrDebuffAppliedThisTurnPower>(new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
     }
 
     /// <summary>订阅生物事件（首次遇到时订阅）。</summary>
@@ -55,18 +66,26 @@ public static class DeniaBuffTracker
     {
         if (power.Amount <= 0) return;
         if (power.Owner.IsPlayer && power.Type == PowerType.Buff)
-            BuffOrDebuffAppliedThisTurn = true;
+            MarkBuffOrDebuffAppliedThisTurn(power.Owner);
         else if (!power.Owner.IsPlayer && power.Type == PowerType.Debuff)
-            BuffOrDebuffAppliedThisTurn = true;
+            MarkEnemyDebuffApplied(power.Owner);
     }
 
     private static void OnPowerIncreased(PowerModel power, int amount, bool _)
     {
         if (amount <= 0) return;
         if (power.Owner.IsPlayer && power.Type == PowerType.Buff)
-            BuffOrDebuffAppliedThisTurn = true;
+            MarkBuffOrDebuffAppliedThisTurn(power.Owner);
         else if (!power.Owner.IsPlayer && power.Type == PowerType.Debuff)
-            BuffOrDebuffAppliedThisTurn = true;
+            MarkEnemyDebuffApplied(power.Owner);
+    }
+
+    private static void MarkEnemyDebuffApplied(Creature enemy)
+    {
+        var combat = enemy.CombatState;
+        if (combat == null) return;
+        foreach (var player in combat.Players)
+            MarkBuffOrDebuffAppliedThisTurn(player.Creature);
     }
 
     /// <summary>统计玩家身上的增益总层数（PowerType.Buff, Amount > 0）。聚爆轨迹只计入十分之一。</summary>
@@ -100,12 +119,20 @@ public static class DeniaBuffTracker
 [HarmonyPatch(typeof(Hook), nameof(Hook.AfterSideTurnStart))]
 public static class DeniaBuffTrackerSubscribePatch
 {
-    public static void Prefix(ICombatState combatState, CombatSide side)
+    public static void Prefix(ref Task __result, ICombatState combatState, CombatSide side)
     {
         if (side != CombatSide.Player) return;
         foreach (var player in combatState.Players)
             DeniaBuffTracker.EnsureSubscribed(player.Creature);
         foreach (var enemy in combatState.Enemies)
             DeniaBuffTracker.EnsureSubscribed(enemy);
+
+        __result = WrapTurnMarkerClear(__result, combatState);
+    }
+
+    private static async Task WrapTurnMarkerClear(Task original, ICombatState combatState)
+    {
+        await DeniaBuffTracker.ClearTurnMarkers(combatState);
+        await (original ?? Task.CompletedTask);
     }
 }

@@ -17,7 +17,7 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace Denia;
 
-/// <summary>你也试试？ — Rare Attack, 0e. This turn, each card you play adds 3 burst cap to target.</summary>
+/// <summary>你也试试？ — Rare Attack, 0e. This turn, each card you play adds 1(2) burst cap to target.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaYouTryIt : DeniaCard
 {
@@ -29,15 +29,22 @@ public sealed class DeniaYouTryIt : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "你也试试？",
-        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:4|3}点[gold]聚爆上限[/gold]。");
+        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:2|1}点[gold]聚爆上限[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-        int amount = IsUpgraded ? 4 : 3;
+        int amount = IsUpgraded ? 2 : 1;
         await PowerCmd.Apply<DeniaYouTryItPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
-        var power = Owner.Creature.GetPower<DeniaYouTryItPower>();
-        if (power != null) power.Target = play.Target;
+        int targetIndex = Owner.Creature.CombatState.Enemies
+            .Select((enemy, index) => (enemy, index))
+            .FirstOrDefault(pair => ReferenceEquals(pair.enemy, play.Target)).index;
+        bool targetFound = Owner.Creature.CombatState.Enemies.Any(enemy => ReferenceEquals(enemy, play.Target));
+        if (targetFound)
+        {
+            await PowerCmd.Remove<DeniaYouTryItTargetIndexPower>(Owner.Creature);
+            await PowerCmd.Apply<DeniaYouTryItTargetIndexPower>(ctx, Owner.Creature, targetIndex + 1, Owner.Creature, this);
+        }
     }
 
     protected override void OnUpgrade() { }
@@ -49,8 +56,6 @@ public sealed class DeniaYouTryItPower : CustomPowerModel
     public override PowerStackType StackType => PowerStackType.Counter;
     protected override bool IsVisibleInternal => false;
 
-    internal Creature? Target;
-
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "你也试试？",
             Description: "本回合内每打出一张牌，给目标敌人附加聚爆上限。",
@@ -59,16 +64,26 @@ public sealed class DeniaYouTryItPower : CustomPowerModel
     public override Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
     {
         if (side == CombatSide.Player)
+        {
             _ = PowerCmd.Remove<DeniaYouTryItPower>(Owner);
+            _ = PowerCmd.Remove<DeniaYouTryItTargetIndexPower>(Owner);
+        }
         return Task.CompletedTask;
     }
 
-    public static void OnAnyCardPlayed(Player player, CardPlay cardPlay)
+    public static async Task OnAnyCardPlayed(Player player, CardPlay cardPlay)
     {
         var creature = player.Creature;
         var power = creature.GetPower<DeniaYouTryItPower>();
-        if (power?.Target == null || power.Target.IsDead) return;
+        var targetIndexPower = creature.GetPower<DeniaYouTryItTargetIndexPower>();
+        if (power == null || targetIndexPower == null || targetIndexPower.Amount <= 0) return;
+        if (cardPlay.Card is DeniaYouTryIt) return;
+        int targetIndex = targetIndexPower.Amount - 1;
+        var enemies = creature.CombatState.Enemies;
+        if (targetIndex < 0 || targetIndex >= enemies.Count) return;
+        var target = enemies[targetIndex];
+        if (target.IsDead) return;
         int amount = power.Amount;
-        _ = AemeathFusionBurstState.TryIncreaseFusionBurstCap(power.Target, amount, creature, null!);
+        await AemeathFusionBurstState.TryIncreaseFusionBurstCap(target, amount, creature, null!);
     }
 }

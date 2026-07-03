@@ -21,14 +21,14 @@ public sealed class DeniaGetSun : DeniaCard
     public DeniaGetSun() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "得到太阳",
-        Description: "提高{IfUpgraded:show:5|2}聚爆上限，附加{IfUpgraded:show:9|6}点[gold]聚爆[/gold]。\n虚质强化：若触发[gold]引爆[/gold]，获得6点[gold]格挡[/gold]。若没有触发引爆，不消耗虚质。");
+        Description: "提高{IfUpgraded:show:3|1}聚爆上限，附加{IfUpgraded:show:7|4}点[gold]聚爆[/gold]。\n虚质强化：若触发[gold]引爆[/gold]，获得6点[gold]格挡[/gold]。若没有触发引爆，不消耗虚质。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        int burst = IsUpgraded ? 9 : 6;
-        int capInc = IsUpgraded ? 5 : 2;
+        int burst = IsUpgraded ? 7 : 4;
+        int capInc = IsUpgraded ? 3 : 1;
 
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, capInc, Owner.Creature, this);
 

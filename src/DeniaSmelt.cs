@@ -10,6 +10,7 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.ValueProps;
+using TuneStrain;
 
 namespace Denia;
 
@@ -18,6 +19,9 @@ namespace Denia;
 public sealed class DeniaSmelt : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 2;
+
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { TuneStrainKeywords.TuneStrainResponse };
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new DynamicVar[] { new DamageVar(5m, ValueProp.Move), new BlockVar(7m, ValueProp.Move) };
