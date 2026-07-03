@@ -11,6 +11,7 @@
 · 黑色形态：鸣式共鸣者达妮娅，擅长输出
 
 ◆ 全新通用系统：集谐
-详见https://github.com/Sirius882/sts2-tune-strain
+详见集谐mod页面 https://github.com/Sirius882/sts2-tune-strain
+从v2.1开始，达妮娅mod需要搭配集谐mod使用
 
 ◆ 9 件新遗物
