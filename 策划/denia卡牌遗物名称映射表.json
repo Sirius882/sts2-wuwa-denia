@@ -85,7 +85,12 @@
     { "中文名": "玩什么？",           "内部ID": "DeniaPlayWhat",             "源文件": "DeniaPlayWhat.cs" },
     { "中文名": "是啊，玩什么？",     "内部ID": "DeniaYesPlayWhat",          "源文件": "DeniaYesPlayWhat.cs" },
     { "中文名": "你看！",             "内部ID": "DeniaLookAtThis",           "源文件": "DeniaLookAtThis.cs" },
-    { "中文名": "最初和最后的礼物",   "内部ID": "DeniaFirstAndLastGift",     "源文件": "DeniaFirstAndLastGift.cs" }
+    { "中文名": "最初和最后的礼物",   "内部ID": "DeniaFirstAndLastGift",     "源文件": "DeniaFirstAndLastGift.cs" },
+    { "中文名": "结束了？",           "内部ID": "DeniaEnded",                "源文件": "DeniaEnded.cs" },
+    { "中文名": "夏日服饰？！",       "内部ID": "DeniaSummerOutfit",         "源文件": "DeniaSummerOutfit.cs" },
+    { "中文名": "MegaLights",         "内部ID": "DeniaMegaLights",           "源文件": "DeniaMegaLights.cs" },
+    { "中文名": "Fatal Error!",       "内部ID": "DeniaFatalError",           "源文件": "DeniaFatalError.cs" },
+    { "中文名": "UE4 Client Game已崩溃", "内部ID": "DeniaUe4ClientGameCrashed", "源文件": "DeniaUe4ClientGameCrashed.cs" }
   ],
   "遗物": [
     { "中文名": "骗术师",       "内部ID": "DeniaTrickster",              "源文件": "DeniaTrickster.cs" },

@@ -86,6 +86,7 @@ public sealed class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
         var enemies = combatState.Enemies.Where(e => !e.IsDead).ToArray();
         foreach (var enemy in enemies)
         {
+            // 走 Aemeath 公共附加 API，让“回到远方 / 从远方”的 Harmony 加成生效。
             await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner, null!);
             await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, cap, Owner, null!);
         }

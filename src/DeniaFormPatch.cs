@@ -321,6 +321,25 @@ public static class DeniaExtraBurstPatch
         if (pwr != null) amount += (int)pwr.Amount;
     }
 }
+// ---- Patch 7b: 回到远方——无自动引爆的附加聚爆也+1 ----
+[HarmonyPatch]
+public static class DeniaExtraBurstWithoutAutoBurstPatch
+{
+    [HarmonyTargetMethod]
+    public static MethodBase TargetMethod()
+    {
+        return AccessTools.Method(typeof(AemeathWw.Scripts.AemeathFusionBurstState), "TryAddFusionBurstWithoutAutoBurst",
+            new[] { typeof(Creature), typeof(int), typeof(Creature), typeof(MegaCrit.Sts2.Core.Models.CardModel) });
+    }
+
+    public static void Prefix(ref int amount, Creature applier)
+    {
+        if (DeniaMeltingAway.IsMeltingAwayBurstFill) return;
+        if (applier?.IsPlayer != true) return;
+        var pwr = applier.GetPower<DeniaExtraBurstPower>();
+        if (pwr != null) amount += (int)pwr.Amount;
+    }
+}
 // ---- Patch 8: 从远方——附加聚爆上限+1 ----
 [HarmonyPatch]
 public static class DeniaExtraBurstCapPatch

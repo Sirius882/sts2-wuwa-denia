@@ -16,7 +16,7 @@ public sealed class DeniaPleaseDoNot : CustomCardModel, ITranscendenceCard
         "res://images/packed/card_portraits/denia/card_face_please_do_not.png";
 
     public DeniaPleaseDoNot()
-        : base(1, CardType.Skill, CardRarity.Basic, TargetType.Self, showInCardLibrary: false) { }
+        : base(1, CardType.Skill, CardRarity.Basic, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "请您不要···",

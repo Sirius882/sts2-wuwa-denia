@@ -18,7 +18,7 @@ public sealed class DeniaBackToPink : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_back_to_pink.png";
 
     public DeniaBackToPink()
-        : base(1, CardType.Skill, CardRarity.Basic, TargetType.Self, showInCardLibrary: false) { }
+        : base(1, CardType.Skill, CardRarity.Basic, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "好女孩？",
