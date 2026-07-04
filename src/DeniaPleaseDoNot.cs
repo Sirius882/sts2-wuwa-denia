@@ -20,7 +20,7 @@ public sealed class DeniaPleaseDoNot : CustomCardModel, ITranscendenceCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "请您不要···",
-        Description: "只在[gold]粉色[/gold]形态下有效。\n切换到[gold]黑色[/gold]形态，获得「直视我」和「怜悯我」。");
+        Description: "只在[gold]粉色[/gold]形态下有效。\n切换到[gold]黑色[/gold]形态");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -28,12 +28,6 @@ public sealed class DeniaPleaseDoNot : CustomCardModel, ITranscendenceCard
             return;
 
         await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
-
-        var cb = Owner.Creature.CombatState;
-        await CardPileCmd.AddGeneratedCardToCombat(
-            cb.CreateCard<DeniaLookAtMe>(Owner), PileType.Hand, Owner);
-        await CardPileCmd.AddGeneratedCardToCombat(
-            cb.CreateCard<DeniaPityMe>(Owner), PileType.Hand, Owner);
     }
 
     protected override void OnUpgrade()

@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AemeathWw.Scripts;
 using AemeathWw.Scripts.Api;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
@@ -16,7 +15,7 @@ using TuneStrain;
 namespace Denia;
 
 [Pool(typeof(DeniaCardPool))]
-public sealed class DeniaSorrow : DeniaCard, IResonanceBreakCard
+public sealed class DeniaSorrow : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 2;
 
@@ -30,11 +29,11 @@ public sealed class DeniaSorrow : DeniaCard, IResonanceBreakCard
         "res://images/packed/card_portraits/denia/card_face_sorrow.png";
 
     public DeniaSorrow()
-        : base(1, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
+        : base(2, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "哀",
-        Description: "造成{Damage:diff()}点伤害，附加{IfUpgraded:show:5|3}点[gold]偏谐[/gold]和1点[gold]集谐·偏移[/gold]，尝试[gold]谐度破坏[/gold]。\n虚质强化：伤害+4。");
+        Description: "造成{Damage:diff()}点伤害，附加{IfUpgraded:show:2|1}点[gold]集谐·偏移[/gold]，触发无条件[gold]谐度破坏[/gold]。此次[gold]谐度破坏[/gold]只造成五分之一的伤害。\n虚质强化：伤害+4。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -50,10 +49,10 @@ public sealed class DeniaSorrow : DeniaCard, IResonanceBreakCard
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
 
-        int offTune = IsUpgraded ? 5 : 3;
-        await AemeathMechanicsApi.TryAddOffTune(play.Target, offTune, Owner.Creature, this);
-        await TuneStrainState.TryAddBias(play.Target, 1, Owner.Creature, this);
-        await AemeathMechanicsApi.TryTriggerResonanceBreak(play.Target, Owner.Creature, this);
+        await TuneStrainState.TryAddBias(play.Target, IsUpgraded ? 2 : 1, Owner.Creature, this);
+        await DeniaResonanceBreakDamageModifier.RunOnce(
+            0.2m,
+            () => AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this));
     }
 
     protected override void OnUpgrade() { }

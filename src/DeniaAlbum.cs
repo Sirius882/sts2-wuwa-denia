@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using BaseLib.Abstracts;
 using MegaCrit.Sts2.Core.Entities.Relics;
-using MegaCrit.Sts2.Core.Models.RelicPools;
 
 namespace Denia;
 
-[BaseLib.Utils.Pool(typeof(SharedRelicPool))]
+[BaseLib.Utils.Pool(typeof(DeniaRelicPool))]
 public sealed class DeniaAlbum : CustomRelicModel
 {
     public override RelicRarity Rarity => RelicRarity.Rare;

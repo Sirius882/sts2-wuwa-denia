@@ -30,12 +30,6 @@ public sealed class DeniaDontComeIn : DeniaCard
             await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
             await DeniaResourceState.GainVirtualMatter(Owner.Creature, 6, Owner.Creature, this);
 
-            var cb = Owner.Creature.CombatState;
-            await CardPileCmd.AddGeneratedCardToCombat(
-                cb.CreateCard<DeniaPityMe>(Owner), PileType.Hand, Owner);
-            await CardPileCmd.AddGeneratedCardToCombat(
-                cb.CreateCard<DeniaLookAtMe>(Owner), PileType.Hand, Owner);
-
             if (IsUpgraded)
                 await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
         }

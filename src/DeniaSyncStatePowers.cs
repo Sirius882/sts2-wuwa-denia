@@ -27,6 +27,16 @@ public sealed class DeniaBlackFormTrajectoryDebtPower : DeniaHiddenCounterPower
     static DeniaBlackFormTrajectoryDebtPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaBlackFormTrajectoryDebtPower));
 }
 
+public sealed class DeniaWeaknessBonusStrengthDebtPower : DeniaHiddenCounterPower
+{
+    static DeniaWeaknessBonusStrengthDebtPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaWeaknessBonusStrengthDebtPower));
+}
+
+public sealed class DeniaWeaknessBonusTrajectoryDebtPower : DeniaHiddenCounterPower
+{
+    static DeniaWeaknessBonusTrajectoryDebtPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaWeaknessBonusTrajectoryDebtPower));
+}
+
 public sealed class DeniaBlackFormTemporaryResonanceModePower : DeniaHiddenCounterPower
 {
     static DeniaBlackFormTemporaryResonanceModePower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaBlackFormTemporaryResonanceModePower));

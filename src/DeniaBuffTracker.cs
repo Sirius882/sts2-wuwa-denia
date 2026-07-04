@@ -1,15 +1,13 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
+using HarmonyLib;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Powers;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Hooks;
 using MegaCrit.Sts2.Core.Models;
-using HarmonyLib;
-using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 namespace Denia;
 
@@ -19,25 +17,13 @@ namespace Denia;
 /// </summary>
 public static class DeniaBuffTracker
 {
-    private static readonly HashSet<Creature> _subscribed = new();
-
-    public static void Init()
-    {
-        CombatManager.Instance.CombatSetUp += _ =>
-        {
-            BuffOrDebuffThisCombat();
-        };
-    }
-
-    private static void BuffOrDebuffThisCombat()
-    {
-        _subscribed.Clear();
-    }
+    public static void Init() { }
 
     public static async Task ClearTurnMarkers(ICombatState combatState)
     {
         foreach (var player in combatState.Players)
         {
+            if (player.Character is not Denia) continue;
             await PowerCmd.Remove<DeniaBuffOrDebuffAppliedThisTurnPower>(player.Creature);
             await PowerCmd.Remove<DeniaFormSwitchedThisTurnPower>(player.Creature);
         }
@@ -46,46 +32,30 @@ public static class DeniaBuffTracker
     public static bool WasBuffOrDebuffAppliedThisTurn(Creature creature) =>
         creature.GetPower<DeniaBuffOrDebuffAppliedThisTurnPower>()?.Amount > 0;
 
-    public static void MarkBuffOrDebuffAppliedThisTurn(Creature creature)
+    internal static Creature? GetMarkerOwner(PowerModel power, decimal amount, Creature? applier, CardModel? cardSource)
     {
-        if (creature.GetPower<DeniaBuffOrDebuffAppliedThisTurnPower>() != null) return;
-        _ = PowerCmd.Apply<DeniaBuffOrDebuffAppliedThisTurnPower>(new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
-    }
+        if (amount <= 0) return null;
+        Creature target = power.Owner;
 
-    /// <summary>订阅生物事件（首次遇到时订阅）。</summary>
-    public static void EnsureSubscribed(Creature creature)
-    {
-        if (_subscribed.Add(creature))
+        if (target.IsPlayer && target.Player?.Character is Denia && power.Type == PowerType.Buff)
+            return target;
+
+        if (!target.IsPlayer && power.Type == PowerType.Debuff)
         {
-            creature.PowerApplied += OnPowerChanged;
-            creature.PowerIncreased += OnPowerIncreased;
+            if (applier?.IsPlayer == true && applier.Player?.Character is Denia)
+                return applier;
+            if (cardSource?.Owner?.Character is Denia)
+                return cardSource.Owner.Creature;
         }
+
+        return null;
     }
 
-    private static void OnPowerChanged(PowerModel power)
+    internal static async Task MarkBuffOrDebuffAppliedThisTurn(PlayerChoiceContext choiceContext, Creature creature)
     {
-        if (power.Amount <= 0) return;
-        if (power.Owner.IsPlayer && power.Type == PowerType.Buff)
-            MarkBuffOrDebuffAppliedThisTurn(power.Owner);
-        else if (!power.Owner.IsPlayer && power.Type == PowerType.Debuff)
-            MarkEnemyDebuffApplied(power.Owner);
-    }
-
-    private static void OnPowerIncreased(PowerModel power, int amount, bool _)
-    {
-        if (amount <= 0) return;
-        if (power.Owner.IsPlayer && power.Type == PowerType.Buff)
-            MarkBuffOrDebuffAppliedThisTurn(power.Owner);
-        else if (!power.Owner.IsPlayer && power.Type == PowerType.Debuff)
-            MarkEnemyDebuffApplied(power.Owner);
-    }
-
-    private static void MarkEnemyDebuffApplied(Creature enemy)
-    {
-        var combat = enemy.CombatState;
-        if (combat == null) return;
-        foreach (var player in combat.Players)
-            MarkBuffOrDebuffAppliedThisTurn(player.Creature);
+        if (creature.Player?.Character is not Denia) return;
+        if (creature.GetPower<DeniaBuffOrDebuffAppliedThisTurnPower>() != null) return;
+        await PowerCmd.Apply<DeniaBuffOrDebuffAppliedThisTurnPower>(choiceContext, creature, 1m, creature, null!);
     }
 
     /// <summary>统计玩家身上的增益总层数（PowerType.Buff, Amount > 0）。聚爆轨迹只计入十分之一。</summary>
@@ -115,24 +85,27 @@ public static class DeniaBuffTracker
         return count;
     }
 }
-// ---- Patch 15: Buff/Debuff 追踪 — 订阅新战斗中的所有生物 ----
-[HarmonyPatch(typeof(Hook), nameof(Hook.AfterSideTurnStart))]
-public static class DeniaBuffTrackerSubscribePatch
-{
-    public static void Prefix(ref Task __result, ICombatState combatState, CombatSide side)
-    {
-        if (side != CombatSide.Player) return;
-        foreach (var player in combatState.Players)
-            DeniaBuffTracker.EnsureSubscribed(player.Creature);
-        foreach (var enemy in combatState.Enemies)
-            DeniaBuffTracker.EnsureSubscribed(enemy);
 
-        __result = WrapTurnMarkerClear(__result, combatState);
+[HarmonyPatch(typeof(Hook), nameof(Hook.AfterPowerAmountChanged))]
+public static class DeniaBuffTrackerPowerChangePatch
+{
+    public static void Postfix(
+        ref Task __result,
+        ICombatState combatState,
+        PlayerChoiceContext choiceContext,
+        PowerModel power,
+        decimal amount,
+        Creature? applier,
+        CardModel? cardSource)
+    {
+        var markerOwner = DeniaBuffTracker.GetMarkerOwner(power, amount, applier, cardSource);
+        if (markerOwner == null) return;
+        __result = Wrap(__result, choiceContext, markerOwner);
     }
 
-    private static async Task WrapTurnMarkerClear(Task original, ICombatState combatState)
+    private static async Task Wrap(Task original, PlayerChoiceContext choiceContext, Creature markerOwner)
     {
-        await DeniaBuffTracker.ClearTurnMarkers(combatState);
         await (original ?? Task.CompletedTask);
+        await DeniaBuffTracker.MarkBuffOrDebuffAppliedThisTurn(choiceContext, markerOwner);
     }
 }

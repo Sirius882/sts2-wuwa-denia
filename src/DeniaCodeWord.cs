@@ -29,11 +29,6 @@ public sealed class DeniaCodeWord : DeniaCard
         if (DeniaFormHelper.IsPink(Owner.Creature))
         {
             await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
-            var cb = Owner.Creature.CombatState;
-            await CardPileCmd.AddGeneratedCardToCombat(
-                cb.CreateCard<DeniaPityMe>(Owner), PileType.Hand, Owner);
-            await CardPileCmd.AddGeneratedCardToCombat(
-                cb.CreateCard<DeniaLookAtMe>(Owner), PileType.Hand, Owner);
         }
         else
         {

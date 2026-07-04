@@ -25,7 +25,7 @@ public sealed class DeniaDreamWeave : DeniaCard
     public DeniaDreamWeave() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "织梦",
-        Description: "获得{Block:diff()}点[gold]格挡[/gold]。\n对所有敌人附加{IfUpgraded:show:5|3}点[gold]聚爆[/gold]，触发1次[gold]熔解[/gold]。\n虚质强化：熔解结算后，对所有敌人附加2点[gold]聚爆[/gold]2次。");
+        Description: "获得{Block:diff()}点[gold]格挡[/gold]。\n对所有敌人附加{IfUpgraded:show:5|3}点[gold]聚爆[/gold]，触发2次[gold]熔解[/gold]。\n虚质强化：熔解结算后，对所有敌人附加2点[gold]聚爆[/gold]2次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -37,7 +37,7 @@ public sealed class DeniaDreamWeave : DeniaCard
         foreach (var e in snapshot)
         {
             await AemeathFusionBurstState.TryAddFusionBurst(e, burst, Owner.Creature, this);
-            await AemeathFusionBurstState.ResolveMelt(e, Owner.Creature, this, 1);
+            await AemeathFusionBurstState.ResolveMelt(e, Owner.Creature, this, 2);
         }
 
         if (await TrySpendVirtualMatter(play))

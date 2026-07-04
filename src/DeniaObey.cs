@@ -24,25 +24,21 @@ public sealed class DeniaObey : DeniaCard
     {
         ArgumentNullException.ThrowIfNull(play.Target, "play.Target");
 
-        int melt = IsUpgraded ? 2 : 1;
-        bool preserveBurst = await TrySpendVirtualMatter(play);
-        if (preserveBurst) melt += 1;
+        int melt = IsUpgraded ? 4 : 2;
+        if (await TrySpendVirtualMatter(play))
+            melt += 2;
 
-        int beforeBurst = AemeathFusionBurstState.GetFusionBurst(play.Target);
-        await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, melt);
-
-        if (preserveBurst)
+        DeniaMeltProtectPatch.PreserveNextMelt = true;
+        try
         {
-            int afterBurst = AemeathFusionBurstState.GetFusionBurst(play.Target);
-            int lost = beforeBurst - afterBurst;
-            if (lost > 0)
-                await AemeathFusionBurstState.TryAddFusionBurst(play.Target, lost, Owner.Creature, this);
+            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, melt);
         }
+        finally { DeniaMeltProtectPatch.PreserveNextMelt = false; }
 
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 10, Owner.Creature, this);
     }
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "听话",
-            Description: "对目标触发{IfUpgraded:show:2|1}次[gold]熔解[/gold]。\n给目标附加10点[gold]聚爆[/gold]。\n虚质强化：多触发1次[gold]熔解[/gold]，此卡的[gold]熔解[/gold]不消耗聚爆层数。");
+            Description: "对目标触发{IfUpgraded:show:4|2}次[gold]熔解[/gold]，此次[gold]熔解[/gold]不消耗聚爆层数。\n给目标附加10点[gold]聚爆[/gold]。\n虚质强化：多触发2次[gold]熔解[/gold]，此卡的[gold]熔解[/gold]不消耗聚爆层数。");
 }

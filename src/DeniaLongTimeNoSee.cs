@@ -33,14 +33,14 @@ public sealed class DeniaLongTimeNoSee : DeniaCard
             if (DeniaFormHelper.HasBlackFormStrengthChoice(Owner.Creature))
             {
                 await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, w, Owner.Creature, this);
-                await DeniaFormHelper.AddBlackFormStrengthDebt(Owner.Creature, w, Owner.Creature, this);
+                await DeniaFormHelper.AddWeaknessBonusStrengthDebt(Owner.Creature, w, Owner.Creature, this);
             }
             if (DeniaFormHelper.HasBlackFormTrajectoryChoice(Owner.Creature))
             {
                 int traj = w * 10;
                 await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
                     ctx, Owner.Creature, traj, Owner.Creature, this);
-                await DeniaFormHelper.AddBlackFormTrajectoryDebt(Owner.Creature, traj, Owner.Creature, this);
+                await DeniaFormHelper.AddWeaknessBonusTrajectoryDebt(Owner.Creature, traj, Owner.Creature, this);
             }
         }
     }

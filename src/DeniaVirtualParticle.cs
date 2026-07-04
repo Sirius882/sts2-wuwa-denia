@@ -36,14 +36,14 @@ public sealed class DeniaVirtualParticle : DeniaCard
             if (DeniaFormHelper.HasBlackFormStrengthChoice(Owner.Creature))
             {
                 await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, totalWeak, Owner.Creature, this);
-                await DeniaFormHelper.AddBlackFormStrengthDebt(Owner.Creature, totalWeak, Owner.Creature, this);
+                await DeniaFormHelper.AddWeaknessBonusStrengthDebt(Owner.Creature, totalWeak, Owner.Creature, this);
             }
             if (DeniaFormHelper.HasBlackFormTrajectoryChoice(Owner.Creature))
             {
                 int traj = totalWeak * 10;
                 await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
                     ctx, Owner.Creature, traj, Owner.Creature, this);
-                await DeniaFormHelper.AddBlackFormTrajectoryDebt(Owner.Creature, traj, Owner.Creature, this);
+                await DeniaFormHelper.AddWeaknessBonusTrajectoryDebt(Owner.Creature, traj, Owner.Creature, this);
             }
         }
     }

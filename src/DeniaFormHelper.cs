@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Entities.Powers;
@@ -54,6 +55,18 @@ public static class DeniaFormHelper
             await PowerCmd.Apply<DeniaBlackFormTrajectoryDebtPower>(_throwing, creature, amount, applier, source);
     }
 
+    public static async Task AddWeaknessBonusStrengthDebt(Creature creature, int amount, Creature applier, CardModel source)
+    {
+        if (amount > 0)
+            await PowerCmd.Apply<DeniaWeaknessBonusStrengthDebtPower>(_throwing, creature, amount, applier, source);
+    }
+
+    public static async Task AddWeaknessBonusTrajectoryDebt(Creature creature, int amount, Creature applier, CardModel source)
+    {
+        if (amount > 0)
+            await PowerCmd.Apply<DeniaWeaknessBonusTrajectoryDebtPower>(_throwing, creature, amount, applier, source);
+    }
+
     public static async Task MarkTemporaryResonanceMode(Creature creature, Creature applier, CardModel source)
     {
         if (creature.GetPower<DeniaPermanentResonanceModeSeenPower>() != null) return;
@@ -61,17 +74,30 @@ public static class DeniaFormHelper
             await PowerCmd.Apply<DeniaBlackFormTemporaryResonanceModePower>(_throwing, creature, 1m, applier, source);
     }
 
-    public static async Task SwitchToBlack(Creature creature, Creature applier, CardModel source)
+    public static async Task SwitchToBlack(Creature creature, Creature applier, CardModel source, bool addBlackFormCards = true)
     {
+        bool wasPink = IsPink(creature);
         await MarkFormSwitchedThisTurn(creature, applier, source);
         var power = creature.GetPower<DeniaFormPower>();
         if (power == null)
             await PowerCmd.Apply<DeniaFormPower>(_throwing, creature, 1m, applier, source);
         else if (power.Amount <= 0)
             await PowerCmd.ModifyAmount(_throwing, power, 1m, applier, source);
+        if (wasPink && addBlackFormCards && creature.Player != null)
+            await AddBlackFormCards(creature.Player);
         DeniaFormPatch.RefreshForCreature(creature);
         await DeniaResourceState.GainVirtualMatter(creature, 10, applier, source);
         await ApplyFormSwitchEffects(creature, applier, source);
+    }
+
+    private static async Task AddBlackFormCards(Player owner)
+    {
+        var combatState = owner.Creature.CombatState;
+        if (combatState == null) return;
+        await CardPileCmd.AddGeneratedCardToCombat(
+            combatState.CreateCard<DeniaLookAtMe>(owner), PileType.Hand, owner);
+        await CardPileCmd.AddGeneratedCardToCombat(
+            combatState.CreateCard<DeniaPityMe>(owner), PileType.Hand, owner);
     }
 
     public static async Task SwitchToPink(Creature creature, Creature applier, CardModel source, bool clearVM = true)
@@ -109,6 +135,26 @@ public static class DeniaFormHelper
                 await PowerCmd.ModifyAmount(_throwing, traj, -Math.Min(trajToRemove, (int)traj.Amount), applier, source);
         }
         await PowerCmd.Remove<DeniaBlackFormTrajectoryDebtPower>(creature);
+
+        var weaknessStrengthDebt = creature.GetPower<DeniaWeaknessBonusStrengthDebtPower>();
+        if (weaknessStrengthDebt != null && weaknessStrengthDebt.Amount > 0)
+        {
+            var str = creature.GetPower<StrengthPower>();
+            int strToRemove = (int)weaknessStrengthDebt.Amount;
+            if (str != null && str.Amount > 0)
+                await PowerCmd.ModifyAmount(_throwing, str, -Math.Min(strToRemove, (int)str.Amount), applier, source);
+        }
+        await PowerCmd.Remove<DeniaWeaknessBonusStrengthDebtPower>(creature);
+
+        var weaknessTrajectoryDebt = creature.GetPower<DeniaWeaknessBonusTrajectoryDebtPower>();
+        if (weaknessTrajectoryDebt != null && weaknessTrajectoryDebt.Amount > 0)
+        {
+            var traj = creature.GetPower<AemeathFusionBurstTrajectoryPower>();
+            int trajToRemove = (int)weaknessTrajectoryDebt.Amount;
+            if (traj != null && traj.Amount > 0)
+                await PowerCmd.ModifyAmount(_throwing, traj, -Math.Min(trajToRemove, (int)traj.Amount), applier, source);
+        }
+        await PowerCmd.Remove<DeniaWeaknessBonusTrajectoryDebtPower>(creature);
 
         if (clearVM)
         {

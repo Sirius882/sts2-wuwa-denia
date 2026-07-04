@@ -24,7 +24,7 @@ public sealed class DeniaSaline : CustomCardModel
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "生理盐水",
-        Description: "如果处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态；如果处于[gold]粉色[/gold]形态，切换到[gold]黑色[/gold]形态，并获得卡牌\"直视我\"和\"怜悯我\"。\n给自己附加1层[gold]易伤[/gold]。获得{IfUpgraded:show:3|1}点[gold]力量[/gold]和{IfUpgraded:show:3|1}点[gold]敏捷[/gold]。");
+        Description: "切换形态\n给自己附加1层[gold]易伤[/gold]。获得{IfUpgraded:show:3|1}点[gold]力量[/gold]和{IfUpgraded:show:3|1}点[gold]敏捷[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -35,11 +35,6 @@ public sealed class DeniaSaline : CustomCardModel
         else
         {
             await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
-            var cb = Owner.Creature.CombatState;
-            await CardPileCmd.AddGeneratedCardToCombat(
-                cb.CreateCard<DeniaLookAtMe>(Owner), PileType.Hand, Owner);
-            await CardPileCmd.AddGeneratedCardToCombat(
-                cb.CreateCard<DeniaPityMe>(Owner), PileType.Hand, Owner);
         }
 
         await PowerCmd.Apply<VulnerablePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);

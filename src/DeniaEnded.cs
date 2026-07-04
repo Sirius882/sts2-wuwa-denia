@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AemeathWw.Scripts.Api;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
@@ -21,7 +20,7 @@ public sealed class DeniaEnded : DeniaCard
         new[] { TuneStrainKeywords.TuneStrainResponse };
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new DynamicVar[] { new DamageVar(4m, ValueProp.Move) };
+        new DynamicVar[] { new DamageVar(6m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_ended.png";
@@ -31,7 +30,7 @@ public sealed class DeniaEnded : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "结束了？",
-        Description: "造成{Damage:diff()}点伤害。附加{IfUpgraded:show:5|3}点[gold]偏谐[/gold]。");
+        Description: "造成{Damage:diff()}点伤害。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -42,12 +41,10 @@ public sealed class DeniaEnded : DeniaCard
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
-
-        await AemeathMechanicsApi.TryAddOffTune(play.Target, IsUpgraded ? 5 : 3, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()
     {
-        DynamicVars.Damage.UpgradeValueBy(2m);
+        DynamicVars.Damage.UpgradeValueBy(4m);
     }
 }

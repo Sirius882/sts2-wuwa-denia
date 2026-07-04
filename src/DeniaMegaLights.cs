@@ -31,13 +31,13 @@ public sealed class DeniaMegaLights : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "MegaLights",
-        Description: "造成{Damage:diff()}点伤害。附加5点[gold]偏谐[/gold]。若此牌打出前目标已有[gold]偏谐[/gold]，再附加{IfUpgraded:show:5|3}点[gold]偏谐[/gold]。");
+        Description: "造成{Damage:diff()}点伤害。若此牌打出前目标已有[gold]集谐·偏移[/gold]，再附加1点[gold]集谐·偏移[/gold]{IfUpgraded:show:，然后触发无条件[gold]谐度破坏[/gold]|}。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        bool hadOffTune = AemeathMechanicsApi.GetOffTune(play.Target) > 0;
+        bool hadBias = TuneStrainState.GetBias(play.Target) > 0;
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
             .FromCard(this)
@@ -45,13 +45,16 @@ public sealed class DeniaMegaLights : DeniaCard
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
 
-        await AemeathMechanicsApi.TryAddOffTune(play.Target, 5, Owner.Creature, this);
-        if (hadOffTune)
-            await AemeathMechanicsApi.TryAddOffTune(play.Target, IsUpgraded ? 5 : 3, Owner.Creature, this);
+        if (hadBias)
+        {
+            await TuneStrainState.TryAddBias(play.Target, 1, Owner.Creature, this);
+            if (IsUpgraded)
+                await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
+        }
     }
 
     protected override void OnUpgrade()
     {
-        DynamicVars.Damage.UpgradeValueBy(4m);
+        DynamicVars.Damage.UpgradeValueBy(-2m);
     }
 }

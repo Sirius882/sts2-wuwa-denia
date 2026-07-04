@@ -30,7 +30,7 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
     {
         if (!DeniaFormHelper.IsPink(Owner.Creature)) return;
 
-        await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
+        await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this, addBlackFormCards: false);
 
         await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
             ctx, Owner.Creature, 20, Owner.Creature, this);

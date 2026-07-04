@@ -53,6 +53,7 @@ public static class DeniaFormPatch
     public static void Postfix(NCreature __instance)
     {
         DeniaRelicBurstHandler.Init();
+        DeniaMeltProtectPatch.Init();
         DeniaBuffTracker.Init();
 
         var creature = __instance.Entity;
@@ -265,31 +266,36 @@ public static class DeniaRelicBurstHandler
         }
     }
 }
-// ---- Patch 4: 相册粉色熔解保护——Patch Aemeath 内置的 ShouldPreserveFusionBurstOnMelt ----
-[HarmonyPatch]
+// ---- Patch 4: 相册粉色熔解保护——接入 Aemeath 熔解扣层规则 ----
 public static class DeniaMeltProtectPatch
 {
+    private static readonly IAemeathMeltConsumeRule Rule = new DeniaMeltPreserveRule();
+    private static bool _registered;
+
     public static bool PreserveNextMelt;
 
-    [HarmonyTargetMethod]
-    public static MethodBase TargetMethod()
+    public static void Init()
     {
-        return AccessTools.Method(typeof(AemeathWw.Scripts.AemeathFusionBurstState), "ShouldPreserveFusionBurstOnMelt",
-            new[] { typeof(Creature), typeof(MegaCrit.Sts2.Core.Models.CardModel) });
+        if (_registered) return;
+        _registered = true;
+        AemeathFusionBurstRules.RegisterMeltConsumeRule(Rule);
     }
 
-    public static void Postfix(ref bool __result, Creature applier)
+    private sealed class DeniaMeltPreserveRule : IAemeathMeltConsumeRule
     {
-        if (__result) return;
-        if (PreserveNextMelt)
+        public int Priority => 200;
+
+        public int GetConsumedFusionBurst(AemeathMeltContext context, int currentConsumed)
         {
-            __result = true;
-            return;
+            if (currentConsumed <= 0) return currentConsumed;
+            if (PreserveNextMelt) return 0;
+
+            Creature? applier = context.Applier ?? context.Source?.Owner?.Creature;
+            if (applier?.IsPlayer != true) return currentConsumed;
+            if (applier.Player?.GetRelic<DeniaAlbum>() == null) return currentConsumed;
+            if (!DeniaFormHelper.IsPink(applier)) return currentConsumed;
+            return 0;
         }
-        if (applier?.IsPlayer != true) return;
-        if (applier.Player?.GetRelic<DeniaAlbum>() == null) return;
-        if (!DeniaFormHelper.IsPink(applier)) return;
-        __result = true;
     }
 }
 // ---- Patch 5: 欧洛巴斯之触——骗术师 → 赝作矮星 ----
@@ -451,7 +457,7 @@ public static class DeniaRelicTurnStartPatch
         };
     }
 
-    public static void Prefix(ref Task __result, MegaCrit.Sts2.Core.Combat.ICombatState combatState, MegaCrit.Sts2.Core.Combat.CombatSide side, IReadOnlyList<MegaCrit.Sts2.Core.Entities.Creatures.Creature> participants)
+    public static void Postfix(ref Task __result, MegaCrit.Sts2.Core.Combat.ICombatState combatState, MegaCrit.Sts2.Core.Combat.CombatSide side, IReadOnlyList<MegaCrit.Sts2.Core.Entities.Creatures.Creature> participants)
     {
         // Player side: wrap to run after hooks complete
         if (side == MegaCrit.Sts2.Core.Combat.CombatSide.Player)
@@ -467,6 +473,7 @@ public static class DeniaRelicTurnStartPatch
 
     private static async Task WrapTurnStart(Task original, MegaCrit.Sts2.Core.Combat.ICombatState combatState)
     {
+        await DeniaBuffTracker.ClearTurnMarkers(combatState);
         await (original ?? Task.CompletedTask);
         foreach (var player in combatState.Players)
         {
@@ -686,85 +693,6 @@ public static class DeniaTorchPineNutPatch
         int strGain = (int)amount / 5 * (int)pwr.Amount;
         if (strGain > 0)
             DeniaTorchPineNutPower.AccumulateStrength(target, strGain);
-    }
-}
-// ---- Patch 19: 聚爆自动引爆安全补丁 ----
-/// Aemeath TryTriggerAutoBurst 使用 BlockingPlayerChoiceContext 造成伤害，
-/// 该上下文在玩家回合内可能触发死锁（新版本 action 系统更严格）。
-/// 替换为 ThrowingPlayerChoiceContext：自动引爆伤害为 Unpowered 属性，不会触发玩家选择。
-[HarmonyPatch]
-public static class DeniaSafeAutoBurstPatch
-{
-    [HarmonyTargetMethod]
-    public static MethodBase TargetMethod()
-    {
-        return AccessTools.Method(typeof(AemeathWw.Scripts.AemeathFusionBurstState), "TryTriggerAutoBurst",
-            new[] { typeof(Creature), typeof(Creature), typeof(MegaCrit.Sts2.Core.Models.CardModel) });
-    }
-
-    /// <summary>跳过原始方法，用安全版本替代</summary>
-    public static bool Prefix(Creature target, Creature? applier, CardModel? source, ref Task<bool> __result)
-    {
-        __result = SafeTriggerAutoBurst(target, applier, source);
-        return false;
-    }
-
-    private static async Task<bool> SafeTriggerAutoBurst(Creature target, Creature? applier, CardModel? source)
-    {
-        if (target.IsDead) return false;
-        if (!AemeathWw.Scripts.AemeathFusionBurstState.IsAtFusionBurstCap(target)) return false;
-        if (AemeathWw.Scripts.AemeathFusionBurstState.HasAutoBurstSuppressed(target)) return false;
-        if (AemeathWw.Scripts.AemeathFusionBurstState.IsAutoBurstDisabledForCombat(target)) return false;
-
-        // 设置 IsBurstProcessing 标志（通过反射访问私有 setter）
-        var isBurstProcessingProp = typeof(AemeathWw.Scripts.AemeathFusionBurstState)
-            .GetProperty("IsBurstProcessing", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-        bool prevBurst = false;
-        try
-        {
-            if (isBurstProcessingProp != null)
-            {
-                prevBurst = (bool)(isBurstProcessingProp.GetValue(null) ?? false);
-                isBurstProcessingProp.SetValue(null, true);
-            }
-
-            int burstCap = AemeathWw.Scripts.AemeathFusionBurstState.GetFusionBurstCap(target);
-            int rawDamage = AemeathWw.Scripts.AemeathFusionBurstState.GetBurstDamage(burstCap);
-            // ApplyFusionBurstDamageBonus 是私有方法，无法直接调用；
-            // 使用原始方法中的计算逻辑：轨迹每层 +1%
-            var traj = applier?.GetPower<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>();
-            int trajStacks = traj?.Amount ?? 0;
-            int damage = trajStacks > 0 ? (int)(rawDamage * (1m + trajStacks / 100m)) : rawDamage;
-
-            var enemies = target.CombatState?.HittableEnemies?.Where(e => !e.IsDead).ToArray()
-                ?? Array.Empty<Creature>();
-
-            // 先清除聚爆
-            await AemeathWw.Scripts.AemeathFusionBurstState.ClearFusionBurst(target);
-
-            if (damage > 0 && enemies.Length > 0)
-            {
-                foreach (var enemy in enemies)
-                {
-                    // 使用 ThrowingPlayerChoiceContext 替代 BlockingPlayerChoiceContext
-                    await MegaCrit.Sts2.Core.Commands.CreatureCmd.Damage(
-                        new ThrowingPlayerChoiceContext(), enemy, (decimal)damage,
-                        MegaCrit.Sts2.Core.ValueProps.ValueProp.Unpowered, applier, source);
-                }
-            }
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            GD.PrintErr($"[Denia] SafeAutoBurst error: {ex.Message}");
-            return false;
-        }
-        finally
-        {
-            if (isBurstProcessingProp != null)
-                isBurstProcessingProp.SetValue(null, prevBurst);
-        }
     }
 }
 // ---- Patch 17: 虚质科学直觉——每消耗10虚质获得1能量 ----
