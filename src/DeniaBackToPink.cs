@@ -21,8 +21,8 @@ public sealed class DeniaBackToPink : DeniaCard
         : base(1, CardType.Skill, CardRarity.Basic, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "好女孩？",
-        Description: "只在[gold]黑色[/gold]形态下有效。\n给随机敌人附加3点[gold]聚爆[/gold]。\n切换到[gold]粉色[/gold]形态。{IfUpgraded:show:获得1黯核。|}\n虚质强化：额外附加3点[gold]聚爆[/gold]。");
+        Title: "多“装”了两天病",
+        Description: "只在[gold]黑色形态[/gold]下有效。\n给随机敌人附加3点[gold]聚爆[/gold]。\n切换到[gold]粉色形态[/gold]。{IfUpgraded:show:获得1黯核。|}\n虚质强化：额外附加3点[gold]聚爆[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

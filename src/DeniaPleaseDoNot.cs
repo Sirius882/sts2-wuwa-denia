@@ -10,7 +10,7 @@ using MegaCrit.Sts2.Core.Models;
 namespace Denia;
 
 [BaseLib.Utils.Pool(typeof(DeniaCardPool))]
-public sealed class DeniaPleaseDoNot : CustomCardModel, ITranscendenceCard
+public sealed class DeniaPleaseDoNot : DeniaCard, ITranscendenceCard
 {
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_please_do_not.png";
@@ -20,7 +20,7 @@ public sealed class DeniaPleaseDoNot : CustomCardModel, ITranscendenceCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "请您不要···",
-        Description: "只在[gold]粉色[/gold]形态下有效。\n切换到[gold]黑色[/gold]形态");
+        Description: "只在[gold]粉色形态[/gold]下有效。\n切换到[gold]黑色形态[/gold]");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

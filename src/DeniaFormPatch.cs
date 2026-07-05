@@ -196,7 +196,7 @@ public static class DeniaBurstHook
         return originalResult;
     }
 }
-// ---- Patch 2b: 虚质基础获取——粉色形态打出攻击牌 +2虚质 ----
+// ---- Patch 2b: 虚质基础获取——[gold]粉色形态[/gold]打出攻击牌 +2虚质 ----
 [HarmonyPatch(typeof(MegaCrit.Sts2.Core.Hooks.Hook), nameof(MegaCrit.Sts2.Core.Hooks.Hook.AfterCardPlayed))]
 public static class DeniaBaseVMGainPatch
 {
@@ -236,7 +236,7 @@ public static class DeniaRelicBurstHandler
         DeniaBurstEvents.OnBurstDone += OnBurst;
     }
 
-    // 引爆后：持有骗术师/赝作矮星时，为目标附加其上限四分之一的聚爆；粉色形态额外获得2虚质（基础机制）
+    // 引爆后：持有骗术师/赝作矮星时，为目标附加其上限四分之一的聚爆；[gold]粉色形态[/gold]额外获得2虚质（基础机制）
     private static async Task OnBurst(Creature target, Creature applier, int cap)
     {
         if (target.IsDead) return;
@@ -255,7 +255,7 @@ public static class DeniaRelicBurstHandler
                     target, add, applier, null!);
         }
 
-        // 粉色形态触发引爆 → +2虚质（基础机制，不依赖遗物）
+        // [gold]粉色形态[/gold]触发引爆 → +2虚质（基础机制，不依赖遗物）
         if (DeniaFormHelper.IsPink(applier))
         {
             int vmAmount = 2;
@@ -477,7 +477,7 @@ public static class DeniaRelicTurnStartPatch
         await (original ?? Task.CompletedTask);
         foreach (var player in combatState.Players)
         {
-            // 相册：黑色形态 +1 能量
+            // 相册：[gold]黑色形态[/gold] +1 能量
             if (player.GetRelic<DeniaAlbum>() != null && DeniaFormHelper.IsBlack(player.Creature))
                 await MegaCrit.Sts2.Core.Commands.PlayerCmd.GainEnergy(1m, player);
 
@@ -520,7 +520,7 @@ public static class DeniaRelicTurnStartPatch
                 }
             }
 
-            // --- 角色基础逻辑：粉色形态每回合+1黯核，生日蛋糕每层额外+1 ---
+            // --- 角色基础逻辑：[gold]粉色形态[/gold]每回合+1黯核，生日蛋糕每层额外+1 ---
             if (player.Character is Denia && DeniaFormHelper.IsPink(player.Creature)
                 && DeniaResourceState.GetDarkCore(player.Creature) < DeniaResourceState.DarkCoreMax)
             {
@@ -555,6 +555,7 @@ public static class DeniaRelicTurnStartPatch
         foreach (var player in combatState.Players)
         {
             await DeniaEntropyBoostPower.FlushBlockAsync(player.Creature);
+            await DeniaEntropyBoostPower.ClearTriggerCountAsync(player.Creature);
             await DeniaTorchPineNutPower.FlushStrengthAsync(player.Creature);
         }
     }
@@ -695,7 +696,7 @@ public static class DeniaTorchPineNutPatch
             DeniaTorchPineNutPower.AccumulateStrength(target, strGain);
     }
 }
-// ---- Patch 17: 虚质科学直觉——每消耗10虚质获得1能量 ----
+// ---- Patch 17: 虚质科学直觉——每消耗8虚质获得1能量 ----
 /// 累加虚质消耗量，通过 AfterCardPlayed 安全发放能量。
 [HarmonyPatch(typeof(DeniaResourceState), nameof(DeniaResourceState.TrySpendVirtualMatter))]
 public static class DeniaVMIntuitionPatch

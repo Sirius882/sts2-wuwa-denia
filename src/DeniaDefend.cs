@@ -29,7 +29,7 @@ public sealed class DeniaDefend : DeniaCard
     public override bool GainsBlock => true;
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "防御", Description: "获得{Block:diff()}点[gold]格挡[/gold]。若处于粉色形态，对随机一名敌人附加1点[gold]聚爆[/gold]。虚质强化：对随机敌人附加2点[gold]聚爆[/gold]。");
+        new CardLoc(Title: "防御", Description: "获得{Block:diff()}点[gold]格挡[/gold]。若处于[gold]粉色形态[/gold]，对随机一名敌人附加1点[gold]聚爆[/gold]。虚质强化：对随机敌人附加2点[gold]聚爆[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

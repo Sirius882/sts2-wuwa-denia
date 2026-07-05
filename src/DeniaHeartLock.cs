@@ -12,7 +12,7 @@ using TuneStrain;
 
 namespace Denia;
 
-/// <summary>心锁 — Uncommon Skill, 0e. Exhaust+Retain. 黑→6VM, 粉→1能量。</summary>
+/// <summary>心锁 — Uncommon Skill, 0e. Exhaust+Retain. 黑→8VM, 粉→1能量。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaHeartLock : DeniaCard
 {
@@ -27,12 +27,12 @@ public sealed class DeniaHeartLock : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "心锁",
-        Description: "若处于[gold]黑色[/gold]形态，获得6[gold]虚质[/gold]；若处于[gold]粉色[/gold]形态，获得1点能量。{IfUpgraded:show:抽1张牌。|}");
+        Description: "若处于[gold]黑色形态[/gold]，获得8[gold]虚质[/gold]；若处于[gold]粉色形态[/gold]，获得1点能量。{IfUpgraded:show:抽1张牌。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         if (DeniaFormHelper.IsBlack(Owner.Creature))
-            await DeniaResourceState.GainVirtualMatter(Owner.Creature, 6, Owner.Creature, this);
+            await DeniaResourceState.GainVirtualMatter(Owner.Creature, 8, Owner.Creature, this);
         else
             await PlayerCmd.GainEnergy(1m, Owner);
 

@@ -27,7 +27,7 @@ public sealed class DeniaSummerOutfit : DeniaCard
         : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "夏日服饰？！",
+        Title: "人格的证明",
         Description: "每次附加[gold]集谐·偏移[/gold]时，额外附加1点。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
@@ -51,7 +51,7 @@ public sealed class DeniaSummerOutfitPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_summer_outfit_power.webp";
 
     public override List<(string, string)>? Localization => new PowerLoc(
-        Title: "夏日服饰？！",
+        Title: "人格的证明",
         Description: "每次附加集谐·偏移时，额外附加{Amount}点。",
         SmartDescription: "每次附加集谐·偏移时，额外附加{Amount}点。");
 }

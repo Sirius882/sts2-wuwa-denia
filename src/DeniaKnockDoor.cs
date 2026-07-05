@@ -20,7 +20,7 @@ public sealed class DeniaKnockDoor : DeniaCard
     public DeniaKnockDoor() : base(2, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "轻叩门扉",
-        Description: "黑色形态：所有敌人失去4点[gold]力量[/gold]。\n粉色形态：目标失去6点[gold]力量[/gold]。\n持续1回合。");
+        Description: "[gold]黑色形态[/gold]：所有敌人失去4点[gold]力量[/gold]。\n[gold]粉色形态[/gold]：目标失去6点[gold]力量[/gold]。\n持续1回合。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

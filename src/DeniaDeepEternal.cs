@@ -31,7 +31,7 @@ public sealed class DeniaDeepEternal : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "深黯、终末、恒常",
-            Description: "提升全体敌人3点聚爆上限。对随机一名敌人触发一次无条件引爆。接下来2回合内，每回合对全体敌人附加3点聚爆并提升3聚爆上限。若处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态。\n黯核强化：持续回合数变为3。");
+            Description: "提升全体敌人3点聚爆上限。对随机一名敌人触发一次无条件引爆。接下来2回合内，每回合对全体敌人附加3点聚爆并提升3聚爆上限。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n黯核强化：持续回合数变为3。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -50,7 +50,7 @@ public sealed class DeniaDeepEternal : DeniaCard
         int duration = await TrySpendDarkCore(play) ? 3 : 2;
         await PowerCmd.Apply<DeniaDeepEternalPower>(ctx, Owner.Creature, duration, Owner.Creature, this);
 
-        // 4. 若处于黑色形态，切换到粉色（最后做）
+        // 4. 若处于[gold]黑色形态[/gold]，切换到粉色（最后做）
         if (DeniaFormHelper.IsBlack(Owner.Creature))
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
     }

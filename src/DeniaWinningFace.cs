@@ -19,6 +19,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaWinningFace : DeniaCard, IResonanceBreakCard
 {
+    public override int CurrentVirtualMatterCost => 4;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
 
@@ -29,14 +31,20 @@ public sealed class DeniaWinningFace : DeniaCard, IResonanceBreakCard
         : base(2, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "想赢的人脸上是没有笑容的",
-        Description: "尝试[gold]谐度破坏[/gold]。给任意{IfUpgraded:show:3|1}张手牌附加[gold]集谐响应[/gold]。");
+        Title: "“没有价值的个体”",
+        Description: "无条件[gold]谐度破坏[/gold]。此次[gold]谐度破坏[/gold]只造成五分之一的伤害。给任意{IfUpgraded:show:3|1}张手牌附加[gold]集谐响应[/gold]。\n虚质强化：[gold]谐度破坏[/gold]伤害恢复正常。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        await AemeathMechanicsApi.TryTriggerResonanceBreak(play.Target, Owner.Creature, this);
+        bool normalDamage = await TrySpendVirtualMatter(play);
+        if (normalDamage)
+            await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
+        else
+            await DeniaResonanceBreakDamageModifier.RunOnce(
+                0.2m,
+                () => AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this));
 
         int count = IsUpgraded ? 3 : 1;
         var eligible = PileType.Hand.GetPile(Owner).Cards

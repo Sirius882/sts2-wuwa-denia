@@ -11,7 +11,7 @@ namespace Denia;
 
 /// <summary>
 /// Denia 双能量系统：虚质(VirtualMatter)与黯核(DarkCore)的读取与增删。
-/// 消耗规则：只在黑色形态消耗并强化卡牌；粉色形态不消耗、不强化。
+/// 消耗规则：只在[gold]黑色形态[/gold]消耗并强化卡牌；[gold]粉色形态[/gold]不消耗、不强化。
 /// </summary>
 public static class DeniaResourceState
 {
@@ -37,7 +37,7 @@ public static class DeniaResourceState
     }
 
     /// <summary>
-    /// 消耗虚质。只在黑色形态生效，粉色形态直接返回 false（未消耗，卡牌不应获得强化）。
+    /// 消耗虚质。只在[gold]黑色形态[/gold]生效，[gold]粉色形态[/gold]直接返回 false（未消耗，卡牌不应获得强化）。
     /// </summary>
     public static async Task<bool> TrySpendVirtualMatter(Creature creature, int amount, Creature applier, CardModel source)
     {
@@ -93,7 +93,7 @@ public static class DeniaResourceState
     }
 
     /// <summary>
-    /// 消耗黯核。只在黑色形态生效，粉色形态直接返回 false（未消耗，卡牌不应获得强化）。
+    /// 消耗黯核。只在[gold]黑色形态[/gold]生效，[gold]粉色形态[/gold]直接返回 false（未消耗，卡牌不应获得强化）。
     /// 同步原生 Stars 与 Power 兜底。
     /// </summary>
     public static async Task<bool> TrySpendDarkCore(Creature creature, int amount, Creature applier, CardModel source)

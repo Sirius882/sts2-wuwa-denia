@@ -22,7 +22,7 @@ public sealed class DeniaCodeWord : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "暗号",
-        Description: "切换形态。若切换为黑色形态，获得“直视我”和“怜悯我”。\n{IfUpgraded:show:抽1张牌。|}");
+        Description: "切换形态。若切换为[gold]黑色形态[/gold]，获得“直视我”和“怜悯我”。\n{IfUpgraded:show:抽1张牌。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

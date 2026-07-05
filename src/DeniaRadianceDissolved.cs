@@ -38,7 +38,7 @@ public sealed class DeniaRadianceDissolved : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "光辉，自此消融",
-        Description: "无论形态，消耗所有[gold]虚质[/gold]和黯核。对全体敌人造成y/2+4z+力量点伤害x次。若处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
+        Description: "无论形态，消耗所有[gold]虚质[/gold]和黯核。对全体敌人造成y/2+4z+力量点伤害x次。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -47,7 +47,7 @@ public sealed class DeniaRadianceDissolved : DeniaCard
         int dcSpent = DeniaResourceState.GetDarkCore(Owner.Creature);
 
         await DeniaResourceState.ClearVirtualMatter(Owner.Creature, Owner.Creature, this);
-        // 直接清零黯核，绕过 TrySpendDarkCore 的黑色形态检查
+        // 直接清零黯核，绕过 TrySpendDarkCore 的[gold]黑色形态[/gold]检查
         if (dcSpent > 0)
         {
             if (Owner.Creature.Player?.PlayerCombatState != null)

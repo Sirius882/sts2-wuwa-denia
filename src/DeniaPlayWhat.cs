@@ -16,9 +16,10 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaPlayWhat : DeniaCard
 {
-    public override IEnumerable<CardKeyword> CanonicalKeywords => IsUpgraded
-        ? new[] { TuneStrainKeywords.TuneStrainResponse }
-        : new[] { CardKeyword.Exhaust, TuneStrainKeywords.TuneStrainResponse };
+    public override int CurrentVirtualMatterCost => 4;
+
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { TuneStrainKeywords.TuneStrainResponse };
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new DynamicVar[] { new DamageVar(4m, ValueProp.Move) };
@@ -30,15 +31,19 @@ public sealed class DeniaPlayWhat : DeniaCard
         : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "玩什么？",
-        Description: "附加1[gold]集谐·偏移[/gold]，造成{Damage:diff()}点伤害。{IfUpgraded:show:\n不再消耗。|}");
+        Title: "最后的谎言",
+        Description: "附加1[gold]集谐·偏移[/gold]，造成{Damage:diff()}点伤害。\n虚质强化：伤害+8。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
         await TuneStrainState.TryAddBias(play.Target, 1, Owner.Creature, this);
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
+        decimal damage = DynamicVars.Damage.BaseValue;
+        if (await TrySpendVirtualMatter(play))
+            damage += 8m;
+
+        await DamageCmd.Attack(damage)
             .FromCard(this)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
@@ -47,7 +52,6 @@ public sealed class DeniaPlayWhat : DeniaCard
 
     protected override void OnUpgrade()
     {
-        RemoveKeyword(CardKeyword.Exhaust);
-        AddKeyword(TuneStrainKeywords.TuneStrainResponse);
+        EnergyCost.UpgradeBy(-1);
     }
 }

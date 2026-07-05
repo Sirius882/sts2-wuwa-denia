@@ -1,3 +1,15 @@
 {
+	"DENIA-VIRTUAL_MATTER_ENHANCEMENT.title": "Virtual Matter Enhancement",
+	"DENIA-VIRTUAL_MATTER_ENHANCEMENT.description": "When this card is played, if you are in Black Form and have enough Virtual Matter, spend that amount of Virtual Matter and trigger the enhanced effect.",
+	"DENIA-DARK_CORE_ENHANCEMENT.title": "Dark Core Enhancement",
+	"DENIA-DARK_CORE_ENHANCEMENT.description": "When this card is played, if you are in Black Form and have enough Dark Core, spend that amount of Dark Core and trigger the enhanced effect.",
+	"DENIA-VIRTUAL_MATTER.title": "Virtual Matter",
+	"DENIA-VIRTUAL_MATTER.description": "A special energy used by Denia. It can strengthen card effects.",
+	"DENIA-DARK_CORE.title": "Dark Core",
+	"DENIA-DARK_CORE.description": "A special energy used by Denia. It can strengthen card effects.",
+	"DENIA-PINK_FORM.title": "Pink Form",
+	"DENIA-PINK_FORM.description": "Denia's normal form as a student of Star Torch Academy. It excels at cycling and setup.",
+	"DENIA-BLACK_FORM.title": "Black Form",
+	"DENIA-BLACK_FORM.description": "Denia's hidden Resonator form. It can strengthen cards with Virtual Matter and Dark Core, and excels at both offense and defense."
 }
 

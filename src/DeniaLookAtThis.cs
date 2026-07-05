@@ -19,6 +19,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaLookAtThis : DeniaCard
 {
+    public override int CurrentVirtualMatterCost => 5;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
 
@@ -32,17 +34,18 @@ public sealed class DeniaLookAtThis : DeniaCard
         : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "你看！",
-        Description: "对所有敌人附加1[gold]集谐·偏移[/gold]。造成{Damage:diff()}点伤害。本场战斗中，从牌组中选择{IfUpgraded:show:4|2}张牌，附加[gold]集谐响应[/gold]。");
+        Title: "你看见了什么？",
+        Description: "对所有敌人附加1[gold]集谐·偏移[/gold]。造成{Damage:diff()}点伤害。本场战斗中，从牌组中选择{IfUpgraded:show:4|2}张牌，附加[gold]集谐响应[/gold]。\n虚质强化：多附加1[gold]集谐·偏移[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         var combatState = Owner.Creature.CombatState;
         ArgumentNullException.ThrowIfNull(combatState);
 
+        int bias = await TrySpendVirtualMatter(play) ? 2 : 1;
         var enemies = combatState.Enemies.Where(enemy => !enemy.IsDead).ToArray();
         foreach (var enemy in enemies)
-            await TuneStrainState.TryAddBias(enemy, 1, Owner.Creature, this);
+            await TuneStrainState.TryAddBias(enemy, bias, Owner.Creature, this);
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
             .FromCard(this)

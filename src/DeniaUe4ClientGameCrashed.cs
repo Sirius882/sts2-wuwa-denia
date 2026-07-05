@@ -16,6 +16,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaUe4ClientGameCrashed : DeniaCard
 {
+    public override int CurrentVirtualMatterCost => 5;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         [];
 
@@ -29,14 +31,18 @@ public sealed class DeniaUe4ClientGameCrashed : DeniaCard
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "UE4 Client Game已崩溃",
-        Description: "造成{Damage:diff()}点伤害，附加{IfUpgraded:show:2|1}点[gold]集谐·偏移[/gold]。");
+        Title: "族群进化的错误",
+        Description: "造成{Damage:diff()}点伤害，附加{IfUpgraded:show:2|1}点[gold]集谐·偏移[/gold]。\n虚质强化：伤害+10。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
+        decimal damage = DynamicVars.Damage.BaseValue;
+        if (await TrySpendVirtualMatter(play))
+            damage += 10m;
+
+        await DamageCmd.Attack(damage)
             .FromCard(this)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")

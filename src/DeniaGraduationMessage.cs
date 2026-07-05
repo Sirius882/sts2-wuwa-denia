@@ -14,6 +14,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaGraduationMessage : DeniaCard
 {
+    public override int CurrentDarkCoreCost => 1;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { CardKeyword.Exhaust };
 
@@ -25,11 +27,13 @@ public sealed class DeniaGraduationMessage : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "毕业寄语",
-        Description: "获得1能量。");
+        Description: "获得1能量。\n黯核强化：再获得1能量。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         await PlayerCmd.GainEnergy(1, Owner);
+        if (await TrySpendDarkCore(play))
+            await PlayerCmd.GainEnergy(1, Owner);
     }
 
     protected override void OnUpgrade()

@@ -24,7 +24,7 @@ public sealed class DeniaFirstLastGift : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "我回来了！",
-        Description: "获得12虚质和3黯核。\n若处于[gold]粉色[/gold]形态，切换到[gold]黑色[/gold]形态，获得「直视我」和「怜悯我」。");
+        Description: "获得12虚质和3黯核。\n若处于[gold]粉色形态[/gold]，切换到[gold]黑色形态[/gold]，获得「直视我」和「怜悯我」。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -32,7 +32,7 @@ public sealed class DeniaFirstLastGift : DeniaCard
         await DeniaResourceState.GainVirtualMatter(Owner.Creature, 12, Owner.Creature, this);
         await DeniaResourceState.GainDarkCore(Owner.Creature, 3, Owner.Creature, this);
 
-        // 粉色形态下切换到黑色并获得直视我+怜悯我
+        // [gold]粉色形态[/gold]下切换到黑色并获得直视我+怜悯我
         if (DeniaFormHelper.IsPink(Owner.Creature))
         {
             await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);

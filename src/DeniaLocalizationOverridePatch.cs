@@ -16,6 +16,7 @@ public static class DeniaLocalizationOverridePatch
     {
         ("characters", "characters.json"),
         ("cards", "cards.json"),
+        ("card_keywords", "card_keywords.json"),
         ("powers", "powers.json"),
         ("relics", "relics.json")
     };

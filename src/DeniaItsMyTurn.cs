@@ -31,7 +31,7 @@ public sealed class DeniaItsMyTurn : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "到我的回合啦",
-        Description: "造成{Damage:diff()}点伤害并附加8层[gold]聚爆[/gold]。若处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态，抽{IfUpgraded:show:3|2}张牌。");
+        Description: "造成{Damage:diff()}点伤害并附加8层[gold]聚爆[/gold]。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]，抽{IfUpgraded:show:3|2}张牌。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -44,7 +44,7 @@ public sealed class DeniaItsMyTurn : DeniaCard
 
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 8, Owner.Creature, this);
 
-        // 后变身+抽牌（仅黑色形态触发）
+        // 后变身+抽牌（仅[gold]黑色形态[/gold]触发）
         if (DeniaFormHelper.IsBlack(Owner.Creature))
         {
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);

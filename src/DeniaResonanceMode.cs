@@ -20,6 +20,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaResonanceMode : DeniaCard
 {
+    public override int CurrentDarkCoreCost => 1;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
 
@@ -31,22 +33,41 @@ public sealed class DeniaResonanceMode : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "共鸣模态·集谐",
-        Description: "进入[gold]共鸣模态·集谐[/gold]，给任意两张手牌附加[gold]集谐响应[/gold]。\n[gold]共鸣模态·集谐·达妮娅[/gold]：计算集谐增伤时，按2倍采用你的集谐响应 power 层数。");
+        Description: "进入[gold]共鸣模态·集谐[/gold]，给任意两张手牌附加[gold]集谐响应[/gold]。\n黯核强化：选择范围扩大到整个持有的牌组，可选4张牌。\n[gold]共鸣模态·集谐·达妮娅[/gold]：计算集谐增伤时，按2倍采用你的集谐响应 power 层数。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        bool darkCoreEnhanced = await TrySpendDarkCore(play);
+
         await PowerCmd.Apply<DeniaResonanceModePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
         await DeniaFormHelper.MarkResonanceModePermanent(Owner.Creature);
 
-        var eligible = PileType.Hand.GetPile(Owner).Cards
-            .Where(card => card != this && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse))
-            .ToList();
-        int count = System.Math.Min(2, eligible.Count);
-        if (count <= 0) return;
+        IEnumerable<CardModel> selected;
+        if (darkCoreEnhanced)
+        {
+            int count = 4;
+            var prefs = new CardSelectorPrefs(new LocString("card_selection", "DENIA_TO_TUNE_STRAIN_RESPONSE"), count);
+            selected = await CardSelectCmd.FromDeckGeneric(
+                Owner,
+                prefs,
+                card => card != DeckVersion
+                    && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse)
+                    && !TuneStrainState.HasTemporaryResponse(card));
+        }
+        else
+        {
+            int count = 2;
+            var eligible = PileType.Hand.GetPile(Owner).Cards
+                .Where(card => card != this && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse))
+                .ToList();
+            count = System.Math.Min(count, eligible.Count);
+            if (count <= 0) return;
 
-        var prefs = new CardSelectorPrefs(new LocString("card_selection", "DENIA_TO_TUNE_STRAIN_RESPONSE"), count);
-        var selected = await CardSelectCmd.FromHand(ctx, Owner, prefs,
-            card => card != this && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse), this);
+            var prefs = new CardSelectorPrefs(new LocString("card_selection", "DENIA_TO_TUNE_STRAIN_RESPONSE"), count);
+            selected = await CardSelectCmd.FromHand(ctx, Owner, prefs,
+                card => card != this && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse), this);
+        }
+
         foreach (var card in selected.ToList())
             TuneStrainState.AddTemporaryResponse(Owner, card);
     }

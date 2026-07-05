@@ -15,6 +15,8 @@ namespace Denia;
 
 public sealed class DeniaHeartfeltRecommendation : DeniaCard
 {
+    public override int CurrentVirtualMatterCost => 3;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
 
@@ -25,12 +27,15 @@ public sealed class DeniaHeartfeltRecommendation : DeniaCard
         : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "这个真心推荐",
-        Description: "本场战斗中，从牌组中选择{IfUpgraded:show:7|4}张牌，附加[gold]集谐响应[/gold]。");
+        Title: "《罗伊族童话故事》",
+        Description: "本场战斗中，从牌组中选择{IfUpgraded:show:7|4}张牌，附加[gold]集谐响应[/gold]。\n虚质强化：选择的牌数+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int count = IsUpgraded ? 7 : 4;
+        if (await TrySpendVirtualMatter(play))
+            count += 2;
+
         var prefs = new CardSelectorPrefs(new LocString("card_selection", "DENIA_TO_TUNE_STRAIN_RESPONSE"), count);
         var selected = await CardSelectCmd.FromDeckGeneric(
             Owner,

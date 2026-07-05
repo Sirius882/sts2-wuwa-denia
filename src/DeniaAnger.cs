@@ -4,14 +4,18 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaAnger : DeniaCard
 {
+    public override int CurrentVirtualMatterCost => 3;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust, CardKeyword.Retain };
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_anger.png";
     public DeniaAnger() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
-    public override List<(string, string)>? Localization => new CardLoc(Title: "怒", Description: "选择最多{IfUpgraded:show:4|3}张手牌消耗。每消耗1张牌，获得{IfUpgraded:show:4|3}格挡。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "怒", Description: "选择最多{IfUpgraded:show:4|3}张手牌消耗。每消耗1张牌，获得{IfUpgraded:show:4|3}格挡。\n虚质强化：每段格挡+2。");
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int maxSelect = IsUpgraded ? 4 : 3;
         int blockPer = IsUpgraded ? 4 : 3;
+        if (await TrySpendVirtualMatter(play))
+            blockPer += 2;
         var hand = PileType.Hand.GetPile(Owner);
         if (!hand.Cards.Any()) return;
         var prefs = new CardSelectorPrefs(new LocString("card_selection", "TO_EXHAUST"), 0, maxSelect);

@@ -43,7 +43,7 @@ public sealed class Denia : PlaceholderCharacterModel
         new CharacterLoc(
             Title:                   "达妮娅",
             TitleObject:             "达妮娅",
-            Description:             "如果执着得够久，故事就一定能迎来好结局，不是吗？\n“我在终点站等你”\n黑色形态下，能以虚质和黯核强化卡牌的效果。",
+            Description:             "如果执着得够久，故事就一定能迎来好结局，不是吗？\n“我在终点站等你”\n[gold]黑色形态[/gold]下，能以虚质和黯核强化卡牌的效果。",
             PronounObject:           "她",
             PronounSubject:          "她",
             PronounPossessive:       "她的",

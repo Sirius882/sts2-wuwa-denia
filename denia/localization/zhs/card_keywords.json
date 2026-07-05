@@ -1,3 +1,15 @@
 {
+	"DENIA-VIRTUAL_MATTER_ENHANCEMENT.title": "虚质强化",
+	"DENIA-VIRTUAL_MATTER_ENHANCEMENT.description": "此牌打出时，若处于黑色形态且虚质足够，则消耗对应数量虚质，并触发强化效果。",
+	"DENIA-DARK_CORE_ENHANCEMENT.title": "黯核强化",
+	"DENIA-DARK_CORE_ENHANCEMENT.description": "此牌打出时，若处于黑色形态且黯核足够，则消耗对应数量黯核，并触发强化效果。",
+	"DENIA-VIRTUAL_MATTER.title": "虚质",
+	"DENIA-VIRTUAL_MATTER.description": "达妮娅的一种特殊能量，可用于强化卡牌效果。",
+	"DENIA-DARK_CORE.title": "黯核",
+	"DENIA-DARK_CORE.description": "达妮娅的一种特殊能量，可用于强化卡牌效果。",
+	"DENIA-PINK_FORM.title": "粉色形态",
+	"DENIA-PINK_FORM.description": "星炬学院学生达妮娅的常态，擅长运转。",
+	"DENIA-BLACK_FORM.title": "黑色形态",
+	"DENIA-BLACK_FORM.description": "达妮娅不为人知的鸣式共鸣者形态，能以虚质和黯核强化卡牌，擅长攻防。"
 }
 

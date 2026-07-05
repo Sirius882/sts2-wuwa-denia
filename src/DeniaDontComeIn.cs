@@ -14,14 +14,14 @@ namespace Denia;
 public sealed class DeniaDontComeIn : DeniaCard
 {
     public override string PortraitPath =>
-        "res://images/packed/card_portraits/denia/card_face_dont_come_in.png";
+        "res://images/packed/card_portraits/denia/card_face_dont_come_in_new.jpg";
 
     public DeniaDontComeIn()
         : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "不要···进来",
-        Description: "若处于[gold]粉色[/gold]形态，切换到[gold]黑色[/gold]形态，额外获得6[gold]虚质[/gold]，获得「怜悯我」和「直视我」。{IfUpgraded:show:获得1黯核。|}");
+        Description: "若处于[gold]粉色形态[/gold]，切换到[gold]黑色形态[/gold]，额外获得6[gold]虚质[/gold]，获得「怜悯我」和「直视我」。{IfUpgraded:show:获得1黯核。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

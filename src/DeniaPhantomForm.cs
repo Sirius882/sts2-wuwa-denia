@@ -16,7 +16,7 @@ namespace Denia;
 public sealed class DeniaPhantomForm : DeniaCard
 {
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new DynamicVar[] { new BlockVar(8m, ValueProp.Move) };
+        new DynamicVar[] { new BlockVar(6m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_phantom_form.png";
@@ -40,7 +40,7 @@ public sealed class DeniaPhantomForm : DeniaCard
 
         if (willBurst)
         {
-            int block2 = IsUpgraded ? 10 : 8;
+            int block2 = IsUpgraded ? 8 : 6;
             await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(block2, ValueProp.Move), play);
         }
     }
@@ -52,5 +52,5 @@ public sealed class DeniaPhantomForm : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "幻灭之形",
-            Description: "附加6点[gold]聚爆[/gold]。获得{Block:diff()}点[gold]格挡[/gold]。\n若触发[gold]引爆[/gold]，再获得{IfUpgraded:show:10|8}点[gold]格挡[/gold]。");
+            Description: "附加6点[gold]聚爆[/gold]。获得{Block:diff()}点[gold]格挡[/gold]。\n若触发[gold]引爆[/gold]，再获得{IfUpgraded:show:8|6}点[gold]格挡[/gold]。");
 }

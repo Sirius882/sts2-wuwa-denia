@@ -25,7 +25,7 @@ public sealed class DeniaVirtualScienceIntuition : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "虚质科学直觉",
-        Description: "本场战斗每消耗10点[gold]虚质[/gold]，获得1点[gold]能量[/gold]。");
+        Description: "本场战斗每消耗8点[gold]虚质[/gold]，获得1点[gold]能量[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

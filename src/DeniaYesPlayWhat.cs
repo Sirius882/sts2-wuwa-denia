@@ -25,8 +25,8 @@ public sealed class DeniaYesPlayWhat : DeniaCard
         : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "是啊，玩什么？",
-        Description: "无条件[gold]谐度破坏[/gold]。{IfUpgraded:show:\n获得保留。|}");
+        Title: "最初的谎言",
+        Description: "无条件[gold]谐度破坏[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

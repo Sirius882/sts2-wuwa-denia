@@ -20,7 +20,7 @@ public sealed class DeniaVirtualParticle : DeniaCard
     public DeniaVirtualParticle() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "虚质粒子",
-        Description: "给予所有敌人{IfUpgraded:show:3|2}层[gold]虚弱[/gold]。\n黯核强化：若进入黑色形态后打出「直视我」，获得等量[gold]力量[/gold]；若打出「怜悯我」，获得10倍[gold]聚爆轨迹[/gold]。切换粉色时清除。");
+        Description: "给予所有敌人{IfUpgraded:show:3|2}层[gold]虚弱[/gold]。\n黯核强化：若进入[gold]黑色形态[/gold]后打出「直视我」，获得等量[gold]力量[/gold]；若打出「怜悯我」，获得10倍[gold]聚爆轨迹[/gold]。切换粉色时清除。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

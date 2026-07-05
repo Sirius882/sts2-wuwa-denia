@@ -14,6 +14,8 @@ namespace Denia;
 /// <summary>熵变强化: 获得buff/debuff时获得格挡（按instance次数算，非层数）</summary>
 public sealed class DeniaEntropyBoostPower : CustomPowerModel
 {
+    private const int MaxTriggersPerTurn = 6;
+
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
     protected override bool IsVisibleInternal => true;
@@ -25,13 +27,19 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
     public int ExtraBlock { get; set; }
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "熵变强化", Description: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。", SmartDescription: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。");
+        new PowerLoc(Title: "熵变强化", Description: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。每回合最多触发6次。", SmartDescription: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。每回合最多触发6次。");
 
     public static void AccumulateBlock(Creature creature, int amount)
     {
         if (amount <= 0) return;
+        var triggered = creature.GetPower<DeniaEntropyBoostTriggeredThisTurnPower>();
+        int remaining = MaxTriggersPerTurn - (int)(triggered?.Amount ?? 0);
+        if (remaining <= 0) return;
+
         _ = PowerCmd.Apply<DeniaEntropyBoostPendingBlockPower>(
             new ThrowingPlayerChoiceContext(), creature, amount, creature, null!);
+        _ = PowerCmd.Apply<DeniaEntropyBoostTriggeredThisTurnPower>(
+            new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
     }
 
     public static async Task FlushBlockAsync(Creature creature)
@@ -43,5 +51,10 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
         if (total > 0)
             await CreatureCmd.GainBlock(
                 creature, new BlockVar(total, ValueProp.Unpowered), null);
+    }
+
+    public static async Task ClearTriggerCountAsync(Creature creature)
+    {
+        await PowerCmd.Remove<DeniaEntropyBoostTriggeredThisTurnPower>(creature);
     }
 }

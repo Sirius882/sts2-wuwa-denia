@@ -33,7 +33,7 @@ public sealed class DeniaMeltingAway : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "熔毁殆尽",
-        Description: "对随机一名敌人触发一次无条件引爆。若处于[gold]黑色[/gold]形态，切换到[gold]粉色[/gold]形态，并在此后每回合开始时，对所有敌人附加{IfUpgraded:show:2|1}点[gold]聚爆[/gold]，并提升其聚爆上限1点。\n黯核强化：附加的[gold]聚爆[/gold]层数+2。");
+        Description: "对随机一名敌人触发一次无条件引爆。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]，并在此后每回合开始时，对所有敌人附加{IfUpgraded:show:2|1}点[gold]聚爆[/gold]，并提升其聚爆上限1点。\n黯核强化：附加的[gold]聚爆[/gold]层数+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -49,11 +49,11 @@ public sealed class DeniaMeltingAway : DeniaCard
             finally { IsMeltingAwayBurstFill = false; }
         }
 
-        // 2. 黯核强化（在切换形态前消耗，因为黯核需要黑色形态）
+        // 2. 黯核强化（在切换形态前消耗，因为黯核需要[gold]黑色形态[/gold]）
         int dcBonus = await TrySpendDarkCore(play) ? 2 : 0;
         int baseAmount = IsUpgraded ? 2 : 1;
 
-        // 3. 若处于黑色形态，切换到粉色，并附加持续性能力
+        // 3. 若处于[gold]黑色形态[/gold]，切换到粉色，并附加持续性能力
         if (DeniaFormHelper.IsBlack(Owner.Creature))
         {
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);

@@ -15,6 +15,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaBubbleMachine : DeniaCard
 {
+    public override int CurrentVirtualMatterCost => 3;
+
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new[] { new BlockVar(7m, ValueProp.Move) };
 
@@ -28,14 +30,18 @@ public sealed class DeniaBubbleMachine : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "泡泡机",
-        Description: "获得{Block:diff()}点[gold]格挡[/gold]。\n若本回合切换过形态，再获得{Block:diff()}点[gold]格挡[/gold]。");
+        Description: "获得{Block:diff()}点[gold]格挡[/gold]。\n若本回合切换过形态，再获得{Block:diff()}点[gold]格挡[/gold]。\n虚质强化：两段格挡基础数值均+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
+        decimal block = DynamicVars.Block.BaseValue;
+        if (await TrySpendVirtualMatter(play))
+            block += 2m;
+
+        await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(block, ValueProp.Move), play);
 
         if (DeniaFormHelper.HasSwitchedFormThisTurn(Owner.Creature))
-            await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
+            await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(block, ValueProp.Move), play);
     }
 
     protected override void OnUpgrade()

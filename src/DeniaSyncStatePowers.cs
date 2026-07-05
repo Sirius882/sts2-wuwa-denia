@@ -67,6 +67,11 @@ public sealed class DeniaEntropyBoostPendingBlockPower : DeniaHiddenCounterPower
     static DeniaEntropyBoostPendingBlockPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaEntropyBoostPendingBlockPower));
 }
 
+public sealed class DeniaEntropyBoostTriggeredThisTurnPower : DeniaHiddenCounterPower
+{
+    static DeniaEntropyBoostTriggeredThisTurnPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaEntropyBoostTriggeredThisTurnPower));
+}
+
 public sealed class DeniaTorchPineNutPendingStrengthPower : DeniaHiddenCounterPower
 {
     static DeniaTorchPineNutPendingStrengthPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaTorchPineNutPendingStrengthPower));

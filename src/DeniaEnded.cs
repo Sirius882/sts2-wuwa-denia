@@ -16,6 +16,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaEnded : DeniaCard
 {
+    public override int CurrentVirtualMatterCost => 3;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
 
@@ -29,18 +31,28 @@ public sealed class DeniaEnded : DeniaCard
         : base(0, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
-        Title: "结束了？",
-        Description: "造成{Damage:diff()}点伤害。");
+        Title: "做个了断",
+        Description: "造成{Damage:diff()}点伤害。\n虚质强化：再造成一次等量伤害。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
+
+        bool repeat = await TrySpendVirtualMatter(play);
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
             .FromCard(this)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
+        if (repeat)
+        {
+            await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
+                .FromCard(this)
+                .Targeting(play.Target)
+                .WithHitFx("vfx/vfx_attack_slash")
+                .Execute(ctx);
+        }
     }
 
     protected override void OnUpgrade()
