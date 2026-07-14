@@ -888,8 +888,11 @@
   "DENIA-DENIA_RESONANCE_MODE_POWER.description": "When calculating Tune Strain vulnerability, your Tune Strain Response power stacks count as double.",
   "DENIA-DENIA_RESONANCE_MODE_POWER.smartDescription": "When calculating Tune Strain vulnerability, your Tune Strain Response power stacks count as double.",
   "DENIA-DENIA_TORCH_PINE_NUT_POWER.title": "Torch Pine Nut",
-  "DENIA-DENIA_TORCH_PINE_NUT_POWER.description": "Whenever you gain Fusion Burst Trajectory, also gain Strength equal to one fifth of the amount gained.",
-  "DENIA-DENIA_TORCH_PINE_NUT_POWER.smartDescription": "Whenever you gain Fusion Burst Trajectory, also gain Strength equal to one fifth of the amount gained.",
+  "DENIA-DENIA_TORCH_PINE_NUT_POWER.description": "Whenever you gain Shrouded Star, also gain the same amount of Strength.",
+  "DENIA-DENIA_TORCH_PINE_NUT_POWER.smartDescription": "Whenever you gain Shrouded Star, also gain the same amount of Strength.",
+  "DENIA-DENIA_SHROUDED_STAR_POWER.title": "Shrouded Star",
+  "DENIA-DENIA_SHROUDED_STAR_POWER.description": "Each stack increases Fusion Burst detonation damage you trigger by 10%, and Melt damage by 20%.",
+  "DENIA-DENIA_SHROUDED_STAR_POWER.smartDescription": "Each stack increases Fusion Burst detonation damage you trigger by 10%, and Melt damage by 20%.",
   "DENIA-DENIA_VIRTUAL_SCIENCE_INTUITION_POWER.title": "Virtual Science Intuition",
   "DENIA-DENIA_VIRTUAL_SCIENCE_INTUITION_POWER.description": "For this combat, gain 1 Energy for every 8 Virtual Matter you spend.",
   "DENIA-DENIA_VIRTUAL_SCIENCE_INTUITION_POWER.smartDescription": "For this combat, gain 1 Energy for every 8 Virtual Matter you spend.",
@@ -898,5 +901,11 @@
   "DENIA-DENIA_XIA_YE_POWER.smartDescription": "Whenever you switch forms, gain {Amount} Dark Core.",
   "DENIA-DENIA_YOU_TRY_IT_POWER.title": "You Try It Too?",
   "DENIA-DENIA_YOU_TRY_IT_POWER.description": "Whenever you play a card this turn, apply Fusion Burst Cap to the target enemy.",
-  "DENIA-DENIA_YOU_TRY_IT_POWER.smartDescription": "Whenever you play a card this turn, apply {Amount} Fusion Burst Cap to the target enemy."
+  "DENIA-DENIA_YOU_TRY_IT_POWER.smartDescription": "Whenever you play a card this turn, apply {Amount} Fusion Burst Cap to the target enemy.",
+  "DENIA-DENIA_IMMERSE_INTO_VOID_POWER.title": "Immerse Into Void",
+  "DENIA-DENIA_IMMERSE_INTO_VOID_POWER.description": "Your Melt no longer consumes Fusion Burst stacks.",
+  "DENIA-DENIA_IMMERSE_INTO_VOID_POWER.smartDescription": "Your Melt no longer consumes Fusion Burst stacks.",
+  "DENIA-DENIA_TAINTED_DARKNESS_POWER.title": "Tainted Darkness",
+  "DENIA-DENIA_TAINTED_DARKNESS_POWER.description": "For a number of turns, deal damage to the target at the end of your turn. If you take unblocked damage, cancel the remaining attacks.",
+  "DENIA-DENIA_TAINTED_DARKNESS_POWER.smartDescription": "For {Amount} turns, deal {Damage} damage to the target at the end of your turn. If you take unblocked damage, cancel the remaining attacks."
 }

@@ -19,7 +19,7 @@ public sealed class DeniaLookAtMe : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_look_at_me.png";
 
     public DeniaLookAtMe()
-        : base(0, CardType.Attack, CardRarity.Basic, TargetType.Self, showInCardLibrary: false) { }
+        : base(0, CardType.Power, CardRarity.Basic, TargetType.Self, showInCardLibrary: true) { }
 
     public override int MaxUpgradeLevel => 0;
 

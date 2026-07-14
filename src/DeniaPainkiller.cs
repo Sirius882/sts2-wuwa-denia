@@ -14,6 +14,6 @@ public sealed class DeniaPainkiller : CustomRelicModel
     public override List<(string, string)>? Localization =>
         new RelicLoc(
             Title: "止痛药",
-            Description: "每场战斗开始时，获得5点[gold]力量[/gold]、5点[gold]敏捷[/gold]和50层[gold]聚爆轨迹[/gold]。每个回合开始时，获得1层[gold]易伤[/gold]。",
+            Description: "每场战斗开始时，获得5点[gold]力量[/gold]、5点[gold]敏捷[/gold]和5层[gold]蔽星[/gold]。每个回合开始时，获得1层[gold]易伤[/gold]。",
             Flavor: "被残星会会长换成了生理盐水，并没有止痛的效果。");
 }

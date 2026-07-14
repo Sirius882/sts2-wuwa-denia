@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.HoverTips;
 using MegaCrit.Sts2.Core.Localization;
-using MegaCrit.Sts2.Core.Entities.Players;
+using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using TuneStrain;
 using TuneStrain.Powers;
 
@@ -106,31 +108,66 @@ public abstract class DeniaCard(
         if (Mentions(description, "熔解", "Melt") && AemeathSpecialKeywords.Melt != CardKeyword.None)
             yield return HoverTipFactory.FromKeyword(AemeathSpecialKeywords.Melt);
 
-        if (Mentions(description, "聚爆轨迹", "Fusion Burst Trajectory"))
-            yield return HoverTipFactory.FromPower<AemeathFusionBurstTrajectoryPower>();
-
         if (Mentions(description, "聚爆上限", "Fusion Burst Cap"))
             yield return HoverTipFactory.FromPower<AemeathFusionBurstCapPower>();
 
         if (MentionsAfterRemoving(description,
-            ["聚爆轨迹", "聚爆上限", "Fusion Burst Trajectory", "Fusion Burst Cap"],
+            ["聚爆上限", "Fusion Burst Cap"],
             "聚爆", "Fusion Burst"))
             yield return HoverTipFactory.FromPower<AemeathFusionBurstPower>();
 
         if (Mentions(description, "引爆", "detonation", "Auto-Burst") && AemeathSpecialKeywords.AutoBurst != CardKeyword.None)
             yield return HoverTipFactory.FromKeyword(AemeathSpecialKeywords.AutoBurst);
+
+        if (Mentions(description, "冻伤", "Frostbite"))
+            yield return HoverTipFactory.FromPower<DeniaFrostbitePower>();
+
+        if (Mentions(description, "蔽星", "Shrouded Star"))
+            yield return DeniaKeywordTip("SHROUDED_STAR");
     }
 
+    /// <summary>
+    /// 为关键词扫描准备“当前升级态可见”的描述文本。
+    /// 不能裸调 Description.GetFormattedText()：hover 时 variables 为空，
+    /// {Damage}/{Block} 等会抛 Localization formatting error 并刷屏。
+    /// 应像 CardModel.GetDescriptionForPile 一样先注入 DynamicVars + IfUpgraded。
+    /// </summary>
     private string GetDescriptionTextForHoverScan()
     {
         try
         {
-            return Description.GetRawText();
+            LocString description = Description;
+            // 注入卡牌动态变量（Damage/Block/IfUpgraded 等）
+            DynamicVars.AddTo(description);
+            description.Add(new IfUpgradedVar(IsUpgraded ? UpgradeDisplay.Upgraded : UpgradeDisplay.Normal));
+            return description.GetFormattedText();
         }
         catch (Exception)
         {
-            return string.Empty;
+            // 回退：只解析 IfUpgraded 分支，忽略 Damage/Block 等数值占位符
+            try
+            {
+                return ResolveIfUpgradedForScan(Description.GetRawText(), IsUpgraded);
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
+    }
+
+    /// <summary>
+    /// 轻量解析 {IfUpgraded:show:升级文案|基础文案}，用于 GetFormattedText 失败时的扫描回退。
+    /// </summary>
+    private static string ResolveIfUpgradedForScan(string raw, bool isUpgraded)
+    {
+        if (string.IsNullOrEmpty(raw)) return string.Empty;
+        // {IfUpgraded:show:A|B} 或 {IfUpgraded:show:A|}
+        return Regex.Replace(
+            raw,
+            @"\{IfUpgraded:show:([^|}]*)\|?([^}]*)\}",
+            m => isUpgraded ? m.Groups[1].Value : m.Groups[2].Value,
+            RegexOptions.CultureInvariant);
     }
 
     private static bool Mentions(string text, params string[] terms)

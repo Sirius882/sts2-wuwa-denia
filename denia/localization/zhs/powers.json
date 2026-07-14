@@ -872,8 +872,11 @@
   "DENIA-DENIA_RESONANCE_MODE_POWER.description": "计算集谐增伤时，按2倍采用你的集谐响应 power 层数。",
   "DENIA-DENIA_RESONANCE_MODE_POWER.smartDescription": "计算集谐增伤时，按2倍采用你的集谐响应 power 层数。",
   "DENIA-DENIA_TORCH_PINE_NUT_POWER.title": "匍炬松松子",
-  "DENIA-DENIA_TORCH_PINE_NUT_POWER.description": "获得聚爆轨迹时，同步获得该次获得层数1/5的力量。",
-  "DENIA-DENIA_TORCH_PINE_NUT_POWER.smartDescription": "获得聚爆轨迹时，同步获得该次获得层数1/5的力量。",
+  "DENIA-DENIA_TORCH_PINE_NUT_POWER.description": "获得蔽星时，同步获得相同层数的力量。",
+  "DENIA-DENIA_TORCH_PINE_NUT_POWER.smartDescription": "获得蔽星时，同步获得相同层数的力量。",
+  "DENIA-DENIA_SHROUDED_STAR_POWER.title": "蔽星",
+  "DENIA-DENIA_SHROUDED_STAR_POWER.description": "每层使由你引发的聚爆引爆伤害提升10%，熔解伤害提升20%。",
+  "DENIA-DENIA_SHROUDED_STAR_POWER.smartDescription": "每层使由你引发的聚爆引爆伤害提升10%，熔解伤害提升20%。",
   "DENIA-DENIA_VIRTUAL_SCIENCE_INTUITION_POWER.title": "虚质科学直觉",
   "DENIA-DENIA_VIRTUAL_SCIENCE_INTUITION_POWER.description": "本场战斗每消耗8点虚质，获得1点能量。",
   "DENIA-DENIA_VIRTUAL_SCIENCE_INTUITION_POWER.smartDescription": "本场战斗每消耗8点虚质，获得1点能量。",
@@ -882,5 +885,11 @@
   "DENIA-DENIA_XIA_YE_POWER.smartDescription": "每次切换形态时，获得{Amount}黯核。",
   "DENIA-DENIA_YOU_TRY_IT_POWER.title": "你也试试？",
   "DENIA-DENIA_YOU_TRY_IT_POWER.description": "本回合内每打出一张牌，给目标敌人附加聚爆上限。",
-  "DENIA-DENIA_YOU_TRY_IT_POWER.smartDescription": "本回合内每打出一张牌，给目标敌人附加{Amount}聚爆上限。"
+  "DENIA-DENIA_YOU_TRY_IT_POWER.smartDescription": "本回合内每打出一张牌，给目标敌人附加{Amount}聚爆上限。",
+  "DENIA-DENIA_IMMERSE_INTO_VOID_POWER.title": "没入虚无",
+  "DENIA-DENIA_IMMERSE_INTO_VOID_POWER.description": "你所有的熔解都不消耗聚爆层数。",
+  "DENIA-DENIA_IMMERSE_INTO_VOID_POWER.smartDescription": "你所有的熔解都不消耗聚爆层数。",
+  "DENIA-DENIA_TAINTED_DARKNESS_POWER.title": "污涌之暗",
+  "DENIA-DENIA_TAINTED_DARKNESS_POWER.description": "接下来若干回合，在你的回合结束时对目标造成伤害。若你受到未被格挡的伤害，取消后续攻击。",
+  "DENIA-DENIA_TAINTED_DARKNESS_POWER.smartDescription": "接下来{Amount}回合，在你的回合结束时对目标造成{Damage}点伤害。若你受到未被格挡的伤害，取消后续攻击。"
 }

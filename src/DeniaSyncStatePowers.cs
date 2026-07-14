@@ -27,6 +27,11 @@ public sealed class DeniaBlackFormTrajectoryDebtPower : DeniaHiddenCounterPower
     static DeniaBlackFormTrajectoryDebtPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaBlackFormTrajectoryDebtPower));
 }
 
+public sealed class DeniaBlackFormShroudedStarDebtPower : DeniaHiddenCounterPower
+{
+    static DeniaBlackFormShroudedStarDebtPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaBlackFormShroudedStarDebtPower));
+}
+
 public sealed class DeniaWeaknessBonusStrengthDebtPower : DeniaHiddenCounterPower
 {
     static DeniaWeaknessBonusStrengthDebtPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaWeaknessBonusStrengthDebtPower));
@@ -85,5 +90,11 @@ public sealed class DeniaVirtualScienceIntuitionRemainderPower : DeniaHiddenCoun
 public sealed class DeniaMeltingAwayCapBonusPower : DeniaHiddenCounterPower
 {
     static DeniaMeltingAwayCapBonusPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaMeltingAwayCapBonusPower));
+}
+
+/// <summary>本场战斗已打出卡牌计数器——骗术师/赝作矮星共享用（用作阈值触发）。</summary>
+public sealed class DeniaRelicCardPlayedCounterPower : DeniaHiddenCounterPower
+{
+    static DeniaRelicCardPlayedCounterPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaRelicCardPlayedCounterPower));
 }
 

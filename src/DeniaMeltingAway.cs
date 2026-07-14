@@ -29,7 +29,7 @@ public sealed class DeniaMeltingAway : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_melting_away.png";
 
     public DeniaMeltingAway()
-        : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
+        : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "熔毁殆尽",

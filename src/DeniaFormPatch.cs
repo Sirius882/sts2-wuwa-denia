@@ -19,6 +19,8 @@ using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
+using MegaCrit.Sts2.Core.Random;
+using TuneStrain;
 
 namespace Denia;
 
@@ -54,6 +56,7 @@ public static class DeniaFormPatch
     {
         DeniaRelicBurstHandler.Init();
         DeniaMeltProtectPatch.Init();
+        DeniaShroudedStarDamagePatch.Init();
         DeniaBuffTracker.Init();
 
         var creature = __instance.Entity;
@@ -236,7 +239,7 @@ public static class DeniaRelicBurstHandler
         DeniaBurstEvents.OnBurstDone += OnBurst;
     }
 
-    // 引爆后：持有骗术师/赝作矮星时，为目标附加其上限四分之一的聚爆；[gold]粉色形态[/gold]额外获得2虚质（基础机制）
+    // 引爆后：持有骗术师/赝作矮星时，为目标附加其上限若干分之一的聚爆；[gold]粉色形态[/gold]额外获得2虚质（基础机制）
     private static async Task OnBurst(Creature target, Creature applier, int cap)
     {
         if (target.IsDead) return;
@@ -244,12 +247,13 @@ public static class DeniaRelicBurstHandler
         var player = applier.Player;
         if (player == null) return;
 
-        // 引爆后补四分之一聚爆（需要遗物）
+        // 引爆后补聚爆：赝作矮星=1/3，骗术师=1/4（向下取整）。两者同时持有时优先用赝作矮星。
         bool hasTeddy = player.GetRelic<DeniaTrickster>() != null;
         bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
         if (hasTeddy || hasDwarf)
         {
-            int add = cap / 4;
+            int divisor = hasDwarf ? 3 : 4;
+            int add = cap / divisor;
             if (add > 0)
                 await AemeathWw.Scripts.AemeathFusionBurstState.TryAddFusionBurstWithoutAutoBurst(
                     target, add, applier, null!);
@@ -267,18 +271,48 @@ public static class DeniaRelicBurstHandler
     }
 }
 // ---- Patch 4: 相册粉色熔解保护——接入 Aemeath 熔解扣层规则 ----
+// 同时为"此卡熔解不消耗聚爆层数"提供精确按卡牌实例的保留语义。
+// 不再用全局静态位 PreserveNextMelt：ResolveMelt 内 await 会让该位污染并发熔解。
 public static class DeniaMeltProtectPatch
 {
     private static readonly IAemeathMeltConsumeRule Rule = new DeniaMeltPreserveRule();
     private static bool _registered;
 
-    public static bool PreserveNextMelt;
+    // 当前正在保护"自身熔解不消耗聚爆层数"的卡牌实例集合（按卡牌实例精确匹配）。
+    private static readonly HashSet<MegaCrit.Sts2.Core.Models.CardModel> PreservedCards = new();
+    private static readonly object LockObj = new();
 
     public static void Init()
     {
         if (_registered) return;
         _registered = true;
         AemeathFusionBurstRules.RegisterMeltConsumeRule(Rule);
+    }
+
+    /// <summary>
+    /// 标记 <paramref name="card"/> 在当前 OnPlay 内触发的熔解不消耗聚爆层数。
+    /// 在 ResolveMelt 完成后调用返回值的 Dispose() 取消保护。
+    /// </summary>
+    public static IDisposable BeginPreserve(MegaCrit.Sts2.Core.Models.CardModel card)
+    {
+        ArgumentNullException.ThrowIfNull(card);
+        lock (LockObj) PreservedCards.Add(card);
+        return new PreserveScope(card);
+    }
+
+    private sealed class PreserveScope : IDisposable
+    {
+        private readonly MegaCrit.Sts2.Core.Models.CardModel _card;
+        private bool _disposed;
+
+        public PreserveScope(MegaCrit.Sts2.Core.Models.CardModel card) { _card = card; }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            lock (LockObj) PreservedCards.Remove(_card);
+        }
     }
 
     private sealed class DeniaMeltPreserveRule : IAemeathMeltConsumeRule
@@ -288,9 +322,22 @@ public static class DeniaMeltProtectPatch
         public int GetConsumedFusionBurst(AemeathMeltContext context, int currentConsumed)
         {
             if (currentConsumed <= 0) return currentConsumed;
-            if (PreserveNextMelt) return 0;
 
+            // 1) 按卡牌实例精确保留：听话/祝愿你于静默中/谨此致访（虚质强化态）触发的熔解不消耗聚爆层数。
+            var source = context.Source;
+            if (source != null)
+            {
+                bool preserve;
+                lock (LockObj) preserve = PreservedCards.Contains(source);
+                if (preserve) return 0;
+            }
+
+            // 2) 没入虚无：持有者的所有熔解都不消耗聚爆层数。
             Creature? applier = context.Applier ?? context.Source?.Owner?.Creature;
+            if (applier?.IsPlayer == true && applier.GetPower<DeniaImmerseIntoVoidPower>() != null)
+                return 0;
+
+            // 3) 相册+粉色形态：持有者的熔解不消耗聚爆层数。
             if (applier?.IsPlayer != true) return currentConsumed;
             if (applier.Player?.GetRelic<DeniaAlbum>() == null) return currentConsumed;
             if (!DeniaFormHelper.IsPink(applier)) return currentConsumed;
@@ -307,8 +354,53 @@ public static class DeniaTouchOfOrobasPatch
         if (starterRelic is DeniaTrickster)
             __result = ModelDb.Relic<DeniaCounterfeitDwarfStar>().ToMutable();
     }
-}
-// ---- Patch 7: 回到远方——附加聚爆+1 ----
+}// ---- Patch 6: 蔽星--按持有者层数提高聚爆引爆伤害(+10%/层)和熔解伤害(+20%/层) ----
+public static class DeniaShroudedStarDamagePatch
+{
+    private static readonly IAemeathAutoBurstDamageRule AutoBurstRule = new ShroudedStarAutoBurstDamageRule();
+    private static readonly IAemeathMeltDamageRule MeltRule = new ShroudedStarMeltDamageRule();
+    private static bool _registered;
+
+    public static void Init()
+    {
+        if (_registered) return;
+        _registered = true;
+        AemeathFusionBurstRules.RegisterAutoBurstDamageRule(AutoBurstRule);
+        AemeathFusionBurstRules.RegisterMeltDamageRule(MeltRule);
+    }
+
+    private sealed class ShroudedStarAutoBurstDamageRule : IAemeathAutoBurstDamageRule
+    {
+        public int Priority => 100;
+
+        public int Apply(AemeathAutoBurstContext context, int currentDamage)
+        {
+            if (currentDamage <= 0) return currentDamage;
+            var applier = context.Applier;
+            if (applier?.IsPlayer != true) return currentDamage;
+            var power = applier.GetPower<DeniaShroudedStarPower>();
+            if (power == null || power.Amount <= 0) return currentDamage;
+            // 每层 +10%
+            return currentDamage + currentDamage * (int)power.Amount * 10 / 100;
+        }
+    }
+
+    private sealed class ShroudedStarMeltDamageRule : IAemeathMeltDamageRule
+    {
+        public int Priority => 100;
+
+        public int Apply(AemeathMeltContext context, int currentDamage)
+        {
+            if (currentDamage <= 0) return currentDamage;
+            var applier = context.Applier;
+            if (applier?.IsPlayer != true) return currentDamage;
+            var power = applier.GetPower<DeniaShroudedStarPower>();
+            if (power == null || power.Amount <= 0) return currentDamage;
+            // 每层 +20%
+            return currentDamage + currentDamage * (int)power.Amount * 20 / 100;
+        }
+    }
+}// ---- Patch 7: 回到远方——附加聚爆+1 ----
 [HarmonyPatch]
 public static class DeniaExtraBurstPatch
 {
@@ -374,22 +466,79 @@ public static class DeniaModifyAmountPatch
         return true;
     }
 }
-// ---- Patch 9c: AfterCardPlayed flush（熵变强化格挡 + 匍炬松松子力量）----
+// ---- Patch 9c: AfterCardPlayed flush（熵变强化格挡 + 匍炬松松子力量 + 骗术师/赝作矮星阈值触发）----
 [HarmonyPatch(typeof(MegaCrit.Sts2.Core.Hooks.Hook), nameof(MegaCrit.Sts2.Core.Hooks.Hook.AfterCardPlayed))]
 public static class DeniaAccumulatorFlushPatch
 {
     public static void Postfix(ref Task __result, CardPlay cardPlay)
     {
-        var creature = cardPlay.Card.Owner?.Creature;
-        if (creature == null) return;
-        __result = WrapFlush(__result, creature);
+        var player = cardPlay.Card.Owner;
+        if (player == null) return;
+        __result = WrapFlush(__result, player);
     }
 
-    private static async Task WrapFlush(Task original, Creature creature)
+    private static async Task WrapFlush(Task original, MegaCrit.Sts2.Core.Entities.Players.Player player)
     {
-        await original;
+        await (original ?? Task.CompletedTask);
+
+        var creature = player.Creature;
+        if (creature == null) return;
+
+        // 1) flush ETH / 匍炬松松子 累加器
         await DeniaEntropyBoostPower.FlushBlockAsync(creature);
         await DeniaTorchPineNutPower.FlushStrengthAsync(creature);
+
+        // 2) 骗术师/赝作矮星：每场战斗每打出 N 张牌 → 随机一张牌临时集谐响应
+        bool hasTeddy = player.GetRelic<DeniaTrickster>() != null;
+        bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
+        if (!hasTeddy && !hasDwarf) return;
+        await TryTriggerRelicRandomResponse(player, hasDwarf, hasTeddy);
+    }
+
+    private static async Task TryTriggerRelicRandomResponse(
+        MegaCrit.Sts2.Core.Entities.Players.Player player,
+        bool hasDwarf,
+        bool hasTeddy)
+    {
+        var creature = player.Creature;
+        int threshold = hasDwarf ? 2 : 3; // 赝作矮星优先级更高
+
+        // 累加 1
+        await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<DeniaRelicCardPlayedCounterPower>(
+            new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
+        var counter = creature.GetPower<DeniaRelicCardPlayedCounterPower>();
+        int now = counter != null ? (int)counter.Amount : 0;
+        if (now < threshold) return;
+
+        // 命中阈值：先重置计数器（无论后续是否真发响应，避免重复触发）
+        await MegaCrit.Sts2.Core.Commands.PowerCmd.Remove<DeniaRelicCardPlayedCounterPower>(creature);
+
+        // 收集候选：从抽/手/弃 三堆中排除已永久集谐响应或已临时集谐响应
+        var eligible = new List<MegaCrit.Sts2.Core.Models.CardModel>();
+        PileType[] piles = { PileType.Draw, PileType.Hand, PileType.Discard };
+        foreach (var pt in piles)
+        {
+            System.Collections.Generic.IReadOnlyList<MegaCrit.Sts2.Core.Models.CardModel> cards;
+            try { cards = pt.GetPile(player).Cards; }
+            catch (InvalidOperationException) { continue; }
+            foreach (var c in cards)
+            {
+                if (c.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse)) continue;
+                if (TuneStrainState.HasTemporaryResponse(c)) continue;
+                eligible.Add(c);
+            }
+        }
+
+        if (eligible.Count == 0) return; // 跳过（已重置计数）
+
+        // 全端种子化 RNG
+        if (player.RunState is MegaCrit.Sts2.Core.Runs.NullRunState) return;
+        var rng = player.RunState.Rng.CombatCardSelection;
+        var chosen = rng.NextItem(eligible);
+        if (chosen == null) return;
+
+        // AddTemporaryResponse 内部 CardCmd.ApplyKeyword 同步 void——记入卡片 keywords，本端确定修改会同步进入 SerializableCard.Keywords。
+        TuneStrainState.AddTemporaryResponse(player, chosen);
     }
 }
 // ---- Patch 9d: 熵变强化——Hook BeforePowerAmountChanged（自己Buff + 敌人Debuff）----
@@ -423,7 +572,6 @@ public static class DeniaRelicTurnStartPatch
     private static bool _painkillerFirst;
     internal static readonly HashSet<Creature> _hitThisCombat = new();
     private static readonly HashSet<Creature> _swordSetupDone = new();
-    private static readonly Dictionary<Creature, bool> _wasSolo = new();
 
     static DeniaRelicTurnStartPatch()
     {
@@ -432,13 +580,12 @@ public static class DeniaRelicTurnStartPatch
             _painkillerFirst = false;
             _hitThisCombat.Clear();
             _swordSetupDone.Clear();
-            _wasSolo.Clear();
             foreach (var player in combatState.Players)
             {
                 var sacrificialSword = player.GetRelic<DeniaSacrificialSword>();
                 if (sacrificialSword == null) continue;
                 sacrificialSword.GrantedStrength = 0m;
-                sacrificialSword.GrantedTrajectory = 0m;
+                sacrificialSword.GrantedShroudedStar = 0m;
                 sacrificialSword.EffectRemoved = false;
             }
         };
@@ -489,7 +636,7 @@ public static class DeniaRelicTurnStartPatch
                     _painkillerFirst = true;
                     await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>(new ThrowingPlayerChoiceContext(), player.Creature, 5m, player.Creature, null!);
                     await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.DexterityPower>(new ThrowingPlayerChoiceContext(), player.Creature, 5m, player.Creature, null!);
-                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(new ThrowingPlayerChoiceContext(), player.Creature, 50m, player.Creature, null!);
+                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<DeniaShroudedStarPower>(new ThrowingPlayerChoiceContext(), player.Creature, 5m, player.Creature, null!);
                 }
                 await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.VulnerablePower>(new ThrowingPlayerChoiceContext(), player.Creature, 1m, player.Creature, null!);
             }
@@ -505,17 +652,17 @@ public static class DeniaRelicTurnStartPatch
                 await MegaCrit.Sts2.Core.Commands.CreatureCmd.GainBlock(
                     player.Creature, new MegaCrit.Sts2.Core.Localization.DynamicVars.BlockVar(6m, MegaCrit.Sts2.Core.ValueProps.ValueProp.Move), null);
 
-            // 献斗剑护符：战斗开始时+20聚爆轨迹+4力量（首次掉血后移除效果）
+            // 献斗剑护符：战斗开始时+2蔽星+2力量（首次掉血后移除效果）
             var sacrificialSword = player.GetRelic<DeniaSacrificialSword>();
             if (sacrificialSword != null)
             {
-                if (!sacrificialSword.EffectRemoved && sacrificialSword.GrantedStrength <= 0m && sacrificialSword.GrantedTrajectory <= 0m)
+                if (!sacrificialSword.EffectRemoved && sacrificialSword.GrantedStrength <= 0m && sacrificialSword.GrantedShroudedStar <= 0m)
                 {
-                    const decimal swordTrajectory = 20m;
-                    const decimal swordStrength = 4m;
-                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(new ThrowingPlayerChoiceContext(), player.Creature, swordTrajectory, player.Creature, null!);
+                    const decimal swordStar = 2m;
+                    const decimal swordStrength = 2m;
+                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<DeniaShroudedStarPower>(new ThrowingPlayerChoiceContext(), player.Creature, swordStar, player.Creature, null!);
                     await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>(new ThrowingPlayerChoiceContext(), player.Creature, swordStrength, player.Creature, null!);
-                    sacrificialSword.GrantedTrajectory = swordTrajectory;
+                    sacrificialSword.GrantedShroudedStar = swordStar;
                     sacrificialSword.GrantedStrength = swordStrength;
                 }
             }
@@ -530,7 +677,7 @@ public static class DeniaRelicTurnStartPatch
                 await DeniaResourceState.GainDarkCore(player.Creature, dcGain, player.Creature, null!);
             }
 
-            // --- 大师之剑：战斗开始时若计数>0给2力量 ---
+            // --- 大师之剑：战斗开始时若计数>0给2力量和2蔽星 ---
             var sword = player.GetRelic<DeniaMasterSword>();
             if (sword != null && !_swordSetupDone.Contains(player.Creature))
             {
@@ -540,15 +687,15 @@ public static class DeniaRelicTurnStartPatch
                 {
                     await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>(
                         new ThrowingPlayerChoiceContext(), player.Creature, 2m, player.Creature, null!);
+                    await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<DeniaShroudedStarPower>(
+                        new ThrowingPlayerChoiceContext(), player.Creature, 2m, player.Creature, null!);
                     sword.GrantedStrength = 2m;
+                    sword.GrantedShroudedStar = 2m;
                 }
             }
 
             // --- 大师之剑：Boss胜利后计数恢复40 ---
             // handled in OnCombatWon subscription via DeniaMasterSword.AfterObtained/AfterRoomEntered
-
-            // 骗术师/赝作矮星：敌方仅有一名目标时，维持一份30聚爆轨迹
-            await RefreshSoloTrajectory(player, combatState);
         }
 
         // 熵变强化/匍炬松松子累加器 flush（安全发放）
@@ -558,30 +705,6 @@ public static class DeniaRelicTurnStartPatch
             await DeniaEntropyBoostPower.ClearTriggerCountAsync(player.Creature);
             await DeniaTorchPineNutPower.FlushStrengthAsync(player.Creature);
         }
-    }
-
-    private static async Task RefreshSoloTrajectory(MegaCrit.Sts2.Core.Entities.Players.Player player, MegaCrit.Sts2.Core.Combat.ICombatState combatState)
-    {
-        bool hasTeddy = player.GetRelic<DeniaTrickster>() != null;
-        bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
-        if (!hasTeddy && !hasDwarf) return;
-
-        bool solo = combatState.Enemies.Count(e => !e.IsDead) == 1;
-        bool was = _wasSolo.TryGetValue(player.Creature, out bool w) && w;
-        if (solo == was) return;
-
-        _wasSolo[player.Creature] = solo;
-        if (!solo)
-        {
-            var traj = player.Creature.GetPower<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>();
-            if (traj != null && traj.Amount >= 30m)
-                await MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(
-                    new ThrowingPlayerChoiceContext(), traj, -30m, player.Creature, null!);
-            return;
-        }
-
-        await MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
-            new ThrowingPlayerChoiceContext(), player.Creature, 30m, player.Creature, null!);
     }
 
     private static void KusabimaruCheck(MegaCrit.Sts2.Core.Combat.ICombatState combatState)
@@ -646,16 +769,16 @@ public static class DeniaSacrificeHpTrackPatch
             sword.GrantedStrength = 0m;
         }
 
-        if (sword.GrantedTrajectory > 0m)
+        if (sword.GrantedShroudedStar > 0m)
         {
-            var traj = creature.GetPower<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>();
-            if (traj != null && traj.Amount > 0m)
+            var star = creature.GetPower<DeniaShroudedStarPower>();
+            if (star != null && star.Amount > 0m)
             {
-                decimal trajToRemove = System.Math.Min(traj.Amount, sword.GrantedTrajectory);
+                decimal starToRemove = System.Math.Min(star.Amount, sword.GrantedShroudedStar);
                 await MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(
-                    new ThrowingPlayerChoiceContext(), traj, -trajToRemove, creature, null!);
+                    new ThrowingPlayerChoiceContext(), star, -starToRemove, creature, null!);
             }
-            sword.GrantedTrajectory = 0m;
+            sword.GrantedShroudedStar = 0m;
         }
     }
 }
@@ -678,7 +801,7 @@ public static class DeniaCardPortraitFillPatch
         catch { }
     }
 }
-// ---- Patch 15: 匍炬松松子——获得聚爆轨迹时获得1/5力量 ----
+// ---- Patch 15: 匍炬松松子--获得蔽星时获得等量力量 ----
 [HarmonyPatch(typeof(MegaCrit.Sts2.Core.Hooks.Hook), nameof(MegaCrit.Sts2.Core.Hooks.Hook.BeforePowerAmountChanged))]
 public static class DeniaTorchPineNutPatch
 {
@@ -686,12 +809,12 @@ public static class DeniaTorchPineNutPatch
     {
         if (amount <= 0) return;
         if (target?.IsPlayer != true) return;
-        if (power is not AemeathFusionBurstTrajectoryPower) return;
+        if (power is not DeniaShroudedStarPower) return;
 
         var pwr = target.GetPower<DeniaTorchPineNutPower>();
         if (pwr == null) return;
 
-        int strGain = (int)amount / 5 * (int)pwr.Amount;
+        int strGain = (int)amount * (int)pwr.Amount;
         if (strGain > 0)
             DeniaTorchPineNutPower.AccumulateStrength(target, strGain);
     }
@@ -754,13 +877,21 @@ public static class DeniaMasterSwordPatch
         {
             sword.Counter--;
             sword.RefreshDisplay();
-            if (sword.Counter == 0 && sword.GrantedStrength > 0)
+            if (sword.Counter == 0 && (sword.GrantedStrength > 0 || sword.GrantedShroudedStar > 0))
             {
                 var str = player.Creature.GetPower<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>();
-                if (str != null && str.Amount >= sword.GrantedStrength)
+                if (str != null && str.Amount >= sword.GrantedStrength && sword.GrantedStrength > 0)
                     _ = MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(
                         new ThrowingPlayerChoiceContext(), str, -sword.GrantedStrength, player.Creature, null!);
+                if (sword.GrantedShroudedStar > 0)
+                {
+                    var star = player.Creature.GetPower<DeniaShroudedStarPower>();
+                    if (star != null && star.Amount >= sword.GrantedShroudedStar)
+                        _ = MegaCrit.Sts2.Core.Commands.PowerCmd.ModifyAmount(
+                            new ThrowingPlayerChoiceContext(), star, -sword.GrantedShroudedStar, player.Creature, null!);
+                }
                 sword.GrantedStrength = 0;
+                sword.GrantedShroudedStar = 0;
             }
         }
     }

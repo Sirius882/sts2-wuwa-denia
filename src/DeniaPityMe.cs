@@ -19,7 +19,7 @@ public sealed class DeniaPityMe : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_pity_me.png";
 
     public DeniaPityMe()
-        : base(0, CardType.Power, CardRarity.Basic, TargetType.Self, showInCardLibrary: false) { }
+        : base(0, CardType.Power, CardRarity.Basic, TargetType.Self, showInCardLibrary: true) { }
 
     public override int MaxUpgradeLevel => 0;
 
@@ -27,12 +27,12 @@ public sealed class DeniaPityMe : DeniaCard
     {
         if (!DeniaFormHelper.IsBlack(Owner.Creature)) return;
 
-        int trajGain = await TrySpendVirtualMatter(play) ? 20 : 0;
-        if (trajGain > 0)
+        int starGain = await TrySpendVirtualMatter(play) ? 2 : 0;
+        if (starGain > 0)
         {
-            await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
-                ctx, Owner.Creature, trajGain, Owner.Creature, this);
-            await DeniaFormHelper.AddBlackFormTrajectoryDebt(Owner.Creature, trajGain, Owner.Creature, this);
+            await PowerCmd.Apply<DeniaShroudedStarPower>(
+                ctx, Owner.Creature, starGain, Owner.Creature, this);
+            await DeniaFormHelper.AddBlackFormShroudedStarDebt(Owner.Creature, starGain, Owner.Creature, this);
         }
 
         // 消耗手牌中的"直视我"和所有"怜悯我"
@@ -44,5 +44,5 @@ public sealed class DeniaPityMe : DeniaCard
     }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "怜悯我", Description: "只能在[gold]黑色形态[/gold]下打出。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：获得20层[gold]聚爆轨迹[/gold]（退出[gold]黑色形态[/gold]时失去）。");
+        new CardLoc(Title: "怜悯我", Description: "只能在[gold]黑色形态[/gold]下打出。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：获得2层[gold]蔽星[/gold]（退出[gold]黑色形态[/gold]时失去）。");
 }

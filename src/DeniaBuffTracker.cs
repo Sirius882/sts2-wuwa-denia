@@ -58,17 +58,14 @@ public static class DeniaBuffTracker
         await PowerCmd.Apply<DeniaBuffOrDebuffAppliedThisTurnPower>(choiceContext, creature, 1m, creature, null!);
     }
 
-    /// <summary>统计玩家身上的增益总层数（PowerType.Buff, Amount > 0）。聚爆轨迹只计入十分之一。</summary>
+    /// <summary>统计玩家身上的增益总层数（PowerType.Buff, Amount > 0）。</summary>
     public static int CountPlayerBuffs(Creature player)
     {
         int count = 0;
         foreach (var p in player.Powers)
         {
             if (p.Type != PowerType.Buff || p.Amount <= 0) continue;
-            if (p is AemeathFusionBurstTrajectoryPower)
-                count += (int)p.Amount / 10;
-            else
-                count += (int)p.Amount;
+            count += (int)p.Amount;
         }
         return count;
     }

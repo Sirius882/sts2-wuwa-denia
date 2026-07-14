@@ -67,6 +67,12 @@ public static class DeniaFormHelper
             await PowerCmd.Apply<DeniaWeaknessBonusTrajectoryDebtPower>(_throwing, creature, amount, applier, source);
     }
 
+    public static async Task AddBlackFormShroudedStarDebt(Creature creature, int amount, Creature applier, CardModel source)
+    {
+        if (amount > 0)
+            await PowerCmd.Apply<DeniaBlackFormShroudedStarDebtPower>(_throwing, creature, amount, applier, source);
+    }
+
     public static async Task MarkTemporaryResonanceMode(Creature creature, Creature applier, CardModel source)
     {
         if (creature.GetPower<DeniaPermanentResonanceModeSeenPower>() != null) return;
@@ -136,6 +142,16 @@ public static class DeniaFormHelper
         }
         await PowerCmd.Remove<DeniaBlackFormTrajectoryDebtPower>(creature);
 
+        var shroudedStarDebt = creature.GetPower<DeniaBlackFormShroudedStarDebtPower>();
+        if (shroudedStarDebt != null && shroudedStarDebt.Amount > 0)
+        {
+            var star = creature.GetPower<DeniaShroudedStarPower>();
+            int starToRemove = (int)shroudedStarDebt.Amount;
+            if (star != null && star.Amount > 0)
+                await PowerCmd.ModifyAmount(_throwing, star, -Math.Min(starToRemove, (int)star.Amount), applier, source);
+        }
+        await PowerCmd.Remove<DeniaBlackFormShroudedStarDebtPower>(creature);
+
         var weaknessStrengthDebt = creature.GetPower<DeniaWeaknessBonusStrengthDebtPower>();
         if (weaknessStrengthDebt != null && weaknessStrengthDebt.Amount > 0)
         {
@@ -149,10 +165,10 @@ public static class DeniaFormHelper
         var weaknessTrajectoryDebt = creature.GetPower<DeniaWeaknessBonusTrajectoryDebtPower>();
         if (weaknessTrajectoryDebt != null && weaknessTrajectoryDebt.Amount > 0)
         {
-            var traj = creature.GetPower<AemeathFusionBurstTrajectoryPower>();
-            int trajToRemove = (int)weaknessTrajectoryDebt.Amount;
-            if (traj != null && traj.Amount > 0)
-                await PowerCmd.ModifyAmount(_throwing, traj, -Math.Min(trajToRemove, (int)traj.Amount), applier, source);
+            var star = creature.GetPower<DeniaShroudedStarPower>();
+            int starToRemove = (int)weaknessTrajectoryDebt.Amount;
+            if (star != null && star.Amount > 0)
+                await PowerCmd.ModifyAmount(_throwing, star, -Math.Min(starToRemove, (int)star.Amount), applier, source);
         }
         await PowerCmd.Remove<DeniaWeaknessBonusTrajectoryDebtPower>(creature);
 

@@ -24,7 +24,7 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "请您不要···宽恕我",
-        Description: "在[gold]粉色形态[/gold]下，切换到[gold]黑色形态[/gold]，不获得\"直视我\"和\"怜悯我\"，获得20层[gold]聚爆轨迹[/gold]并进入[gold]共鸣模态·集谐[/gold]。退出[gold]黑色形态[/gold]时，失去由此获得的聚爆轨迹并退出[gold]共鸣模态·集谐[/gold]。");
+        Description: "在[gold]粉色形态[/gold]下，切换到[gold]黑色形态[/gold]，不获得\"直视我\"和\"怜悯我\"，获得2层[gold]蔽星[/gold]并进入[gold]共鸣模态·集谐[/gold]。退出[gold]黑色形态[/gold]时，失去由此获得的蔽星并退出[gold]共鸣模态·集谐[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -32,11 +32,11 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
 
         await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this, addBlackFormCards: false);
 
-        await PowerCmd.Apply<AemeathWw.Scripts.AemeathFusionBurstTrajectoryPower>(
-            ctx, Owner.Creature, 20, Owner.Creature, this);
+        await PowerCmd.Apply<DeniaShroudedStarPower>(
+            ctx, Owner.Creature, 2, Owner.Creature, this);
         await PowerCmd.Apply<DeniaResonanceModePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
 
-        await DeniaFormHelper.AddBlackFormTrajectoryDebt(Owner.Creature, 20, Owner.Creature, this);
+        await DeniaFormHelper.AddBlackFormShroudedStarDebt(Owner.Creature, 2, Owner.Creature, this);
         await DeniaFormHelper.MarkTemporaryResonanceMode(Owner.Creature, Owner.Creature, this);
     }
 

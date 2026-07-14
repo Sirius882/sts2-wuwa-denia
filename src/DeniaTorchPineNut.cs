@@ -32,7 +32,7 @@ public sealed class DeniaTorchPineNut : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "匍炬松松子",
-        Description: "获得[gold]聚爆轨迹[/gold]时，同步获得该次获得层数1/5的[gold]力量[/gold]。");
+        Description: "获得[gold]蔽星[/gold]时，同步获得相同层数的[gold]力量[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -56,8 +56,8 @@ public sealed class DeniaTorchPineNutPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "匍炬松松子",
-            Description: "获得聚爆轨迹时，同步获得该次获得层数1/5的力量。",
-            SmartDescription: "获得聚爆轨迹时，同步获得该次获得层数1/5的力量。");
+            Description: "获得蔽星时，同步获得相同层数的力量。",
+            SmartDescription: "获得蔽星时，同步获得相同层数的力量。");
 
     internal static void AccumulateStrength(Creature creature, int amount)
     {

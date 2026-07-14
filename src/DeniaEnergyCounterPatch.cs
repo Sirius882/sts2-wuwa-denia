@@ -1,12 +1,14 @@
 // 达妮娅能量UI补丁：
 // 1. 劫持 EnergyIconHelper.GetPath 将 "denia" 前缀映射到自定 PNG（卡牌能量图标）
-// 2. 在 NCombatUi.Activate 时替换 NEnergyCounter 能量球贴图（战斗栏能量球）
+// 2. 在 NCombatUi.Activate 时替换 NEnergyCounter 能量球贴图（战斗栏能量球）——仅本地玩家的角色是 Denia 时替换
 #nullable enable
 
+using System;
 using System.Linq;
 using Godot;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Context;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Nodes.Combat;
@@ -40,7 +42,9 @@ public static class DeniaEnergyCounterOrbPatch
 
     private static void Postfix(NCombatUi __instance, CombatState state)
     {
-        Player? me = state.Players.FirstOrDefault();
+        Player? me;
+        try { me = LocalContext.GetMe(state); }
+        catch (InvalidOperationException) { return; }
         if (me?.Character is not Denia) return;
 
         var energyCounter = EnergyCounterRef(__instance);

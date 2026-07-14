@@ -32,15 +32,11 @@ public sealed class DeniaVisit : DeniaCard
 
         bool preserveBurst = await TrySpendVirtualMatter(play);
 
-        DeniaMeltProtectPatch.PreserveNextMelt = preserveBurst;
-        try
+        using var scope = preserveBurst ? DeniaMeltProtectPatch.BeginPreserve(this) : null;
+        for (int i = 0; i < meltTimes; i++)
         {
-            for (int i = 0; i < meltTimes; i++)
-            {
-                await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
-            }
+            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
         }
-        finally { DeniaMeltProtectPatch.PreserveNextMelt = false; }
 
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
     }

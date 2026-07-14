@@ -28,14 +28,12 @@ public sealed class DeniaObey : DeniaCard
         if (await TrySpendVirtualMatter(play))
             melt += 2;
 
-        DeniaMeltProtectPatch.PreserveNextMelt = true;
-        try
-        {
-            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, melt);
-        }
-        finally { DeniaMeltProtectPatch.PreserveNextMelt = false; }
+        // 此卡触发的熔解不消耗聚爆层数（按卡牌实例精确保护，避免污染并发熔解）。
+        using var scope = DeniaMeltProtectPatch.BeginPreserve(this);
+        await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, melt);
 
-        await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 10, Owner.Creature, this);
+        if (!play.Target.IsDead)
+            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 10, Owner.Creature, this);
     }
 
     public override List<(string, string)>? Localization =>

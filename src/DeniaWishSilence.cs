@@ -29,12 +29,8 @@ public sealed class DeniaWishSilence : DeniaCard
         int vmMelt = preserveBurst ? 2 : 0;
         int totalMelt = baseMelt + vmMelt;
 
-        DeniaMeltProtectPatch.PreserveNextMelt = preserveBurst;
-        try
-        {
-            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, totalMelt);
-        }
-        finally { DeniaMeltProtectPatch.PreserveNextMelt = false; }
+        using var scope = preserveBurst ? DeniaMeltProtectPatch.BeginPreserve(this) : null;
+        await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, totalMelt);
     }
 
     protected override void OnUpgrade() { }
