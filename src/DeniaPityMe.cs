@@ -27,6 +27,8 @@ public sealed class DeniaPityMe : DeniaCard
     {
         if (!DeniaFormHelper.IsBlack(Owner.Creature)) return;
 
+        await DeniaFormHelper.MarkPityMeSeenThisBlackForm(Owner.Creature, Owner.Creature, this);
+
         int starGain = await TrySpendVirtualMatter(play) ? 2 : 0;
         if (starGain > 0)
         {

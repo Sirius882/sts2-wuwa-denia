@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using BaseLib.Abstracts;
@@ -10,7 +9,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 namespace Denia;
 
-/// <summary>未竟的谎言 — Uncommon Attack</summary>
+[Pool(typeof(DeniaCardPool))]
 public sealed class DeniaUnfinishedLie : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 4;
@@ -18,24 +17,28 @@ public sealed class DeniaUnfinishedLie : DeniaCard
 
     public DeniaUnfinishedLie() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(Title: "未竟的谎言",
-        Description: "提高聚爆上限{IfUpgraded:show:3|2}。\n附加{IfUpgraded:show:6|4}点[gold]聚爆[/gold]。\n若触发[gold]引爆[/gold]，获得1点能量。\n虚质强化：附加的[gold]聚爆[/gold]层数和上限各+2。");
+    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "未竟的谎言",
+        Description: "提高聚爆上限{IfUpgraded:show:3|2}。附加{IfUpgraded:show:5|3}点[gold]聚爆[/gold]。若这张牌触发引爆，获得1点能量。\n虚质强化：附加的[gold]聚爆[/gold]层数和聚爆上限都+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
         int cu = IsUpgraded ? 3 : 2;
-        int bu = IsUpgraded ? 6 : 4;
-
-        if (await TrySpendVirtualMatter(play)) { cu += 2; bu += 2; }
+        int bu = IsUpgraded ? 5 : 3;
+        if (await TrySpendVirtualMatter(play))
+        {
+            cu += 2;
+            bu += 2;
+        }
 
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, cu, Owner.Creature, this);
         int before = AemeathFusionBurstState.GetFusionBurst(play.Target);
         int cap = AemeathFusionBurstState.GetFusionBurstCap(play.Target);
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, bu, Owner.Creature, this);
         int after = AemeathFusionBurstState.GetFusionBurst(play.Target);
-        if (before + bu >= cap && after < before)
+        bool burstTriggered = before + bu >= cap && after < before + bu;
+        if (burstTriggered)
             await PlayerCmd.GainEnergy(1, Owner);
     }
 

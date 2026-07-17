@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,8 +7,6 @@ using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
 using TuneStrain;
 
 namespace Denia;
@@ -30,26 +27,23 @@ public sealed class DeniaRupture : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "破裂",
-            Description: "对全体敌人造成15点伤害2次。\n额外造成一次等于全体敌人聚爆上限之和一半的伤害。\n黯核强化：每段基础伤害+5。");
+            Description: "对全体敌人造成15点伤害2次。\n再造成等于全体敌人聚爆上限之和的伤害一次。\n黯核强化：每段基础数值+5。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int dcBonus = await TrySpendDarkCore(play) ? 5 : 0;
-        int hitCount = 2;
         int baseDmg = 15 + dcBonus;
 
         var enemies = Owner.Creature.CombatState.Enemies.Where(e => !e.IsDead).ToArray();
 
-        // 多段全屏伤害（用 WithHitCount 确保活力正确加成每段）
         await DamageCmd.Attack(baseDmg)
-            .WithHitCount(hitCount)
+            .WithHitCount(2)
             .FromCard(this)
             .TargetingAllOpponents(Owner.Creature.CombatState)
             .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
 
-        // 额外伤害 = 全体聚爆上限之和 / 2
         int totalCap = enemies.Sum(e => AemeathFusionBurstState.GetFusionBurstCap(e));
-        int bonusDmg = totalCap / 2;
+        int bonusDmg = totalCap + dcBonus;
         if (bonusDmg > 0)
         {
             foreach (var enemy in enemies)

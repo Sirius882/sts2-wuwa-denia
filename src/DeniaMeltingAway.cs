@@ -29,11 +29,11 @@ public sealed class DeniaMeltingAway : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_melting_away.png";
 
     public DeniaMeltingAway()
-        : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(2, CardType.Skill, CardRarity.Rare, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "熔毁殆尽",
-        Description: "对随机一名敌人触发一次无条件引爆。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]，并在此后每回合开始时，对所有敌人附加{IfUpgraded:show:2|1}点[gold]聚爆[/gold]，并提升其聚爆上限1点。\n黯核强化：附加的[gold]聚爆[/gold]层数+2。");
+        Description: "对随机一名敌人触发一次无条件聚爆上限引爆。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]，此后每个回合开始时，对所有敌人附加{IfUpgraded:show:2|1}点[gold]聚爆[/gold]，并提升其聚爆上限1点。\n黯核强化：上述附加的[gold]聚爆[/gold]层数和聚爆上限都ld]层数和聚爆上限都+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

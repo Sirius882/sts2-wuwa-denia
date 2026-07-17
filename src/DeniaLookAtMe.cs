@@ -27,6 +27,8 @@ public sealed class DeniaLookAtMe : DeniaCard
     {
         if (!DeniaFormHelper.IsBlack(Owner.Creature)) return;
 
+        await DeniaFormHelper.MarkLookAtMeSeenThisBlackForm(Owner.Creature, Owner.Creature, this);
+
         if (await TrySpendVirtualMatter(play))
         {
             await PowerCmd.Apply<DeniaResonanceModePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);

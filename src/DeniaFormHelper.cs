@@ -37,6 +37,33 @@ public static class DeniaFormHelper
     public static bool HasBlackFormTrajectoryChoice(Creature creature) =>
         creature.GetPower<DeniaBlackFormTrajectoryDebtPower>()?.Amount > 0;
 
+    public static bool SawLookAtMeThisBlackForm(Creature creature) =>
+        creature.GetPower<DeniaBlackFormLookAtMeSeenPower>()?.Amount > 0;
+
+    public static bool SawPityMeThisBlackForm(Creature creature) =>
+        creature.GetPower<DeniaBlackFormPityMeSeenPower>()?.Amount > 0;
+
+    public static bool SawForgiveMePathThisBlackForm(Creature creature) =>
+        creature.GetPower<DeniaBlackFormForgiveMePathPower>()?.Amount > 0;
+
+    public static async Task MarkLookAtMeSeenThisBlackForm(Creature creature, Creature applier, CardModel source)
+    {
+        if (creature.GetPower<DeniaBlackFormLookAtMeSeenPower>() == null)
+            await PowerCmd.Apply<DeniaBlackFormLookAtMeSeenPower>(_throwing, creature, 1m, applier, source);
+    }
+
+    public static async Task MarkPityMeSeenThisBlackForm(Creature creature, Creature applier, CardModel source)
+    {
+        if (creature.GetPower<DeniaBlackFormPityMeSeenPower>() == null)
+            await PowerCmd.Apply<DeniaBlackFormPityMeSeenPower>(_throwing, creature, 1m, applier, source);
+    }
+
+    public static async Task MarkForgiveMePathThisBlackForm(Creature creature, Creature applier, CardModel source)
+    {
+        if (creature.GetPower<DeniaBlackFormForgiveMePathPower>() == null)
+            await PowerCmd.Apply<DeniaBlackFormForgiveMePathPower>(_throwing, creature, 1m, applier, source);
+    }
+
     public static async Task MarkResonanceModePermanent(Creature creature)
     {
         if (creature.GetPower<DeniaPermanentResonanceModeSeenPower>() == null)
@@ -151,6 +178,9 @@ public static class DeniaFormHelper
                 await PowerCmd.ModifyAmount(_throwing, star, -Math.Min(starToRemove, (int)star.Amount), applier, source);
         }
         await PowerCmd.Remove<DeniaBlackFormShroudedStarDebtPower>(creature);
+        await PowerCmd.Remove<DeniaBlackFormLookAtMeSeenPower>(creature);
+        await PowerCmd.Remove<DeniaBlackFormPityMeSeenPower>(creature);
+        await PowerCmd.Remove<DeniaBlackFormForgiveMePathPower>(creature);
 
         var weaknessStrengthDebt = creature.GetPower<DeniaWeaknessBonusStrengthDebtPower>();
         if (weaknessStrengthDebt != null && weaknessStrengthDebt.Amount > 0)

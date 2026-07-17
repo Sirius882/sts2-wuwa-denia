@@ -207,8 +207,11 @@ public abstract class DeniaCard(
     {
         if (CurrentVirtualMatterCost <= 0) return false;
         if (cardPlay.IsAutoPlay) return false;
-        return await DeniaResourceState.TrySpendVirtualMatter(
+        bool spent = await DeniaResourceState.TrySpendVirtualMatter(
             Owner.Creature, CurrentVirtualMatterCost, Owner.Creature, this);
+        if (spent)
+            await DeniaEnhancementEvents.NotifyVirtualMatterEnhanced(Owner.Creature);
+        return spent;
     }
 
     /// <summary>尝试消耗黯核。仅在[gold]黑色形态[/gold]且黯核足够时返回 true 并实际扣除。</summary>
@@ -216,7 +219,25 @@ public abstract class DeniaCard(
     {
         if (CurrentDarkCoreCost <= 0) return false;
         if (cardPlay.IsAutoPlay) return false;
-        return await DeniaResourceState.TrySpendDarkCore(
+        bool spent = await DeniaResourceState.TrySpendDarkCore(
             Owner.Creature, CurrentDarkCoreCost, Owner.Creature, this);
+        if (spent)
+            await DeniaEnhancementEvents.NotifyDarkCoreEnhanced(Owner.Creature);
+        return spent;
     }
 }
+
+/// <summary>虚质/黯核强化成功后的全局通知，供「幻沫」「向虚而行」等监听。</summary>
+public static class DeniaEnhancementEvents
+{
+    public static async Task NotifyVirtualMatterEnhanced(MegaCrit.Sts2.Core.Entities.Creatures.Creature creature)
+    {
+        await DeniaPhantomFoamPower.OnVirtualMatterEnhanced(creature);
+    }
+
+    public static async Task NotifyDarkCoreEnhanced(MegaCrit.Sts2.Core.Entities.Creatures.Creature creature)
+    {
+        await DeniaTowardVoidPower.OnDarkCoreEnhanced(creature);
+    }
+}
+

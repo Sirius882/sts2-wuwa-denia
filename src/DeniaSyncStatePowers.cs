@@ -98,3 +98,33 @@ public sealed class DeniaRelicCardPlayedCounterPower : DeniaHiddenCounterPower
     static DeniaRelicCardPlayedCounterPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaRelicCardPlayedCounterPower));
 }
 
+/// <summary>本次黑色形态期间打出过「直视我」。</summary>
+public sealed class DeniaBlackFormLookAtMeSeenPower : DeniaHiddenCounterPower
+{
+    static DeniaBlackFormLookAtMeSeenPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaBlackFormLookAtMeSeenPower));
+}
+
+/// <summary>本次黑色形态期间打出过「怜悯我」。</summary>
+public sealed class DeniaBlackFormPityMeSeenPower : DeniaHiddenCounterPower
+{
+    static DeniaBlackFormPityMeSeenPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaBlackFormPityMeSeenPower));
+}
+
+/// <summary>本次黑色形态由「请您不要···宽恕我」进入（虚质粒子/久疏问候双收益路径）。</summary>
+public sealed class DeniaBlackFormForgiveMePathPower : DeniaHiddenCounterPower
+{
+    static DeniaBlackFormForgiveMePathPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaBlackFormForgiveMePathPower));
+}
+
+/// <summary>幻沫：本回合已触发次数。</summary>
+public sealed class DeniaPhantomFoamTriggeredThisTurnPower : DeniaHiddenCounterPower
+{
+    static DeniaPhantomFoamTriggeredThisTurnPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaPhantomFoamTriggeredThisTurnPower));
+}
+
+/// <summary>向虚而行：本回合已触发次数。</summary>
+public sealed class DeniaTowardVoidTriggeredThisTurnPower : DeniaHiddenCounterPower
+{
+    static DeniaTowardVoidTriggeredThisTurnPower() => SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaTowardVoidTriggeredThisTurnPower));
+}
+

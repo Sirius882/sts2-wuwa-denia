@@ -33,7 +33,7 @@ public sealed class DeniaResonanceMode : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "共鸣模态·集谐",
-        Description: "进入[gold]共鸣模态·集谐[/gold]，给任意两张手牌附加[gold]集谐响应[/gold]。\n黯核强化：选择范围扩大到整个持有的牌组，可选4张牌。\n[gold]共鸣模态·集谐·达妮娅[/gold]：计算集谐增伤时，按2倍采用你的集谐响应 power 层数。");
+        Description: "进入[gold]共鸣模态·集谐[/gold]，给任意两张手牌附加[gold]集谐响应[/gold]。\n黯核强化：选择范围扩大到整个持有的牌组，可选4张牌。\n[gold]共鸣模态·集谐·达妮娅[/gold]：计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -80,7 +80,7 @@ public sealed class DeniaResonanceMode : DeniaCard
 
 /// <summary>
 /// 共鸣模态·集谐（达妮娅专属）：可见 buff 标记。
-/// 激活时让集谐系统在计算集谐响应度时按 2 倍采用响应 power 层数。
+/// 激活时让集谐系统在计算集谐响应度时按 1.5 倍采用响应 power 层数（向下取整）。
 /// 通过在静态构造里向 TuneStrainState.RegisterResponseDegreeMultiplier 注册一个回调实现解耦。
 /// </summary>
 public sealed class DeniaResonanceModePower : CustomPowerModel
@@ -96,15 +96,15 @@ public sealed class DeniaResonanceModePower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "共鸣模态·集谐",
-            Description: "计算集谐增伤时，按2倍采用你的集谐响应 power 层数。",
-            SmartDescription: "计算集谐增伤时，按2倍采用你的集谐响应 power 层数。");
+            Description: "计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。",
+            SmartDescription: "计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。");
 
     static DeniaResonanceModePower()
     {
         SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaResonanceModePower));
-        // 注册一次：回调在每次计算响应度时被询问，返回 2.0 表示本玩家处于共鸣模态则翻倍。
+        // 注册一次：回调在每次计算响应度时被询问；返回 1.5 表示本玩家处于共鸣模态则按 1.5 倍采用层数（GetResponseDegree 内再向下取整）。
         TuneStrainState.RegisterResponseDegreeMultiplier(creature =>
-            creature.GetPower<DeniaResonanceModePower>() != null ? 2.0 : 1.0);
+            creature.GetPower<DeniaResonanceModePower>() != null ? 1.5 : 1.0);
     }
 }
 

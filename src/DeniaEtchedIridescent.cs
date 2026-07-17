@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using BaseLib.Abstracts;
@@ -11,6 +10,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 namespace Denia;
 
 /// <summary>蚀刻繁彩 — Common Attack</summary>
+[Pool(typeof(DeniaCardPool))]
 public sealed class DeniaEtchedIridescent : DeniaCard
 {
     public override int CurrentDarkCoreCost => 1;
@@ -18,20 +18,25 @@ public sealed class DeniaEtchedIridescent : DeniaCard
 
     public DeniaEtchedIridescent() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(Title: "蚀刻繁彩",
-        Description: "附加{IfUpgraded:show:6|3}点[gold]聚爆[/gold]，抽1张牌。\n黯核强化：再附加3点[gold]聚爆[/gold]2次。");
+    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "蚀刻繁彩",
+        Description: "[gold]熔解[/gold]1，附加{IfUpgraded:show:4|2}点[gold]聚爆[/gold]。抽{IfUpgraded:show:2|1}张牌。\n黯核强化：主效果每使你抽1张牌，再附加3[gold]聚爆[/gold]1次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        int b = IsUpgraded ? 6 : 3;
-        await AemeathFusionBurstState.TryAddFusionBurst(play.Target, b, Owner.Creature, this);
-        await CardPileCmd.Draw(ctx, 1, Owner);
+        int burst = IsUpgraded ? 4 : 2;
+        int draw = IsUpgraded ? 2 : 1;
 
-        if (await TrySpendDarkCore(play))
+        await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
+        if (!play.Target.IsDead)
+            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
+        await CardPileCmd.Draw(ctx, draw, Owner);
+
+        // 黯核强化：升级前1次、升级后2次，分段附加聚爆
+        if (await TrySpendDarkCore(play) && !play.Target.IsDead)
         {
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < draw; i++)
                 await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 3, Owner.Creature, this);
         }
     }

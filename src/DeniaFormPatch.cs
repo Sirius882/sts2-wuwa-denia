@@ -438,7 +438,7 @@ public static class DeniaExtraBurstWithoutAutoBurstPatch
         if (pwr != null) amount += (int)pwr.Amount;
     }
 }
-// ---- Patch 8: 从远方——附加聚爆上限+1 ----
+// ---- Patch 8: 从远方——附加聚爆上限+Amount；已满40则改为熔解 ----
 [HarmonyPatch]
 public static class DeniaExtraBurstCapPatch
 {
@@ -449,12 +449,40 @@ public static class DeniaExtraBurstCapPatch
             new[] { typeof(Creature), typeof(int), typeof(Creature), typeof(MegaCrit.Sts2.Core.Models.CardModel) });
     }
 
-    public static void Prefix(ref int amount, Creature applier)
+    // __state: 若 >0 表示应改为熔解的次数（目标已满硬上限40）
+    public static void Prefix(Creature target, ref int amount, Creature applier, out int __state)
     {
+        __state = 0;
         if (DeniaMeltingAway.IsMeltingAwayBurstFill) return;
         if (applier?.IsPlayer != true) return;
         var pwr = applier.GetPower<DeniaExtraBurstCapPower>();
-        if (pwr != null) amount += (int)pwr.Amount;
+        if (pwr == null || pwr.Amount <= 0) return;
+
+        int extra = (int)pwr.Amount;
+        // 已满硬上限：额外层数改为等量熔解，不再提高上限
+        if (AemeathWw.Scripts.AemeathFusionBurstState.GetFusionBurstCap(target) >= 40)
+        {
+            __state = extra;
+            amount = 0;
+            return;
+        }
+
+        amount += extra;
+    }
+
+    public static void Postfix(Creature target, Creature applier, MegaCrit.Sts2.Core.Models.CardModel source, int __state, ref Task<bool> __result)
+    {
+        if (__state <= 0) return;
+        __result = WrapMelt(__result, target, applier, source, __state);
+    }
+
+    private static async Task<bool> WrapMelt(Task<bool> original, Creature target, Creature applier, MegaCrit.Sts2.Core.Models.CardModel source, int meltTimes)
+    {
+        bool ok = false;
+        if (original != null) ok = await original;
+        if (target == null || target.IsDead || meltTimes <= 0) return ok;
+        await AemeathWw.Scripts.AemeathFusionBurstState.ResolveMelt(target, applier, source, meltTimes);
+        return true;
     }
 }
 // ---- Patch 9: PowerCmd.ModifyAmount 钩子 ----
@@ -702,6 +730,8 @@ public static class DeniaRelicTurnStartPatch
         foreach (var player in combatState.Players)
         {
             await DeniaEntropyBoostPower.FlushBlockAsync(player.Creature);
+            await PowerCmd.Remove<DeniaPhantomFoamTriggeredThisTurnPower>(player.Creature);
+            await PowerCmd.Remove<DeniaTowardVoidTriggeredThisTurnPower>(player.Creature);
             await DeniaEntropyBoostPower.ClearTriggerCountAsync(player.Creature);
             await DeniaTorchPineNutPower.FlushStrengthAsync(player.Creature);
         }

@@ -31,6 +31,7 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
         if (!DeniaFormHelper.IsPink(Owner.Creature)) return;
 
         await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this, addBlackFormCards: false);
+        await DeniaFormHelper.MarkForgiveMePathThisBlackForm(Owner.Creature, Owner.Creature, this);
 
         await PowerCmd.Apply<DeniaShroudedStarPower>(
             ctx, Owner.Creature, 2, Owner.Creature, this);

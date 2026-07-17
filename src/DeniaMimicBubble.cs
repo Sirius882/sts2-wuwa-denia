@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BaseLib.Abstracts;
@@ -11,9 +10,10 @@ using MegaCrit.Sts2.Core.Models.Powers;
 namespace Denia;
 
 /// <summary>拟态泡泡 — Rare Skill</summary>
+[Pool(typeof(DeniaCardPool))]
 public sealed class DeniaMimicBubble : DeniaCard
 {
-    public override int CurrentDarkCoreCost => 2;
+    public override int CurrentDarkCoreCost => 1;
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { CardKeyword.Exhaust };
 

@@ -21,11 +21,11 @@ public sealed class DeniaFirstAndLastGift : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_first_last_gift.png";
 
     public DeniaFirstAndLastGift()
-        : base(1, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "最初和最后的礼物",
-        Description: "附加2[gold]集谐·偏移[/gold]，触发无条件[gold]谐度破坏[/gold]。{IfUpgraded:show:\n保留。|}");
+        Description: "附加2[gold]集谐·偏移[/gold]，无条件[gold]谐度破坏[/gold]。{IfUpgraded:show:\n保留。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

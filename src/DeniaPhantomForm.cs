@@ -13,10 +13,13 @@ using MegaCrit.Sts2.Core.ValueProps;
 namespace Denia;
 
 /// <summary>幻灭之形 — Uncommon Attack</summary>
+[Pool(typeof(DeniaCardPool))]
 public sealed class DeniaPhantomForm : DeniaCard
 {
+    public override int CurrentVirtualMatterCost => 2;
+
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new DynamicVar[] { new BlockVar(6m, ValueProp.Move) };
+        new DynamicVar[] { new BlockVar(5m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_phantom_form.png";
@@ -30,19 +33,19 @@ public sealed class DeniaPhantomForm : DeniaCard
     {
         ArgumentNullException.ThrowIfNull(play.Target, "play.Target");
 
+        int burstAdd = 4;
+        if (await TrySpendVirtualMatter(play))
+            burstAdd += 3;
+
         int cap = AemeathFusionBurstState.GetFusionBurstCap(play.Target);
         int current = AemeathFusionBurstState.GetFusionBurst(play.Target);
-        int burstAdd = 6;
         bool willBurst = current + burstAdd >= cap;
 
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burstAdd, Owner.Creature, this);
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
 
         if (willBurst)
-        {
-            int block2 = IsUpgraded ? 8 : 6;
-            await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(block2, ValueProp.Move), play);
-        }
+            await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
     }
 
     protected override void OnUpgrade()
@@ -52,5 +55,5 @@ public sealed class DeniaPhantomForm : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "幻灭之形",
-            Description: "附加6点[gold]聚爆[/gold]。获得{Block:diff()}点[gold]格挡[/gold]。\n若触发[gold]引爆[/gold]，再获得{IfUpgraded:show:8|6}点[gold]格挡[/gold]。");
+            Description: "附加4点[gold]聚爆[/gold]，获得{Block:diff()}点[gold]格挡[/gold]。如果这张牌触发[gold]聚爆引爆[/gold]，再获得{Block:diff()}点[gold]格挡[/gold]。\n虚质强化：附加的[gold]聚爆[/gold]层数+3。");
 }

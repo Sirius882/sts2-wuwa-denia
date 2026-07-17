@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using BaseLib.Abstracts;
@@ -9,7 +8,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 namespace Denia;
 
-/// <summary>谨此致访 — Uncommon Attack</summary>
+[Pool(typeof(DeniaCardPool))]
 public sealed class DeniaVisit : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 3;
@@ -17,28 +16,27 @@ public sealed class DeniaVisit : DeniaCard
 
     public DeniaVisit() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(Title: "谨此致访",
-        Description: "提高聚爆上限{IfUpgraded:show:3|2}。\n触发{IfUpgraded:show:3|2}次[gold]熔解[/gold]。\n附加{IfUpgraded:show:6|4}点[gold]聚爆[/gold]。\n虚质强化：此牌的[gold]熔解[/gold]不消耗聚爆层数。");
+    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "谨此致访",
+        Description: "提高聚爆上限{IfUpgraded:show:3|2}。触发{IfUpgraded:show:3|2}次[gold]熔解[/gold]。附加{IfUpgraded:show:5|3}点[gold]聚爆[/gold]。\n虚质强化：此牌的[gold]熔解[/gold]不消耗聚爆层数。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
         int capInc = IsUpgraded ? 3 : 2;
-        int burst = IsUpgraded ? 6 : 4;
-        int meltTimes = IsUpgraded ? 3 : 2;
+        int melt = IsUpgraded ? 3 : 2;
+        int burst = IsUpgraded ? 5 : 3;
+        bool preserve = await TrySpendVirtualMatter(play);
 
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, capInc, Owner.Creature, this);
-
-        bool preserveBurst = await TrySpendVirtualMatter(play);
-
-        using var scope = preserveBurst ? DeniaMeltProtectPatch.BeginPreserve(this) : null;
-        for (int i = 0; i < meltTimes; i++)
+        using var scope = preserve ? DeniaMeltProtectPatch.BeginPreserve(this) : null;
+        for (int i = 0; i < melt; i++)
         {
+            if (play.Target.IsDead) break;
             await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
         }
-
-        await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
+        if (!play.Target.IsDead)
+            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }
