@@ -15,12 +15,17 @@
     <PackageReference Include="Alchyr.Sts2.ModAnalyzers" Version="0.1.9" />
     <PackageReference Include="SmartFormat" Version="3.3.0" />
   </ItemGroup>
+  <PropertyGroup>
+    <!-- 可用 /p:AemeathDll=... 或环境变量覆盖工坊路径 -->
+    <AemeathDll Condition="'$(AemeathDll)' == ''">$(AEMEATH_DLL)</AemeathDll>
+    <AemeathDll Condition="'$(AemeathDll)' == ''">E:\SteamLibrary\steamapps\workshop\content\2868840\3747597254\aemeath-ww.dll</AemeathDll>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="sts2">
       <HintPath>..\..\threeDLLs\sts2.dll</HintPath>
     </Reference>
     <Reference Include="aemeath-ww">
-      <HintPath>E:\SteamLibrary\steamapps\workshop\content\2868840\3747597254\aemeath-ww.dll</HintPath>
+      <HintPath>$(AemeathDll)</HintPath>
     </Reference>
     <Reference Include="tune_strain">
       <HintPath>..\tune_strain\.godot\mono\temp\bin\Debug\tune_strain.dll</HintPath>
