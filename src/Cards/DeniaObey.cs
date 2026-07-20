@@ -33,12 +33,15 @@ public sealed class DeniaObey : DeniaCard
 
         if (!play.Target.IsDead)
         {
+            // 先上限后比例层数
             await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, 3, Owner.Creature, this);
-            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, 4, Owner.Creature, this);
+            int burst = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 2);
+            if (burst > 0)
+                await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
         }
     }
 
     public override System.Collections.Generic.List<(string, string)>? Localization =>
         new CardLoc(Title: "听话",
-            Description: "对目标触发{IfUpgraded:show:4|2}次[gold]熔解[/gold]，此牌的[gold]熔解[/gold]不消耗聚爆层数。给目标附加3点[gold]聚爆[/gold]上限和4[gold]聚爆[/gold]。\n虚质强化：多触发2次[gold]熔解[/gold]。");
+            Description: "对目标触发{IfUpgraded:show:4|2}次[gold]熔解[/gold]，此牌的[gold]熔解[/gold]不消耗聚爆层数。给目标附加3点[gold]聚爆[/gold]上限、上限1/2的[gold]聚爆[/gold]。\n虚质强化：多触发2次[gold]熔解[/gold]。");
 }

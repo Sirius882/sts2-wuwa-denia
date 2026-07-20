@@ -25,14 +25,15 @@ public sealed class DeniaDreamWeave : DeniaCard
     public DeniaDreamWeave() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "织梦",
-        Description: "获得{Block:diff()}点[gold]格挡[/gold]。\n对所有敌人触发{IfUpgraded:show:3|2}次[gold]熔解[/gold]，并附加{IfUpgraded:show:5|3}点[gold]聚爆[/gold]。\n虚质强化：熔解结算后，对所有敌人附加2点[gold]聚爆[/gold]2次。");
+        Description: "获得{Block:diff()}点[gold]格挡[/gold]。\n对所有敌人触发{IfUpgraded:show:3|2}次[gold]熔解[/gold]，并附加上限{IfUpgraded:show:2/5|1/3}的[gold]聚爆[/gold]。\n虚质强化：熔解结算后，对所有敌人附加2点[gold]聚爆[/gold]2次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
 
         int melt = IsUpgraded ? 3 : 2;
-        int burst = IsUpgraded ? 5 : 3;
+        int num = IsUpgraded ? 2 : 1;
+        int den = IsUpgraded ? 5 : 3;
         var snapshot = Owner.Creature.CombatState.Enemies.Where(e2 => !e2.IsDead).ToArray();
 
         foreach (var e in snapshot)
@@ -43,7 +44,9 @@ public sealed class DeniaDreamWeave : DeniaCard
 
         foreach (var e in snapshot)
         {
-            if (!e.IsDead)
+            if (e.IsDead) continue;
+            int burst = DeniaFusionBurstMath.CeilRatioOfCap(e, num, den);
+            if (burst > 0)
                 await AemeathFusionBurstState.TryAddFusionBurst(e, burst, Owner.Creature, this);
         }
 

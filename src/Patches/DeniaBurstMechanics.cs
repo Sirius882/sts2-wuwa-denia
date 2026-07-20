@@ -288,12 +288,15 @@ public static class DeniaExtraBurstPatch
             new[] { typeof(Creature), typeof(int), typeof(Creature), typeof(CardModel) });
     }
 
-    public static void Prefix(ref int amount, Creature applier)
+    public static void Prefix(Creature target, ref int amount, Creature applier)
     {
         if (DeniaBurstFillGuard.IsActive) return;
         if (applier?.IsPlayer != true) return;
         var pwr = applier.GetPower<DeniaExtraBurstPower>();
-        if (pwr != null) amount += (int)pwr.Amount;
+        if (pwr == null || pwr.Amount <= 0) return;
+        // Amount = 分母：额外附加 ceil(cap / denom)
+        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, (int)pwr.Amount);
+        if (extra > 0) amount += extra;
     }
 }
 
@@ -307,12 +310,14 @@ public static class DeniaExtraBurstWithoutAutoBurstPatch
             new[] { typeof(Creature), typeof(int), typeof(Creature), typeof(CardModel) });
     }
 
-    public static void Prefix(ref int amount, Creature applier)
+    public static void Prefix(Creature target, ref int amount, Creature applier)
     {
         if (DeniaBurstFillGuard.IsActive) return;
         if (applier?.IsPlayer != true) return;
         var pwr = applier.GetPower<DeniaExtraBurstPower>();
-        if (pwr != null) amount += (int)pwr.Amount;
+        if (pwr == null || pwr.Amount <= 0) return;
+        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, (int)pwr.Amount);
+        if (extra > 0) amount += extra;
     }
 }
 

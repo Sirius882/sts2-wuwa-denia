@@ -39,9 +39,10 @@ public sealed class DeniaKarakara : DeniaCard
 
         if (await TrySpendVirtualMatter(play))
         {
-            int burstCap = AemeathFusionBurstState.GetFusionBurstCap(play.Target) * 2 / 3;
-            if (burstCap > 0)
-                await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, burstCap, Owner.Creature, this);
+            // 聚爆上限三分之二的力量：按 5+额外上限 向上取整
+            int strFromCap = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 2, 3);
+            if (strFromCap > 0)
+                await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, strFromCap, Owner.Creature, this);
         }
     }
 

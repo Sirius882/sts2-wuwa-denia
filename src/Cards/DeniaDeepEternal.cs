@@ -31,7 +31,7 @@ public sealed class DeniaDeepEternal : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "深黯、终末、恒常",
-            Description: "提升全体敌人3点聚爆上限。对随机一名敌人触发一次无条件引爆。接下来2回合内，每回合对全体敌人附加3点聚爆并提升3聚爆上限。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n黯核强化：持续回合数变为3。");
+            Description: "对全体敌人提升3点聚爆上限，然后对随机一位敌人触发一次无条件引爆。在接下来2回合内，每回合对全体敌人附加上限1/2的[gold]聚爆[/gold]，并提升3点聚爆上限。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n黯核强化：持续回合数变为3。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -42,7 +42,7 @@ public sealed class DeniaDeepEternal : DeniaCard
         foreach (var enemy in enemies)
             await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 3, Owner.Creature, this);
 
-        // 2. 无条件引爆（绕开回到远方/从远方/轻唤附加联动，与熔毁殆尽一致）
+        // 2. 无条件引爆（绕开回到远方/从远方/轻唤附加联动）
         var randomEnemy = Owner.RunState.Rng.CombatTargets.NextItem(enemies);
         using (DeniaBurstFillGuard.Enter())
         {
@@ -53,7 +53,7 @@ public sealed class DeniaDeepEternal : DeniaCard
         int duration = await TrySpendDarkCore(play) ? 3 : 2;
         await PowerCmd.Apply<DeniaDeepEternalPower>(ctx, Owner.Creature, duration, Owner.Creature, this);
 
-        // 4. 若处于[gold]黑色形态[/gold]，切换到粉色（最后做）
+        // 4. 若处于黑色形态，切换到粉色（最后做）
         if (DeniaFormHelper.IsBlack(Owner.Creature))
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
     }
@@ -63,7 +63,8 @@ public sealed class DeniaDeepEternal : DeniaCard
         RemoveKeyword(CardKeyword.Exhaust);
     }
 }
-/// <summary>深黯持续效果：每回合对全体敌人附加聚爆+提升上限。</summary>
+
+/// <summary>深黯持续效果：每回合先比例聚爆，再提升上限（设计：先附加上限1/2聚爆，并提升3上限）。</summary>
 public sealed class DeniaDeepEternalPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
@@ -75,8 +76,8 @@ public sealed class DeniaDeepEternalPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "深黯、终末、恒常",
-            Description: "每回合开始时，对所有敌人附加3点聚爆并提升3点聚爆上限。",
-            SmartDescription: "每回合开始时，对所有敌人附加3点聚爆并提升3点聚爆上限。");
+            Description: "每回合开始时，对所有敌人附加上限1/2的聚爆，并提升3点聚爆上限。",
+            SmartDescription: "每回合开始时，对所有敌人附加上限1/2的聚爆，并提升3点聚爆上限。");
 
     public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
     {
@@ -87,12 +88,13 @@ public sealed class DeniaDeepEternalPower : CustomPowerModel
 
         foreach (var enemy in enemies)
         {
-            // 走 Aemeath 公共附加 API，让“回到远方 / 从远方”的 Harmony 加成生效。
-            await AemeathFusionBurstState.TryAddFusionBurst(enemy, 3, Owner, null!);
+            // 设计文案：附加上限1/2的聚爆，并提升3点聚爆上限
+            int burst = DeniaFusionBurstMath.CeilRatioOfCap(enemy, 1, 2);
+            if (burst > 0)
+                await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner, null!);
             await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 3, Owner, null!);
         }
 
-        // 递减持续回合
         await PowerCmd.ModifyAmount(new ThrowingPlayerChoiceContext(), this, -1m, Owner, null!);
     }
 }

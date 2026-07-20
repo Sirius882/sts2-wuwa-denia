@@ -28,7 +28,7 @@ public sealed class DeniaStageSetup : DeniaCard
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int dmg = IsUpgraded ? 10 : 7;
-        int burst = IsUpgraded ? 4 : 3;
+        int capGain = IsUpgraded ? 4 : 3;
         if (await TrySpendDarkCore(play))
             dmg += 7;
         var snapshot = Owner.Creature.CombatState.Enemies.Where(e => !e.IsDead).ToArray();
@@ -38,13 +38,18 @@ public sealed class DeniaStageSetup : DeniaCard
                 .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
             if (!enemy.IsDead)
             {
-                await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, burst, Owner.Creature, this);
-                await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner.Creature, this);
+                // 先上限，再按当前上限比例附加聚爆（未升级 2/5，升级 1/2）
+                await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, capGain, Owner.Creature, this);
+                int num = IsUpgraded ? 1 : 2;
+                int den = IsUpgraded ? 2 : 5;
+                int burst = DeniaFusionBurstMath.CeilRatioOfCap(enemy, num, den);
+                if (burst > 0)
+                    await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner.Creature, this);
             }
         }
     }
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "布景之形",
-            Description: "对所有敌人造成{IfUpgraded:show:10|7}点伤害，提高[gold]聚爆[/gold]上限{IfUpgraded:show:4|3}，并附加{IfUpgraded:show:4|3}点[gold]聚爆[/gold]。\n黯核强化：基础伤害+7。");
+            Description: "对所有敌人造成{IfUpgraded:show:10|7}点伤害，提高[gold]聚爆[/gold]上限{IfUpgraded:show:4|3}，然后附加上限{IfUpgraded:show:1/2|2/5}的[gold]聚爆[/gold]。\n黯核强化：基础伤害+7。");
 }

@@ -19,18 +19,23 @@ public sealed class DeniaEtchedIridescent : DeniaCard
     public DeniaEtchedIridescent() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "蚀刻繁彩",
-        Description: "[gold]熔解[/gold]1，附加{IfUpgraded:show:4|2}点[gold]聚爆[/gold]。抽{IfUpgraded:show:2|1}张牌。\n黯核强化：主效果每使你抽1张牌，再附加3[gold]聚爆[/gold]1次。");
+        Description: "[gold]熔解[/gold]1，附加上限{IfUpgraded:show:2/3|1/3}的[gold]聚爆[/gold]。抽{IfUpgraded:show:2|1}张牌。\n黯核强化：主效果每使你抽1张牌，再附加3[gold]聚爆[/gold]1次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        int burst = IsUpgraded ? 4 : 2;
+        int num = IsUpgraded ? 2 : 1;
+        int den = 3;
         int draw = IsUpgraded ? 2 : 1;
 
         await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
         if (!play.Target.IsDead)
-            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
+        {
+            int burst = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, num, den);
+            if (burst > 0)
+                await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
+        }
         await CardPileCmd.Draw(ctx, draw, Owner);
 
         // 黯核强化：升级前1次、升级后2次，分段附加聚爆

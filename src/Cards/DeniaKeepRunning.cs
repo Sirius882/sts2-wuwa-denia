@@ -17,7 +17,7 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace Denia;
 
-/// <summary>继续逃啊？ — Rare Attack, 0e. This turn, each card you play adds 3 burst to target.</summary>
+/// <summary>继续逃啊？ — Rare Attack。本回合每打牌按目标上限比例附加聚爆。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaKeepRunning : DeniaCard
 {
@@ -29,13 +29,14 @@ public sealed class DeniaKeepRunning : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "继续逃啊？",
-        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:4|2}[gold]聚爆[/gold]。");
+        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加上限{IfUpgraded:show:1/3|1/4}的[gold]聚爆[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-        int amount = IsUpgraded ? 4 : 2;
-        await PowerCmd.Apply<DeniaKeepRunningPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
+        // Amount = 比例分母：未升级 1/4，升级 1/3
+        int ratioDenom = IsUpgraded ? 3 : 4;
+        await PowerCmd.Apply<DeniaKeepRunningPower>(ctx, Owner.Creature, ratioDenom, Owner.Creature, this);
         int targetIndex = Owner.Creature.CombatState.Enemies
             .Select((enemy, index) => (enemy, index))
             .FirstOrDefault(pair => ReferenceEquals(pair.enemy, play.Target)).index;
@@ -53,13 +54,14 @@ public sealed class DeniaKeepRunning : DeniaCard
 public sealed class DeniaKeepRunningPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    // Amount = 比例分母（4 或 3）
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => false;
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "继续逃啊？",
-            Description: "本回合内每打出一张牌，给目标敌人附加聚爆。",
-            SmartDescription: "本回合内每打出一张牌，给目标敌人附加{Amount}聚爆。");
+            Description: "本回合内每打出一张牌，按目标聚爆上限比例附加聚爆。",
+            SmartDescription: "本回合内每打出一张牌，给目标敌人附加上限1/{Amount}的聚爆。");
 
     public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
     {
@@ -68,10 +70,6 @@ public sealed class DeniaKeepRunningPower : CustomPowerModel
         await PowerCmd.Remove<DeniaKeepRunningTargetIndexPower>(Owner);
     }
 
-    /// <summary>
-    /// 每打出一张牌时调用：给目标附加聚爆。
-    /// 必须 await（调用方在异步 Hook 包装链中 await），否则 fire-and-forget 会导致多人 desync。
-    /// </summary>
     public static async Task OnAnyCardPlayed(Player player, CardPlay cardPlay)
     {
         var creature = player.Creature;
@@ -84,7 +82,9 @@ public sealed class DeniaKeepRunningPower : CustomPowerModel
         if (targetIndex < 0 || targetIndex >= enemies.Count) return;
         var target = enemies[targetIndex];
         if (target.IsDead) return;
-        int amount = power.Amount;
+        int ratioDenom = Math.Max(1, power.Amount);
+        int amount = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, ratioDenom);
+        if (amount <= 0) return;
         await AemeathFusionBurstState.TryAddFusionBurst(target, amount, creature, null!);
     }
 }
