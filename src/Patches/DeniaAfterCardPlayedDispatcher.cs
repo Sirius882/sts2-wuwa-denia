@@ -31,15 +31,29 @@ public static class DeniaAfterCardPlayedDispatcher
 
     private static async Task Dispatch(Task original, Player player, CardPlay cardPlay)
     {
-        await (original ?? Task.CompletedTask);
+        try
+        {
+            await (original ?? Task.CompletedTask);
 
-        await TryGainPinkAttackVirtualMatter(player, cardPlay);
-        await ProcessMasterSwordCounter(player, cardPlay);
-        await DeniaKeepRunningPower.OnAnyCardPlayed(player, cardPlay);
-        await DeniaYouTryItPower.OnAnyCardPlayed(player, cardPlay);
-        await TryTriggerRelicRandomResponseIfNeeded(player);
+            await TryGainPinkAttackVirtualMatter(player, cardPlay);
+            await ProcessMasterSwordCounter(player, cardPlay);
+            await DeniaKeepRunningPower.OnAnyCardPlayed(player, cardPlay);
+            await DeniaYouTryItPower.OnAnyCardPlayed(player, cardPlay);
+            await TryTriggerRelicRandomResponseIfNeeded(player);
+        }
+        finally
+        {
+            // clear attack-card flag for black FX if/elif on next card
+            try
+            {
+                if (player?.Creature != null)
+                    DeniaFormPatch.EndBlackFormCardPlay(player.Creature);
+            }
+            catch { }
+        }
     }
 
+    
     private static async Task TryGainPinkAttackVirtualMatter(Player player, CardPlay cardPlay)
     {
         if (player.Character is not Denia) return;

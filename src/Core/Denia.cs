@@ -85,8 +85,9 @@ public sealed class Denia : PlaceholderCharacterModel
     public override IReadOnlyList<RelicModel> StartingRelics =>
         new RelicModel[] { ModelDb.Relic<DeniaTrickster>() };
 
-    public override float AttackAnimDelay => 0.15f;
-    public override float CastAnimDelay => 0.25f;
+    public override float DeathAnimTime => 1.5f;
+    public override float AttackAnimDelay => 0.2f;
+    public override float CastAnimDelay => 0.2f;
 
     // 覆写过渡音效：默认路径 wipe_{id} 不存在，使用 wipe_ironclad 代替
     public override string CharacterTransitionSfx => "event:/sfx/ui/wipe_ironclad";
@@ -103,11 +104,17 @@ public sealed class Denia : PlaceholderCharacterModel
         // 双形态立绘
         "res://images/packed/character_select/denia_pink.png",
         "res://images/packed/character_select/denia_black.png",
+        // 形态切换中间图
+        "res://images/packed/character_select/denia_form_to_black.png",
+        "res://images/packed/character_select/denia_form_to_pink.png",
+        "res://images/packed/character_select/denia_weapon.png",
+        "res://images/ui/combat/denia_black_attack_fx.png",
         // 战斗UI图标
         "res://images/ui/combat/denia_virtual_matter.png",
         "res://images/ui/combat/denia_virtual_matter_cost_icon.png",
         "res://images/ui/combat/denia_dark_core_cost_icon.png",
         "res://images/ui/combat/denia_dark_core_icon.png",
+        "res://images/ui/combat/denia_energy_icon_big.png",
         // 开宝箱/多人手势
         "res://images/ui/hands/denia_hand_point.png",
         "res://images/ui/hands/denia_hand_rock.png",

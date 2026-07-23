@@ -18,7 +18,7 @@ public sealed class DeniaUnfinishedLie : DeniaCard
     public DeniaUnfinishedLie() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "未竟的谎言",
-        Description: "提高聚爆上限{IfUpgraded:show:3|2}。附加上限{IfUpgraded:show:61%|1/2}的[gold]聚爆[/gold]。若这张牌触发引爆，获得1点能量。\n虚质强化：附加的[gold]聚爆[/gold]层数和聚爆上限都+2。");
+        Description: "提高聚爆上限{IfUpgraded:show:3|2}。附加上限{IfUpgraded:show:1/2|1/3}的[gold]聚爆[/gold]。若这张牌触发引爆，获得1点能量。\n虚质强化：附加的[gold]聚爆[/gold]层数和聚爆上限都+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -35,8 +35,8 @@ public sealed class DeniaUnfinishedLie : DeniaCard
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, cu, Owner.Creature, this);
 
         int ratioBurst = IsUpgraded
-            ? DeniaFusionBurstMath.CeilPercentOfCap(play.Target, 61)
-            : DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 2);
+            ? DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 2)
+            : DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 3);
         int bu = ratioBurst + flatBurstBonus;
 
         int before = AemeathFusionBurstState.GetFusionBurst(play.Target);

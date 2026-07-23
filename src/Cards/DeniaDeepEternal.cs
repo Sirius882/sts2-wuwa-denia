@@ -31,7 +31,7 @@ public sealed class DeniaDeepEternal : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "深黯、终末、恒常",
-            Description: "对全体敌人提升3点聚爆上限，然后对随机一位敌人触发一次无条件引爆。在接下来2回合内，每回合对全体敌人附加上限1/2的[gold]聚爆[/gold]，并提升3点聚爆上限。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n黯核强化：持续回合数变为3。");
+            Description: "对全体敌人提升3点聚爆上限，然后对随机一位敌人触发一次无条件引爆。在接下来2回合内，每回合对全体敌人附加上限1/3的[gold]聚爆[/gold]，并提升3点聚爆上限。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n黯核强化：持续回合数变为3。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -64,7 +64,7 @@ public sealed class DeniaDeepEternal : DeniaCard
     }
 }
 
-/// <summary>深黯持续效果：每回合先比例聚爆，再提升上限（设计：先附加上限1/2聚爆，并提升3上限）。</summary>
+/// <summary>深黯持续效果：每回合先比例聚爆，再提升上限（设计：先附加上限1/3聚爆，并提升3上限）。</summary>
 public sealed class DeniaDeepEternalPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
@@ -76,8 +76,8 @@ public sealed class DeniaDeepEternalPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(Title: "深黯、终末、恒常",
-            Description: "每回合开始时，对所有敌人附加上限1/2的聚爆，并提升3点聚爆上限。",
-            SmartDescription: "每回合开始时，对所有敌人附加上限1/2的聚爆，并提升3点聚爆上限。");
+            Description: "每回合开始时，对所有敌人附加上限1/3的聚爆，并提升3点聚爆上限。",
+            SmartDescription: "每回合开始时，对所有敌人附加上限1/3的聚爆，并提升3点聚爆上限。");
 
     public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
     {
@@ -88,8 +88,8 @@ public sealed class DeniaDeepEternalPower : CustomPowerModel
 
         foreach (var enemy in enemies)
         {
-            // 设计文案：附加上限1/2的聚爆，并提升3点聚爆上限
-            int burst = DeniaFusionBurstMath.CeilRatioOfCap(enemy, 1, 2);
+            // 设计文案：附加上限1/3的聚爆，并提升3点聚爆上限
+            int burst = DeniaFusionBurstMath.CeilRatioOfCap(enemy, 1, 3);
             if (burst > 0)
                 await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner, null!);
             await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, 3, Owner, null!);

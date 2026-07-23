@@ -70,8 +70,9 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
             choiceContext, Owner, 1m, Owner, cardSource);
 
         int block = (int)Amount;
+        // Move：受敏捷等格挡加成（不要用 Unpowered）
         if (block > 0)
-            await CreatureCmd.GainBlock(Owner, new BlockVar(block, ValueProp.Unpowered), null);
+            await CreatureCmd.GainBlock(Owner, new BlockVar(block, ValueProp.Move), null);
     }
 
     public static async Task ClearTriggerCountAsync(Creature creature)

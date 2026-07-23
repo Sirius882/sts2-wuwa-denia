@@ -110,7 +110,12 @@ public static class DeniaFormHelper
     public static async Task SwitchToBlack(Creature creature, Creature applier, CardModel source, bool addBlackFormCards = true)
     {
         bool wasPink = IsPink(creature);
+        // 视觉变形先启动，再 await 固定时长（多人同步）
+        if (wasPink)
+            DeniaFormPatch.PlayFormTransition(creature, toBlack: true);
         await MarkFormSwitchedThisTurn(creature, applier, source);
+        if (wasPink)
+            await Cmd.Wait(1.5f); // 0.5 shrink-in + 0.5 hold + 0.5 shrink-out
         var power = creature.GetPower<DeniaFormPower>();
         if (power == null)
             await PowerCmd.Apply<DeniaFormPower>(_throwing, creature, 1m, applier, source);
@@ -118,7 +123,7 @@ public static class DeniaFormHelper
             await PowerCmd.ModifyAmount(_throwing, power, 1m, applier, source);
         if (wasPink && addBlackFormCards && creature.Player != null)
             await AddBlackFormCards(creature.Player);
-        DeniaFormPatch.RefreshForCreature(creature);
+        DeniaFormPatch.EndFormTransition(creature);
         await DeniaResourceState.GainVirtualMatter(creature, 10, applier, source);
         await ApplyFormSwitchEffects(creature, applier, source);
     }
@@ -135,10 +140,13 @@ public static class DeniaFormHelper
 
     public static async Task SwitchToPink(Creature creature, Creature applier, CardModel source, bool clearVM = true)
     {
-        await MarkFormSwitchedThisTurn(creature, applier, source);
         var power = creature.GetPower<DeniaFormPower>();
         if (power == null || power.Amount <= 0) return;
 
+        // 已在黑色形态：先播变形视觉并等待，再改 power
+        DeniaFormPatch.PlayFormTransition(creature, toBlack: false);
+        await MarkFormSwitchedThisTurn(creature, applier, source);
+        await Cmd.Wait(1.5f); // 0.5 shrink-in + 0.5 hold + 0.5 shrink-out
 
         await PowerCmd.ModifyAmount(_throwing, power, -1m, applier, source);
 
@@ -209,7 +217,7 @@ public static class DeniaFormHelper
                 await CardPileCmd.Draw(_throwing, 1, creature.Player);
             await DeniaResourceState.ClearVirtualMatter(creature, applier, source);
         }
-        DeniaFormPatch.RefreshForCreature(creature);
+        DeniaFormPatch.EndFormTransition(creature);
 
         await ApplyFormSwitchEffects(creature, applier, source);
     }

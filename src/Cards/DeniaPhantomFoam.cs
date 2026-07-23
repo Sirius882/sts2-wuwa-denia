@@ -77,7 +77,8 @@ public sealed class DeniaPhantomFoamPower : CustomPowerModel
 
         await PowerCmd.Apply<DeniaPhantomFoamTriggeredThisTurnPower>(
             new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
+        // Move：受敏捷等格挡加成（不要用 Unpowered）
         await CreatureCmd.GainBlock(
-            creature, new BlockVar(power.Amount, ValueProp.Unpowered), null);
+            creature, new BlockVar(power.Amount, ValueProp.Move), null);
     }
 }

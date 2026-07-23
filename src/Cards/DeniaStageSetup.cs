@@ -38,11 +38,11 @@ public sealed class DeniaStageSetup : DeniaCard
                 .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
             if (!enemy.IsDead)
             {
-                // 先上限，再按当前上限比例附加聚爆（未升级 2/5，升级 1/2）
+                // 先上限，再按当前上限比例附加聚爆（未升级 1/5+1，升级 1/3+1）
                 await AemeathFusionBurstState.TryIncreaseFusionBurstCap(enemy, capGain, Owner.Creature, this);
-                int num = IsUpgraded ? 1 : 2;
-                int den = IsUpgraded ? 2 : 5;
-                int burst = DeniaFusionBurstMath.CeilRatioOfCap(enemy, num, den);
+                int num = 1;
+                int den = IsUpgraded ? 3 : 5;
+                int burst = DeniaFusionBurstMath.CeilRatioOfCap(enemy, num, den) + 1;
                 if (burst > 0)
                     await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner.Creature, this);
             }
@@ -51,5 +51,5 @@ public sealed class DeniaStageSetup : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "布景之形",
-            Description: "对所有敌人造成{IfUpgraded:show:10|7}点伤害，提高[gold]聚爆[/gold]上限{IfUpgraded:show:4|3}，然后附加上限{IfUpgraded:show:1/2|2/5}的[gold]聚爆[/gold]。\n黯核强化：基础伤害+7。");
+            Description: "对所有敌人造成{IfUpgraded:show:10|7}点伤害，提高[gold]聚爆[/gold]上限{IfUpgraded:show:4|3}，然后附加上限{IfUpgraded:show:1/3+1|1/5+1}的[gold]聚爆[/gold]。\n黯核强化：基础伤害+7。");
 }

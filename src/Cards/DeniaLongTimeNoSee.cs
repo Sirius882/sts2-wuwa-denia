@@ -13,7 +13,7 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaLongTimeNoSee : DeniaCard
 {
-    public override int CurrentDarkCoreCost => 2;
+    public override int CurrentDarkCoreCost => 1;
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_long_time_no_see.png";
 
     public DeniaLongTimeNoSee() : base(1, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }

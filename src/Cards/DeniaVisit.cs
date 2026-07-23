@@ -17,7 +17,7 @@ public sealed class DeniaVisit : DeniaCard
     public DeniaVisit() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "谨此致访",
-        Description: "提高聚爆上限{IfUpgraded:show:3|2}。触发{IfUpgraded:show:3|2}次[gold]熔解[/gold]。附加上限{IfUpgraded:show:1/2|3/7}的[gold]聚爆[/gold]。\n虚质强化：此牌的[gold]熔解[/gold]不消耗聚爆层数。");
+        Description: "提高聚爆上限{IfUpgraded:show:3|2}。触发{IfUpgraded:show:3|2}次[gold]熔解[/gold]。附加上限{IfUpgraded:show:1/2|3/8}的[gold]聚爆[/gold]。\n虚质强化：此牌的[gold]熔解[/gold]不消耗聚爆层数。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -26,7 +26,7 @@ public sealed class DeniaVisit : DeniaCard
         int capInc = IsUpgraded ? 3 : 2;
         int melt = IsUpgraded ? 3 : 2;
         int num = IsUpgraded ? 1 : 3;
-        int den = IsUpgraded ? 2 : 7;
+        int den = IsUpgraded ? 2 : 8;
         bool preserve = await TrySpendVirtualMatter(play);
 
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, capInc, Owner.Creature, this);
