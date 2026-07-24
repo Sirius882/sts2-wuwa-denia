@@ -11,11 +11,14 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>泡泡机 — Uncommon Skill, 1e. 7 block + 7 if form switched this turn.</summary>
+/// <summary>泡泡机 — Uncommon Skill, 0e, Retain. 7 block + 7 if form switched; upg +3; VM +2.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaBubbleMachine : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 3;
+
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { CardKeyword.Retain };
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new[] { new BlockVar(7m, ValueProp.Move) };
@@ -26,7 +29,7 @@ public sealed class DeniaBubbleMachine : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_bubble_machine.png";
 
     public DeniaBubbleMachine()
-        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
+        : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "泡泡机",

@@ -914,5 +914,14 @@
   "DENIA-DENIA_PHANTOM_FOAM_POWER.smartDescription": "Whenever you trigger a Virtual Matter Enhancement, gain {Amount} Block. Limited times per turn.",
   "DENIA-DENIA_TOWARD_VOID_POWER.title": "Toward the Void",
   "DENIA-DENIA_TOWARD_VOID_POWER.description": "Whenever you trigger a Dark Core Enhancement, gain Block. Max 4 times per turn.",
-  "DENIA-DENIA_TOWARD_VOID_POWER.smartDescription": "Whenever you trigger a Dark Core Enhancement, gain {Amount} Block. Max 4 times per turn."
+  "DENIA-DENIA_TOWARD_VOID_POWER.smartDescription": "Whenever you trigger a Dark Core Enhancement, gain {Amount} Block. Max 4 times per turn.",
+  "DENIA-DENIA_SWALLOW_POWER.title": "Swallow",
+  "DENIA-DENIA_SWALLOW_POWER.description": "Enemies with Tune Strain Interference deal {Amount}% less damage to you. You deal {Amount}% more damage to enemies with Tune Strain Interference.",
+  "DENIA-DENIA_SWALLOW_POWER.smartDescription": "Enemies with Tune Strain Interference deal {Amount}% less damage to you. You deal {Amount}% more damage to enemies with Tune Strain Interference.",
+  "DENIA-DENIA_VISIT_POWER.title": "A Formal Visit",
+  "DENIA-DENIA_VISIT_POWER.description": "Your damage taken and damage dealt each turn are capped.",
+  "DENIA-DENIA_VISIT_POWER.smartDescription": "Your damage taken and damage dealt each turn are capped.",
+  "DENIA-DENIA_GET_SUN_POWER.title": "Obtain the Sun",
+  "DENIA-DENIA_GET_SUN_POWER.description": "Whenever you apply 3 Fusion Burst, give a random card in your deck Tune Strain Response. Progress: {Amount}/3.",
+  "DENIA-DENIA_GET_SUN_POWER.smartDescription": "Whenever you apply 3 Fusion Burst, give a random card in your deck Tune Strain Response. Progress: {Amount}/3."
 }

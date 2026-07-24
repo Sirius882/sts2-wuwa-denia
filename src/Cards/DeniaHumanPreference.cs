@@ -10,30 +10,27 @@ using TuneStrain;
 
 namespace Denia;
 
+/// <summary>人类的喜好 — Uncommon Skill: apply 2 bias; upgrade = all enemies.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaHumanPreference : DeniaCard
 {
-    public override int CurrentDarkCoreCost => 1;
-
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { CardKeyword.Exhaust, TuneStrainKeywords.TuneStrainResponse };
+        new[] { TuneStrainKeywords.TuneStrainResponse };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_human_preference.png";
 
     public DeniaHumanPreference()
-        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
+        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "人类的喜好",
-        Description: "附加2[gold]集谐·偏移[/gold]。\n黯核强化：给其他所有敌人也附加2[gold]集谐·偏移[/gold]。");
+        Description: "{IfUpgraded:show:给所有敌人附加2[gold]集谐·偏移[/gold]。|附加2[gold]集谐·偏移[/gold]。}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         _ = ctx;
-        ArgumentNullException.ThrowIfNull(play.Target);
-        bool hitAllEnemies = await TrySpendDarkCore(play);
-        if (hitAllEnemies)
+        if (IsUpgraded)
         {
             var combatState = Owner.Creature.CombatState;
             ArgumentNullException.ThrowIfNull(combatState);
@@ -42,12 +39,10 @@ public sealed class DeniaHumanPreference : DeniaCard
         }
         else
         {
+            ArgumentNullException.ThrowIfNull(play.Target);
             await TuneStrainState.TryAddBias(play.Target, 2, Owner.Creature, this);
         }
     }
 
-    protected override void OnUpgrade()
-    {
-        EnergyCost.UpgradeBy(-1);
-    }
+    protected override void OnUpgrade() { }
 }

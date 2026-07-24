@@ -1,47 +1,56 @@
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using AemeathWw.Scripts;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
+using MegaCrit.Sts2.Core.CardSelection;
+using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
+using MegaCrit.Sts2.Core.Localization;
+using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
-/// <summary>听话 — Rare Skill</summary>
+/// <summary>听话 — Rare Skill: draw 2, exhaust up to 3/4 hand cards, gain 1 Artifact each.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaObey : DeniaCard
 {
-    public override int CurrentVirtualMatterCost => 4;
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { CardKeyword.Exhaust };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_obey.png";
 
     public DeniaObey()
-        : base(1, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
+
+    public override List<(string, string)>? Localization =>
+        new CardLoc(Title: "听话",
+            Description: "抽2张牌，选择最多{IfUpgraded:show:4|3}张手牌消耗。每消耗1张牌，给自己1层[gold]人工制品[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        ArgumentNullException.ThrowIfNull(play.Target, "play.Target");
+        await CardPileCmd.Draw(ctx, 2, Owner);
 
-        int melt = IsUpgraded ? 4 : 2;
-        if (await TrySpendVirtualMatter(play))
-            melt += 2;
+        int maxSelect = IsUpgraded ? 4 : 3;
+        var hand = PileType.Hand.GetPile(Owner);
+        if (!hand.Cards.Any()) return;
 
-        using var scope = DeniaMeltProtectPatch.BeginPreserve(this);
-        await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, melt);
+        var prefs = new CardSelectorPrefs(new LocString("card_selection", "TO_EXHAUST"), 0, maxSelect);
+        var selected = await CardSelectCmd.FromHand(ctx, Owner, prefs, c => c != this, this);
+        if (selected == null || !selected.Any()) return;
 
-        if (!play.Target.IsDead)
+        int count = 0;
+        foreach (var card in selected.ToList())
         {
-            // 先上限后比例层数（2/5+1）
-            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, 3, Owner.Creature, this);
-            int burst = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 2, 5) + 1;
-            if (burst > 0)
-                await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
+            await CardCmd.Exhaust(ctx, card);
+            count++;
         }
+
+        if (count > 0)
+            await PowerCmd.Apply<ArtifactPower>(ctx, Owner.Creature, count, Owner.Creature, this);
     }
 
-    public override System.Collections.Generic.List<(string, string)>? Localization =>
-        new CardLoc(Title: "听话",
-            Description: "对目标触发{IfUpgraded:show:4|2}次[gold]熔解[/gold]，此牌的[gold]熔解[/gold]不消耗聚爆层数。给目标附加3点[gold]聚爆[/gold]上限、上限2/5+1的[gold]聚爆[/gold]。\n虚质强化：多触发2次[gold]熔解[/gold]。");
+    protected override void OnUpgrade() { }
 }

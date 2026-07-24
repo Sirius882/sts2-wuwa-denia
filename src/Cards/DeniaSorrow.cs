@@ -15,7 +15,7 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaSorrow : DeniaCard
 {
-    public override int CurrentVirtualMatterCost => 4;
+    public override int CurrentVirtualMatterCost => 2;
 
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };

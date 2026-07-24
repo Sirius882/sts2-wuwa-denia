@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
-using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 
 namespace Denia;
 
-/// <summary>不要···进来 — Common Skill, 1e(upg:0). Gain DC, switch black, extra VM, get cards.</summary>
+/// <summary>不要···进来 — Common Skill: switch form then gain 6 VM; upg +1 DC.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaDontComeIn : DeniaCard
 {
@@ -19,20 +16,22 @@ public sealed class DeniaDontComeIn : DeniaCard
     public DeniaDontComeIn()
         : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
+    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(
         Title: "不要···进来",
-        Description: "若处于[gold]粉色形态[/gold]，切换到[gold]黑色形态[/gold]，额外获得6[gold]虚质[/gold]，获得「怜悯我」和「直视我」。{IfUpgraded:show:获得1黯核。|}");
+        Description: "切换形态。获得6[gold]虚质[/gold]。{IfUpgraded:show:\n再获得1黯核。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        // 先切换形态，再获得虚质，避免黑变粉时被清空
         if (DeniaFormHelper.IsPink(Owner.Creature))
-        {
             await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
-            await DeniaResourceState.GainVirtualMatter(Owner.Creature, 6, Owner.Creature, this);
+        else if (DeniaFormHelper.IsBlack(Owner.Creature))
+            await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
 
-            if (IsUpgraded)
-                await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
-        }
+        await DeniaResourceState.GainVirtualMatter(Owner.Creature, 6, Owner.Creature, this);
+
+        if (IsUpgraded)
+            await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }

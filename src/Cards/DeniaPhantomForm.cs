@@ -34,8 +34,8 @@ public sealed class DeniaPhantomForm : DeniaCard
         ArgumentNullException.ThrowIfNull(play.Target, "play.Target");
 
         bool vm = await TrySpendVirtualMatter(play);
-        // 附加上限 2/3 的聚爆；虚质强化 +3 固定层
-        int burstAdd = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 2, 3);
+        // 附加上限 1/2 的聚爆；虚质强化 +3 固定层
+        int burstAdd = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 2);
         if (vm) burstAdd += 3;
 
         int cap = DeniaFusionBurstMath.GetCanonicalCap(play.Target);
@@ -57,5 +57,5 @@ public sealed class DeniaPhantomForm : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "幻灭之形",
-            Description: "附加上限2/3的[gold]聚爆[/gold]，获得{Block:diff()}点[gold]格挡[/gold]。如果这张牌触发[gold]聚爆引爆[/gold]，再获得{Block:diff()}点[gold]格挡[/gold]。\n虚质强化：附加的[gold]聚爆[/gold]层数+3。");
+            Description: "附加上限1/2的[gold]聚爆[/gold]，获得{Block:diff()}点[gold]格挡[/gold]。如果这张牌触发[gold]聚爆引爆[/gold]，再获得{Block:diff()}点[gold]格挡[/gold]。\n虚质强化：附加的[gold]聚爆[/gold]层数+3。");
 }

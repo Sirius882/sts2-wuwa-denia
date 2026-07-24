@@ -11,12 +11,12 @@ using TuneStrain;
 
 namespace Denia;
 
+/// <summary>最初的谎言 — Common Attack: unconditional resonance break; Exhaust+Retain+Response; upg energy-1.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaFirstLie : DeniaCard
 {
-    public override IEnumerable<CardKeyword> CanonicalKeywords => IsUpgraded
-        ? new[] { CardKeyword.Exhaust, CardKeyword.Retain, TuneStrainKeywords.TuneStrainResponse }
-        : new[] { CardKeyword.Exhaust, TuneStrainKeywords.TuneStrainResponse };
+    public override IEnumerable<CardKeyword> CanonicalKeywords =>
+        new[] { CardKeyword.Exhaust, CardKeyword.Retain, TuneStrainKeywords.TuneStrainResponse };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_first_lie.png";
@@ -37,6 +37,6 @@ public sealed class DeniaFirstLie : DeniaCard
 
     protected override void OnUpgrade()
     {
-        AddKeyword(CardKeyword.Retain);
+        EnergyCost.UpgradeBy(-1);
     }
 }
