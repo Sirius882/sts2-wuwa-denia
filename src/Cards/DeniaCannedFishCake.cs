@@ -15,7 +15,10 @@ using TuneStrain;
 
 namespace Denia;
 
-/// <summary>鱼罐头松糕 — Uncommon Attack, 1e. Double Tune Strain response layers for this turn.</summary>
+/// <summary>
+/// 鱼罐头松糕 — Uncommon Skill, 1e, Exhaust.
+/// 本回合集谐响应层数按 2 倍计算；与共鸣模态·集谐(1.5)同时存在时相乘为 3 倍。
+/// </summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaCannedFishCake : DeniaCard
 {
@@ -25,7 +28,7 @@ public sealed class DeniaCannedFishCake : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_canned_fish_cake.png";
 
     public DeniaCannedFishCake()
-        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
+        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "鱼罐头松糕",

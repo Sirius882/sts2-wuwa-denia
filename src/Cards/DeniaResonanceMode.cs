@@ -22,14 +22,11 @@ public sealed class DeniaResonanceMode : DeniaCard
 {
     public override int CurrentDarkCoreCost => 1;
 
-    public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { TuneStrainKeywords.TuneStrainResponse };
-
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_resonance_mode.png";
 
     public DeniaResonanceMode()
-        : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
+        : base(0, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "共鸣模态·集谐",
@@ -74,7 +71,7 @@ public sealed class DeniaResonanceMode : DeniaCard
 
     protected override void OnUpgrade()
     {
-        EnergyCost.UpgradeBy(-1);
+        AddKeyword(CardKeyword.Innate);
     }
 }
 

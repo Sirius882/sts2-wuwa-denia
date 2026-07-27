@@ -6,13 +6,13 @@ using MegaCrit.Sts2.Core.Nodes.Rooms;
 namespace Denia;
 
 /// <summary>
-/// 火堆立绘：占位 necro spine 隐藏后叠 denia_pink。
+/// 火堆立绘：占位 necro spine 隐藏后叠 denia_rest_site（artResources 火堆.png）。
 /// 单人时原 scale=320/width 过小；按目标高度约 520 并上移锚点。
 /// </summary>
 [HarmonyPatch(typeof(NRestSiteRoom), nameof(NRestSiteRoom._Ready))]
 public static class DeniaRestSitePatch
 {
-    private const string PortraitPath = "res://images/packed/character_select/denia_pink.png";
+    private const string PortraitPath = "res://images/packed/character_select/denia_rest_site.png";
     private const float TargetHeight = 520f;
 
     [HarmonyPostfix]

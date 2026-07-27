@@ -10,6 +10,8 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
+using MegaCrit.Sts2.Core.Saves;
+using MegaCrit.Sts2.Core.Settings;
 
 namespace Denia;
 
@@ -44,6 +46,29 @@ public static class DeniaFormPatch
     public const float WeaponSwingDuration = 0.2f;
     public const float BlackFxDuration = 0.2f;
     public const float WeaponDeathAnimDuration = 0.5f; // 0.1 rotate + 0.2 up + 0.2 down
+
+    /// <summary>设置里的加速模式（Fast）。Instant 由 Cmd.Wait 自行跳过。</summary>
+    internal static bool IsFastMode()
+    {
+        try
+        {
+            return SaveManager.Instance?.PrefsSave?.FastMode == FastModeType.Fast;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 形态切换阻塞时长：Normal 1.5s；Fast 动画×2 → 等 0.75s 仍等播完。
+    /// 死亡不走此 API。
+    /// </summary>
+    public static float GetFormTransitionWaitDuration()
+        => IsFastMode() ? FormTransitionDuration * 0.5f : FormTransitionDuration;
+
+    /// <summary>Fast 下武器/黑态特效改为 fire-and-forget（速度仍 0.2s）。</summary>
+    public static bool ShouldSkipCombatFxWait() => IsFastMode();
 
     private static readonly Dictionary<NCreature, TextureRect> _pinkOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _blackOverlay = new();
@@ -199,11 +224,14 @@ public static class DeniaFormPatch
 
     public static async Task AwaitWeaponSwing(Creature creature)
     {
+        // Fast：视觉仍按 0.2s 播，但不等待（instant 手感）
+        if (ShouldSkipCombatFxWait()) return;
         await Cmd.Wait(WeaponSwingDuration);
     }
 
     public static async Task AwaitBlackFx(Creature creature)
     {
+        if (ShouldSkipCombatFxWait()) return;
         await Cmd.Wait(BlackFxDuration);
     }
 
@@ -224,6 +252,15 @@ public static class DeniaFormPatch
     {
         try
         {
+            // 优先挂在 Visuals 上：Game Over 会把 Visuals 从 NCreature 上 Reparent 走。
+            if (nc.Visuals != null && GodotObject.IsInstanceValid(nc.Visuals))
+            {
+                var onVisuals = nc.Visuals.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
+                if (onVisuals != null && GodotObject.IsInstanceValid(onVisuals))
+                    return onVisuals;
+            }
+
+            // 兼容旧位置（NCreature 上）。
             var sync = nc.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
             return sync != null && GodotObject.IsInstanceValid(sync) ? sync : null;
         }
@@ -409,14 +446,25 @@ public static class DeniaFormPatch
     {
         try
         {
-            var existing = nc.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
+            var visuals = nc.Visuals;
+            if (visuals == null || !GodotObject.IsInstanceValid(visuals)) return;
+
+            // 若旧版本把 sync 挂在 NCreature 上，迁移到 Visuals，避免 Game Over Reparent 后动画中断。
+            var legacy = nc.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
+            if (legacy != null && GodotObject.IsInstanceValid(legacy) && legacy.GetParent() != visuals)
+            {
+                legacy.Reparent(visuals);
+            }
+
+            var existing = visuals.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
             if (existing != null && GodotObject.IsInstanceValid(existing))
             {
                 existing.Bind(nc, pink, black, midToBlack, midToPink, corpse, weapon, blackFx);
                 return;
             }
+
             var sync = new DeniaFormOverlaySync { Name = SyncNodeName };
-            nc.AddChild(sync);
+            visuals.AddChild(sync);
             sync.Bind(nc, pink, black, midToBlack, midToPink, corpse, weapon, blackFx);
         }
         catch { }
@@ -682,6 +730,8 @@ public partial class DeniaFormOverlaySync : Node
     private double _layoutTimer;
 
     private AnimState _state = AnimState.Idle;
+    /// <summary>仅粉↔黑形态切换：Fast 下为 2，死亡 ToCorpse 恒为 1。</summary>
+    private float _formAnimSpeed = 1f;
     private double _animTime;
     private double _breathPhase;
     private TransitionKind _transitionKind = TransitionKind.ToBlack;
@@ -802,6 +852,8 @@ public partial class DeniaFormOverlaySync : Node
         _state = AnimState.FormTransition;
         _animTime = 0;
         _transitionKind = kind;
+        // Fast：粉↔黑切换视觉 ×2；死亡走 PlayDeath，不经过此路径
+        _formAnimSpeed = DeniaFormPatch.IsFastMode() ? 2f : 1f;
         ResetMotion();
         _playedPhase1Sfx = false;
         _playedPhase2Sfx = false;
@@ -820,6 +872,8 @@ public partial class DeniaFormOverlaySync : Node
         _state = AnimState.FormTransition;
         _animTime = 0;
         _transitionKind = TransitionKind.ToCorpse;
+        // 死亡动画不受加速模式影响
+        _formAnimSpeed = 1f;
         ResetMotion();
         _playedPhase1Sfx = false;
         _playedPhase2Sfx = false;
@@ -947,16 +1001,36 @@ public partial class DeniaFormOverlaySync : Node
     {
         try
         {
-            if (_creatureNode == null || !GodotObject.IsInstanceValid(_creatureNode))
+            // 自身必须还挂在有效父节点上；Game Over 会拆走 Visuals，sync 应跟着 Visuals 走。
+            if (!GodotObject.IsInstanceValid(this) || GetParent() == null || !IsInsideTree())
             {
                 QueueFree();
+                return;
+            }
+
+            bool creatureValid = _creatureNode != null && GodotObject.IsInstanceValid(_creatureNode);
+            if (!creatureValid)
+            {
+                // 战斗卸载后 NCreature 可能已释放，但死亡/尸体动画仍需继续播完。
+                if (_state == AnimState.Dead
+                    || _state == AnimState.FormTransition
+                    || _state == AnimState.WeaponDeathDrop
+                    || _weaponDeathActive)
+                {
+                    UpdateAnimation(delta);
+                    ApplyTransforms();
+                }
+                else
+                {
+                    QueueFree();
+                }
                 return;
             }
 
             bool needFacing = false;
             try
             {
-                var body = _creatureNode.Body;
+                var body = _creatureNode!.Body;
                 if (body != null && GodotObject.IsInstanceValid(body))
                 {
                     var bs = body.Scale;
@@ -968,12 +1042,12 @@ public partial class DeniaFormOverlaySync : Node
                 }
             }
             catch { }
-            if (needFacing) DeniaFormPatch.SyncFacing(_creatureNode);
+            if (needFacing) DeniaFormPatch.SyncFacing(_creatureNode!);
 
             bool needLayout = false;
             try
             {
-                var visuals = _creatureNode.Visuals;
+                var visuals = _creatureNode!.Visuals;
                 if (visuals != null && GodotObject.IsInstanceValid(visuals))
                 {
                     var vs = visuals.Scale;
@@ -997,7 +1071,7 @@ public partial class DeniaFormOverlaySync : Node
             _layoutTimer += delta;
             if (_layoutTimer < 0.5 && ((int)(_layoutTimer * 10) != (int)((_layoutTimer - delta) * 10)))
                 needLayout = true;
-            if (needLayout) DeniaFormPatch.SyncOverlayLayout(_creatureNode);
+            if (needLayout) DeniaFormPatch.SyncOverlayLayout(_creatureNode!);
 
             UpdateAnimation(delta);
             ApplyTransforms();
@@ -1155,10 +1229,10 @@ public partial class DeniaFormOverlaySync : Node
         }
     }
 
-
     private void UpdateFormTransition(double delta)
     {
-        _animTime += delta;
+        // Fast 粉↔黑：_formAnimSpeed=2；死亡 ToCorpse 恒为 1
+        _animTime += delta * _formAnimSpeed;
         float time = (float)_animTime;
         ResolveTransitionTargets(_transitionKind, out var from, out var to, out var mid, out _);
         bool hasMid = mid != null && GodotObject.IsInstanceValid(mid) && mid.Texture != null;

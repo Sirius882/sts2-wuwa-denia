@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Texture2D" path="res://images/packed/character_select/denia_pink.png" id="1"]
+[ext_resource type="Texture2D" path="res://images/packed/character_select/denia_rest_site.png" id="1"]
 
 [node type="Control" name="DeniaRest"]
 layout_mode = 3

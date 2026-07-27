@@ -24,7 +24,7 @@ public sealed class DeniaProofOfPersonality : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_proof_of_personality.png";
 
     public DeniaProofOfPersonality()
-        : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
+        : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "人格的证明",
@@ -37,7 +37,7 @@ public sealed class DeniaProofOfPersonality : DeniaCard
 
     protected override void OnUpgrade()
     {
-        EnergyCost.UpgradeBy(-1);
+        AddKeyword(CardKeyword.Innate);
     }
 }
 

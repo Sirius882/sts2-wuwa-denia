@@ -11,16 +11,16 @@ using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
-/// <summary>轻叩门扉 — Common Skill, Exhaust</summary>
+/// <summary>轻叩门扉 — Uncommon Skill, Exhaust. 升级提高失去力量数值。</summary>
 public sealed class DeniaKnockDoor : DeniaCard
 {
     public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust };
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_knock_door.png";
 
-    public DeniaKnockDoor() : base(2, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }
+    public DeniaKnockDoor() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "轻叩门扉",
-        Description: "[gold]黑色形态[/gold]：所有敌人失去4点[gold]力量[/gold]。\n[gold]粉色形态[/gold]：目标失去6点[gold]力量[/gold]。\n持续1回合。");
+        Description: "[gold]黑色形态[/gold]：所有敌人失去{IfUpgraded:show:6|4}点[gold]力量[/gold]。\n[gold]粉色形态[/gold]：目标失去{IfUpgraded:show:8|6}点[gold]力量[/gold]。\n持续1回合。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -28,14 +28,16 @@ public sealed class DeniaKnockDoor : DeniaCard
 
         if (DeniaFormHelper.IsBlack(Owner.Creature))
         {
+            decimal amount = IsUpgraded ? 6m : 4m;
             foreach (var e in Owner.Creature.CombatState.Enemies.Where(e2 => !e2.IsDead).ToArray())
-                await PowerCmd.Apply<DeniaKnockDoorStrengthLossPower>(ctx, e, 4m, Owner.Creature, this);
+                await PowerCmd.Apply<DeniaKnockDoorStrengthLossPower>(ctx, e, amount, Owner.Creature, this);
         }
         else
         {
-            await PowerCmd.Apply<DeniaKnockDoorStrengthLossPower>(ctx, play.Target, 6m, Owner.Creature, this);
+            decimal amount = IsUpgraded ? 8m : 6m;
+            await PowerCmd.Apply<DeniaKnockDoorStrengthLossPower>(ctx, play.Target, amount, Owner.Creature, this);
         }
     }
 
-    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
+    protected override void OnUpgrade() { }
 }

@@ -156,8 +156,11 @@ public static class DeniaRelicBurstHandler
         bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
         if (hasTeddy || hasDwarf)
         {
+            // 赝作的矮星：上限 1/3 向上取整；骗术师：上限 1/4 向下取整。
             int divisor = hasDwarf ? 3 : 4;
-            int add = cap / divisor;
+            int add = hasDwarf
+                ? (cap + divisor - 1) / divisor
+                : cap / divisor;
             if (add > 0)
                 await AemeathFusionBurstState.TryAddFusionBurstWithoutAutoBurst(
                     target, add, applier, null!);

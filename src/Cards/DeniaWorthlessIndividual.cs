@@ -12,6 +12,7 @@ using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization;
+using MegaCrit.Sts2.Core.Models.Powers;
 using TuneStrain;
 
 namespace Denia;
@@ -19,7 +20,7 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaWorthlessIndividual : DeniaCard, IResonanceBreakCard
 {
-    public override int CurrentVirtualMatterCost => 4;
+    public override int CurrentVirtualMatterCost => 3;
 
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
@@ -32,32 +33,31 @@ public sealed class DeniaWorthlessIndividual : DeniaCard, IResonanceBreakCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "“没有价值的个体”",
-        Description: "无条件[gold]谐度破坏[/gold]。此次[gold]谐度破坏[/gold]只造成五分之一的伤害。给任意{IfUpgraded:show:3|1}张手牌附加[gold]集谐响应[/gold]。\n虚质强化：[gold]谐度破坏[/gold]伤害恢复正常。");
+        Description: "给任意{IfUpgraded:show:3|1}张手牌附加[gold]集谐响应[/gold]。无条件[gold]谐度破坏[/gold]。\n虚质强化：附加2层[gold]易伤[/gold]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        bool normalDamage = await TrySpendVirtualMatter(play);
-        if (normalDamage)
-            await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
-        else
-            await DeniaResonanceBreakDamageModifier.RunOnce(
-                0.2m,
-                () => AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this));
-
+        // 先选牌附加集谐响应，再触发谐度破坏（策划要求顺序调整）。
         int count = IsUpgraded ? 3 : 1;
         var eligible = PileType.Hand.GetPile(Owner).Cards
             .Where(card => card != this && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse))
             .ToList();
         count = Math.Min(count, eligible.Count);
-        if (count <= 0) return;
+        if (count > 0)
+        {
+            var prefs = new CardSelectorPrefs(new LocString("card_selection", "DENIA_TO_TUNE_STRAIN_RESPONSE"), count);
+            var selected = await CardSelectCmd.FromHand(ctx, Owner, prefs,
+                card => card != this && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse), this);
+            foreach (var card in selected.ToList())
+                TuneStrainState.AddTemporaryResponse(Owner, card);
+        }
 
-        var prefs = new CardSelectorPrefs(new LocString("card_selection", "DENIA_TO_TUNE_STRAIN_RESPONSE"), count);
-        var selected = await CardSelectCmd.FromHand(ctx, Owner, prefs,
-            card => card != this && !card.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse), this);
-        foreach (var card in selected.ToList())
-            TuneStrainState.AddTemporaryResponse(Owner, card);
+        await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
+
+        if (await TrySpendVirtualMatter(play))
+            await PowerCmd.Apply<VulnerablePower>(ctx, play.Target, 2m, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }

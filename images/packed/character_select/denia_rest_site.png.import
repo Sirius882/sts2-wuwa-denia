@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://3ixt2v7trxf8"
-path="res://.godot/imported/card_face_tear_worship.png-f988b5e8dc3c97ccee429244dabbd535.ctex"
+uid="uid://df7xquxj7dt64"
+path="res://.godot/imported/denia_rest_site.png-f47cbb6614a556d8f0f7f91bbf3ddddf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://images/packed/card_portraits/denia/card_face_tear_worship.png"
-dest_files=["res://.godot/imported/card_face_tear_worship.png-f988b5e8dc3c97ccee429244dabbd535.ctex"]
+source_file="res://images/packed/character_select/denia_rest_site.png"
+dest_files=["res://.godot/imported/denia_rest_site.png-f47cbb6614a556d8f0f7f91bbf3ddddf.ctex"]
 
 [params]
 

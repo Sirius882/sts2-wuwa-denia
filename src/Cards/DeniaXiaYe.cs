@@ -12,11 +12,11 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace Denia;
 
-/// <summary>夏耶 — Uncommon Power, 1e. 黯核3: 每次切换形态获得1黯核。</summary>
+/// <summary>夏耶 — Uncommon Power, 1e. 黯核2: 每次切换形态获得1黯核。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaXiaYe : DeniaCard
 {
-    public override int CurrentDarkCoreCost => 3;
+    public override int CurrentDarkCoreCost => 2;
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_xia_ye.png";
 
@@ -25,7 +25,7 @@ public sealed class DeniaXiaYe : DeniaCard
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "夏耶",
-        Description: "黯核3：每次切换形态时，获得1黯核。");
+        Description: "黯核2：每次切换形态时，获得1黯核。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

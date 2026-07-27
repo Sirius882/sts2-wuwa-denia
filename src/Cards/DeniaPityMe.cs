@@ -13,7 +13,7 @@ public sealed class DeniaPityMe : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 2;
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { CardKeyword.Exhaust, CardKeyword.Ethereal };
+        new[] { CardKeyword.Ethereal };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_pity_me.png";

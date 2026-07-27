@@ -13,7 +13,7 @@ using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
-/// <summary>卡纽 - Rare Power, 3e. 每次切换形态获得1能量。升级: +2力量+2蔽星。</summary>
+/// <summary>卡纽 - Rare Power, 2e. 每次切换形态获得1能量。升级: +2力量+2蔽星。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaKaNiu : DeniaCard
 {
@@ -21,7 +21,7 @@ public sealed class DeniaKaNiu : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_ka_niu.png";
 
     public DeniaKaNiu()
-        : base(3, CardType.Power, CardRarity.Rare, TargetType.Self) { }
+        : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "卡纽",

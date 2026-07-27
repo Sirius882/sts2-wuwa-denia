@@ -37,12 +37,18 @@ public sealed class DeniaImmerseIntoVoid : DeniaCard
     protected override void OnUpgrade() { }
 }
 
-/// <summary>没入虚无：持有者的熔解不消耗聚爆层数。</summary>
+/// <summary>没入虚无：持有者的熔解不消耗聚爆层数。图标借用 Aemeath 聚爆轨迹。</summary>
 public sealed class DeniaImmerseIntoVoidPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
     protected override bool IsVisibleInternal => true;
+
+    // 借用 Aemeath「聚爆轨迹」power 图标。
+    public override string? CustomPackedIconPath =>
+        "res://aemeath-ww/ui/powers/aemeath_trajectory_fusion_burst_power.webp";
+    public override string? CustomBigIconPath =>
+        "res://aemeath-ww/ui/powers/aemeath_trajectory_fusion_burst_power.webp";
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "没入虚无",

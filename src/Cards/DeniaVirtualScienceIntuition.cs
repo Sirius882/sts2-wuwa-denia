@@ -18,8 +18,6 @@ public sealed class DeniaVirtualScienceIntuition : DeniaCard
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_virtual_science_intuition.png";
 
-    public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust };
-
     public DeniaVirtualScienceIntuition()
         : base(1, CardType.Power, CardRarity.Ancient, TargetType.Self, showInCardLibrary: true) { }
 

@@ -120,7 +120,8 @@ public sealed class Denia : PlaceholderCharacterModel
         "res://images/ui/hands/denia_hand_rock.png",
         "res://images/ui/hands/denia_hand_paper.png",
         "res://images/ui/hands/denia_hand_scissors.png",
-        // 火堆/商店角色场景
+        // 火堆立绘 / 火堆与商店角色场景
+        "res://images/packed/character_select/denia_rest_site.png",
         "res://scenes/rest_site/characters/denia_rest_site.tscn",
         "res://scenes/merchant/characters/denia_merchant.tscn",
     };
