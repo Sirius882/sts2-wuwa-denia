@@ -24,9 +24,8 @@ public sealed class DeniaPhantomFoam : DeniaCard
     public DeniaPhantomFoam()
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "幻沫",
-        Description: "触发[gold]虚质强化[/gold]时，获得1点[gold]格挡[/gold]。每回合最多触发{IfUpgraded:show:8|6}次。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "幻沫",
+            Description: "触发[color=#9A6A18]虚质强化[/color]时，获得1点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:8|6}次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -63,8 +62,8 @@ public sealed class DeniaPhantomFoamPower : CustomPowerModel
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "幻沫",
-        Description: "触发虚质强化时，获得{Amount}点格挡。每回合最多触发有限次。",
-        SmartDescription: "触发虚质强化时，获得{Amount}点格挡。每回合最多触发有限次。");
+        Description: "触发虚质强化时，获得格挡。每回合有触发上限。",
+        SmartDescription: "触发虚质强化时，获得{Amount}点格挡。每回合有触发上限。");
 
     public static async Task OnVirtualMatterEnhanced(Creature creature)
     {

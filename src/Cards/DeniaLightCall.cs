@@ -6,7 +6,7 @@ public sealed class DeniaLightCall : CustomCardModel
     public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { TuneStrainKeywords.TuneStrainResponse };
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_light_call.png";
     public DeniaLightCall() : base(2, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
-    public override List<(string, string)>? Localization => new CardLoc(Title: "轻唤", Description: "每当附加[gold]聚爆[/gold]时，同步附加一半层数的[gold]易伤[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "轻唤", Description: "附加[color=#9A6A18]聚爆[/color]时，附加一半层数的[color=#9A6A18]易伤[/color]。");
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play) { await PowerCmd.Apply<DeniaLightCallPower>(ctx, Owner.Creature, 1m, Owner.Creature, this); }
     protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
 }

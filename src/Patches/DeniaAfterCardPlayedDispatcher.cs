@@ -1,6 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Combat.History.Entries;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Players;
@@ -39,7 +42,7 @@ public static class DeniaAfterCardPlayedDispatcher
             await ProcessMasterSwordCounter(player, cardPlay);
             await DeniaKeepRunningPower.OnAnyCardPlayed(player, cardPlay);
             await DeniaYouTryItPower.OnAnyCardPlayed(player, cardPlay);
-            await TryTriggerRelicRandomResponseIfNeeded(player);
+            await TryTriggerRelicRandomResponseIfNeeded(player, cardPlay);
         }
         finally
         {
@@ -91,26 +94,52 @@ public static class DeniaAfterCardPlayedDispatcher
         sword.GrantedShroudedStar = 0;
     }
 
-    private static async Task TryTriggerRelicRandomResponseIfNeeded(Player player)
+    private static async Task TryTriggerRelicRandomResponseIfNeeded(Player player, CardPlay cardPlay)
     {
         bool hasTeddy = player.GetRelic<DeniaTrickster>() != null;
         bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
         if (!hasTeddy && !hasDwarf) return;
-        await TryTriggerRelicRandomResponse(player, hasDwarf);
+        int cardsPlayed = DidAttackCardDealHpDamage(cardPlay) ? 2 : 1;
+        await TryTriggerRelicRandomResponse(player, hasDwarf, cardsPlayed);
     }
 
-    private static async Task TryTriggerRelicRandomResponse(Player player, bool hasDwarf)
+    private static bool DidAttackCardDealHpDamage(CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Type != CardType.Attack)
+            return false;
+
+        IEnumerable<MegaCrit.Sts2.Core.Combat.History.CombatHistoryEntry> entries =
+            CombatManager.Instance.History.Entries.Reverse();
+        foreach (var entry in entries)
+        {
+            if (entry is CardPlayStartedEntry started && ReferenceEquals(started.CardPlay, cardPlay))
+                break;
+            if (entry is DamageReceivedEntry damage
+                && ReferenceEquals(damage.CardSource, cardPlay.Card)
+                && damage.Dealer == cardPlay.Card.Owner.Creature
+                && damage.Result.UnblockedDamage > 0)
+                return true;
+        }
+        return false;
+    }
+
+    private static async Task TryTriggerRelicRandomResponse(Player player, bool hasDwarf, int cardsPlayed)
     {
         var creature = player.Creature;
         int threshold = hasDwarf ? 2 : 3;
 
         await PowerCmd.Apply<DeniaRelicCardPlayedCounterPower>(
-            new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
+            new ThrowingPlayerChoiceContext(), creature, cardsPlayed, creature, null!);
         var counter = creature.GetPower<DeniaRelicCardPlayedCounterPower>();
         int now = counter != null ? (int)counter.Amount : 0;
         if (now < threshold) return;
 
-        await PowerCmd.Remove<DeniaRelicCardPlayedCounterPower>(creature);
+        int remainder = now - threshold;
+        if (remainder <= 0)
+            await PowerCmd.Remove<DeniaRelicCardPlayedCounterPower>(creature);
+        else if (counter != null)
+            await PowerCmd.ModifyAmount(
+                new ThrowingPlayerChoiceContext(), counter, -threshold, creature, null!);
 
         var eligible = new List<CardModel>();
         PileType[] piles = { PileType.Draw, PileType.Hand, PileType.Discard };

@@ -22,7 +22,7 @@ public sealed class DeniaLightCallPower : CustomPowerModel, IOnFusionBurstApplie
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_light_call_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "轻唤", Description: "每当附加聚爆时，同步附加一半层数的易伤。", SmartDescription: "每当附加聚爆时，同步附加一半层数的易伤。");
+        new PowerLoc(Title: "轻唤", Description: "附加聚爆时，同步附加一半层数的易伤。", SmartDescription: "附加聚爆时，同步附加一半层数的易伤。");
 
     public async Task OnFusionBurstApplied(Creature target, int amount)
     {

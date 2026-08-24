@@ -6,7 +6,7 @@ public sealed class DeniaHappyBirthday : DeniaCard
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_happy_birthday.png";
     public DeniaHappyBirthday() : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
     public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust };
-    public override List<(string, string)>? Localization => new CardLoc(Title: "生日快乐", Description: "所有我方人物获得{IfUpgraded:show:5|3}层[gold]蔽星[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "生日快乐", Description: "所有我方玩家获得{IfUpgraded:show:5|3}点[color=#9A6A18]蔽星[/color]。");
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int amount = IsUpgraded ? 5 : 3;

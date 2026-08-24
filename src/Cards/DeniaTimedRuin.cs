@@ -13,9 +13,8 @@ public sealed class DeniaTimedRuin : CustomCardModel
 {
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_timed_ruin.png";
     public DeniaTimedRuin() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AllEnemies) { }
-    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(
-        Title: "计时的溃灭",
-        Description: "所有敌人提高聚爆上限1并附加上限1/3的[gold]聚爆[/gold]。");
+    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "计时的溃灭",
+            Description: "所有敌人提高聚爆上限1并附加上限1/3的[color=#9A6A18]聚爆[/color]。");
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         foreach (var e in Owner.Creature.CombatState.Enemies.Where(e2 => !e2.IsDead).ToArray())

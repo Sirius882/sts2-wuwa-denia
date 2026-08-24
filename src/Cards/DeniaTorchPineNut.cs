@@ -30,9 +30,8 @@ public sealed class DeniaTorchPineNut : DeniaCard
     public DeniaTorchPineNut()
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "匍炬松松子",
-        Description: "获得[gold]蔽星[/gold]时，同步获得相同层数的[gold]力量[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "匍炬松松子",
+            Description: "获得[color=#9A6A18]蔽星[/color]时，同步获得相同层数的[color=#9A6A18]力量[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -56,9 +55,10 @@ public sealed class DeniaTorchPineNutPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_torch_pine_nut_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "匍炬松松子",
-            Description: "获得蔽星时，同步获得相同层数的力量。",
-            SmartDescription: "获得蔽星时，同步获得相同层数的力量。");
+        new PowerLoc(
+        Title: "匍炬松松子",
+        Description: "获得蔽星时，同步获得相同层数的力量。",
+        SmartDescription: "获得蔽星时，同步获得相同层数的力量。");
 
     /// <summary>获得蔽星时立刻同步获得力量（引擎 await AfterPowerAmountChanged）。</summary>
     public override async Task AfterPowerAmountChanged(

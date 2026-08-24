@@ -1,3 +1,3 @@
 {
-  "DENIA_TO_TUNE_STRAIN_RESPONSE": "选择[blue]{Amount}[/blue]张牌来附加[gold]集谐响应[/gold]。"
+  "DENIA_TO_TUNE_STRAIN_RESPONSE": "选择[blue]{Amount}[/blue]张牌附加[gold]集谐响应[/gold]。附加的集谐响应只在本场战斗中存在，且在触发集谐谐度破坏时清除。"
 }

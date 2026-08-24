@@ -27,9 +27,8 @@ public sealed class DeniaKeepRunning : DeniaCard
     public DeniaKeepRunning()
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "继续逃啊？",
-        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加上限{IfUpgraded:show:1/3|1/4}的[gold]聚爆[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "继续逃啊？",
+            Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加上限{IfUpgraded:show:1/3|1/4}的[color=#9A6A18]聚爆[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -59,9 +58,10 @@ public sealed class DeniaKeepRunningPower : CustomPowerModel
     protected override bool IsVisibleInternal => false;
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "继续逃啊？",
-            Description: "本回合内每打出一张牌，按目标聚爆上限比例附加聚爆。",
-            SmartDescription: "本回合内每打出一张牌，给目标敌人附加上限1/{Amount}的聚爆。");
+        new PowerLoc(
+        Title: "继续逃啊？",
+        Description: "本回合内每打出一张牌，按目标聚爆上限比例附加聚爆。",
+        SmartDescription: "本回合内每打出一张牌，给目标敌人附加上限1/{Amount}的聚爆。");
 
     public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
     {

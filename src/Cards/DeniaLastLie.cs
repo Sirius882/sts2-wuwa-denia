@@ -34,9 +34,8 @@ public sealed class DeniaLastLie : DeniaCard
     public DeniaLastLie()
         : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "最后的谎言",
-        Description: "附加1[gold]集谐·偏移[/gold]，造成{Damage:diff()}点伤害，在牌组中选择{IfUpgraded:show:3|2}张牌附加[gold]集谐响应[/gold]。\n虚质强化：伤害+8。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "最后的谎言",
+            Description: "附加1[color=#9A6A18]集谐·偏移[/color]，造成{Damage:diff()}点伤害，在牌组中选择{IfUpgraded:show:3|2}张牌附加[color=#9A6A18]集谐响应[/color]。\n虚质强化：伤害+8。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

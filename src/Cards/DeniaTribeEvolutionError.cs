@@ -29,9 +29,8 @@ public sealed class DeniaTribeEvolutionError : DeniaCard
     public DeniaTribeEvolutionError()
         : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "族群进化的错误",
-        Description: "{IfUpgraded:show:附加1[gold]集谐·偏移[/gold]，无条件[gold]谐度破坏[/gold]。|若目标带有[gold]集谐·偏移[/gold]，无条件[gold]谐度破坏[/gold]。}造成{Damage:diff()}点伤害。\n虚质强化：伤害+10。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "族群进化的错误",
+            Description: "{IfUpgraded:show:附加1[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。|若目标带有[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。}造成{Damage:diff()}点伤害。\n虚质强化：伤害+10。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

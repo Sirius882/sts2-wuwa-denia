@@ -16,9 +16,8 @@ public sealed class DeniaDontComeIn : DeniaCard
     public DeniaDontComeIn()
         : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(
-        Title: "不要···进来",
-        Description: "切换形态。获得6[gold]虚质[/gold]。{IfUpgraded:show:\n再获得1黯核。|}");
+    public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "不要···进来",
+            Description: "切换形态。获得6[color=#9A6A18]虚质[/color]{IfUpgraded:show:1黯核。|}。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

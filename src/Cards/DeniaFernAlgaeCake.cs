@@ -27,9 +27,8 @@ public sealed class DeniaFernAlgaeCake : DeniaCard
     public DeniaFernAlgaeCake()
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "蕨团蒲藻饼",
-        Description: "对全体敌人造成{Damage:diff()}点伤害x次。\n黯核强化：再造成9点伤害y次。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "蕨团蒲藻饼",
+            Description: "对全体敌人造成{Damage:diff()}点伤害x次。\n黯核强化：再造成9点伤害y次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -40,11 +39,7 @@ public sealed class DeniaFernAlgaeCake : DeniaCard
         if (dcExtraHits > 0 && !play.IsAutoPlay)
         {
             dcSpent = true;
-            if (Owner.Creature.Player?.PlayerCombatState != null)
-                await PlayerCmd.SetStars(0, Owner.Creature.Player);
-            var dcPower = Owner.Creature.GetPower<DeniaDarkCorePower>();
-            if (dcPower != null)
-                await PowerCmd.ModifyAmount(new ThrowingPlayerChoiceContext(), dcPower, -dc, Owner.Creature, this);
+            await DeniaResourceState.ClearDarkCore(Owner.Creature, Owner.Creature, this);
         }
 
         int baseHits = x;

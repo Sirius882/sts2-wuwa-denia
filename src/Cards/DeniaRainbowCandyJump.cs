@@ -12,7 +12,7 @@ using TuneStrain;
 
 namespace Denia;
 
-/// <summary>彩虹豆豆跳跳糖 — Rare Power, 3e(upg:2e Innate). Extra 2 VM from relic VM gain.</summary>
+/// <summary>彩虹豆豆跳跳糖 — Rare Power, 1e，升级获得固有。粉态攻击牌获得虚质时额外 +2。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaRainbowCandyJump : DeniaCard
 {
@@ -25,11 +25,10 @@ public sealed class DeniaRainbowCandyJump : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_rainbow_candy_jump.png";
 
     public DeniaRainbowCandyJump()
-        : base(3, CardType.Power, CardRarity.Rare, TargetType.Self) { }
+        : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "彩虹豆豆跳跳糖",
-        Description: "通过在[gold]粉色形态[/gold]下打出攻击牌获得[gold]虚质[/gold]时，额外获得2虚质。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "彩虹豆豆跳跳糖",
+            Description: "通过在[color=#9A6A18]粉色形态[/color]下打出攻击牌获得[color=#9A6A18]虚质[/color]时，额外获得2虚质。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -38,7 +37,6 @@ public sealed class DeniaRainbowCandyJump : DeniaCard
 
     protected override void OnUpgrade()
     {
-        EnergyCost.UpgradeBy(-1);
         AddKeyword(CardKeyword.Innate);
     }
 }
@@ -52,7 +50,8 @@ public sealed class DeniaRainbowCandyJumpPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_rainbow_candy_jump_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "彩虹豆豆跳跳糖",
-            Description: "通过[gold]粉色形态[/gold]的攻击牌获得虚质时，额外获得{Amount}×2虚质。",
-            SmartDescription: "通过[gold]粉色形态[/gold]的攻击牌获得虚质时，额外获得{Amount}×2虚质。");
+        new PowerLoc(
+        Title: "彩虹豆豆跳跳糖",
+        Description: "通过粉色形态的攻击牌获得虚质时，额外获得{Amount}×2虚质。",
+        SmartDescription: "通过粉色形态的攻击牌获得虚质时，额外获得{Amount}×2虚质。");
 }

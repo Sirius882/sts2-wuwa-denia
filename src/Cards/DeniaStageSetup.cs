@@ -51,5 +51,5 @@ public sealed class DeniaStageSetup : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "布景之形",
-            Description: "对所有敌人造成{IfUpgraded:show:10|7}点伤害，提高[gold]聚爆[/gold]上限{IfUpgraded:show:4|3}，然后附加上限{IfUpgraded:show:1/3+1|1/5+1}的[gold]聚爆[/gold]。\n黯核强化：基础伤害+7。");
+            Description: "对所有敌人造成{IfUpgraded:show:10|7}点伤害，提高[color=#9A6A18]聚爆[/color]上限{IfUpgraded:show:4|3}，然后附加上限{IfUpgraded:show:1/3+1|1/5+1}的[color=#9A6A18]聚爆[/color]。\n黯核强化：基础伤害+7。");
 }

@@ -27,9 +27,8 @@ public sealed class DeniaVisit : DeniaCard
 
     public DeniaVisit() : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "谨此致访",
-        Description: "本场战斗中，你每回合最多受到{IfUpgraded:show:15|20}点伤害，但是每回合你对每个怪物最多造成{IfUpgraded:show:80|60}点伤害。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "谨此致访",
+            Description: "本场战斗中，你每回合最多受到{IfUpgraded:show:15|20}点伤害，但是每回合你对每个怪物最多造成{IfUpgraded:show:80|60}点伤害。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

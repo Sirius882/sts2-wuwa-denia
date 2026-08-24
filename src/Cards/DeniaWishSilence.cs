@@ -18,7 +18,7 @@ public sealed class DeniaWishSilence : DeniaCard
     public DeniaWishSilence() : base(0, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "祝愿你于静默中",
-        Description: "触发{IfUpgraded:show:3|2}次[gold]熔解[/gold]。\n虚质强化：再触发2次[gold]熔解[/gold]。此卡触发的[gold]熔解[/gold]都不消耗聚爆层数。");
+            Description: "[color=#9A6A18]熔解[/color]{IfUpgraded:show:3|2}。\n虚质强化：[color=#9A6A18]熔解[/color]2。此牌触发的[color=#9A6A18]熔解[/color]都不消耗聚爆层数。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

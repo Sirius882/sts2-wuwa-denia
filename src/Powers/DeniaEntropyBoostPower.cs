@@ -28,9 +28,9 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(
-            Title: "熵变强化",
-            Description: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。每回合最多触发6次。",
-            SmartDescription: "每当自己获得增益或给敌人附加减益时，获得{Amount}点格挡。每回合最多触发6次。");
+        Title: "熵变强化",
+        Description: "获得增益或给敌人附加减益时，获得{Amount}格挡。每回合最多触发6次。",
+        SmartDescription: "获得增益或给敌人附加减益时，获得{Amount}格挡。每回合最多触发6次。");
 
     public override async Task AfterPowerAmountChanged(
         PlayerChoiceContext choiceContext,

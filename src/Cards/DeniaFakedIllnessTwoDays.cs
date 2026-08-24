@@ -20,9 +20,8 @@ public sealed class DeniaFakedIllnessTwoDays : DeniaCard
     public DeniaFakedIllnessTwoDays()
         : base(1, CardType.Skill, CardRarity.Basic, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "多“装”了两天病",
-        Description: "只在[gold]黑色形态[/gold]下有效。\n给随机敌人附加3点[gold]聚爆[/gold]。\n切换到[gold]粉色形态[/gold]。{IfUpgraded:show:获得1黯核。|}\n虚质强化：额外附加3点[gold]聚爆[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "多“装”了两天病",
+            Description: "只在[color=#9A6A18]黑色形态[/color]下有效。\n给随机敌人附加3点[color=#9A6A18]聚爆[/color]，切换到[color=#9A6A18]粉色形态[/color]。{IfUpgraded:show:获得1黯核。|}\n虚质强化：额外附加3点[color=#9A6A18]聚爆[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

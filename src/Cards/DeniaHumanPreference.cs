@@ -23,9 +23,8 @@ public sealed class DeniaHumanPreference : DeniaCard
     public DeniaHumanPreference()
         : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "人类的喜好",
-        Description: "{IfUpgraded:show:给所有敌人附加2[gold]集谐·偏移[/gold]。|附加2[gold]集谐·偏移[/gold]。}");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "人类的喜好",
+            Description: "{IfUpgraded:show:给所有敌人|}附加2[color=#9A6A18]集谐·偏移[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

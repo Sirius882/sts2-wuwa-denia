@@ -23,9 +23,8 @@ public sealed class DeniaXiaYe : DeniaCard
     public DeniaXiaYe()
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "夏耶",
-        Description: "黯核2：每次切换形态时，获得1黯核。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "夏耶",
+            Description: "黯核强化：每次切换形态时，获得1黯核。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -49,7 +48,8 @@ public sealed class DeniaXiaYePower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_xia_ye_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "夏耶",
-            Description: "每次切换形态时，获得黯核。",
-            SmartDescription: "每次切换形态时，获得{Amount}黯核。");
+        new PowerLoc(
+        Title: "夏耶",
+        Description: "每次切换形态时，获得黯核。",
+        SmartDescription: "每次切换形态时，获得{Amount}黯核。");
 }

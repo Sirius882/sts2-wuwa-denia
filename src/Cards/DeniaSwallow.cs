@@ -10,11 +10,12 @@ using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.ValueProps;
+using TuneStrain;
 using TuneStrain.Powers;
 
 namespace Denia;
 
-/// <summary>吞没 — Common Power: -20% damage from 集谐·干涉 (upg 30%), cannot stack. No outgoing boost.</summary>
+/// <summary>吞没 — Common Power: 按集谐响应层数降低集谐·干涉敌人的伤害，不可叠加。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaSwallow : DeniaCard
 {
@@ -24,9 +25,8 @@ public sealed class DeniaSwallow : DeniaCard
     public DeniaSwallow()
         : base(1, CardType.Power, CardRarity.Common, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "吞没",
-        Description: "带有[gold]集谐·干涉[/gold]的敌人对你造成的伤害-{IfUpgraded:show:30|20}%。不可叠加。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "吞没",
+            Description: "每有一层[color=#9A6A18]集谐响应[/color]power，带有[color=#9A6A18]集谐·干涉[/color]的敌人对你造成的伤害降低{IfUpgraded:show:3|2}%，最多不超过{IfUpgraded:show:45|30}%。此卡不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -54,7 +54,7 @@ public sealed class DeniaSwallow : DeniaCard
 }
 
 /// <summary>
-/// 吞没共享逻辑。两个具体 power 只表示状态是否存在，减伤比例固定在各自类中。
+/// 吞没共享逻辑。两个具体 power 只表示状态是否存在，减伤比例按当前集谐响应层数计算。
 /// 仅降低「带有集谐·干涉的敌人对你」造成的伤害；无对外增伤。
 /// </summary>
 public abstract class DeniaSwallowPowerBase : CustomPowerModel
@@ -69,7 +69,8 @@ public abstract class DeniaSwallowPowerBase : CustomPowerModel
     public override string? CustomBigIconPath =>
         "res://images/ui/powers/denia_resonance_mode_tune_strain_power.png";
 
-    protected abstract decimal DamageModifierPercent { get; }
+    protected abstract decimal PercentPerResponse { get; }
+    protected abstract decimal MaxReductionPercent { get; }
 
     public override decimal ModifyDamageMultiplicative(
         Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
@@ -80,30 +81,36 @@ public abstract class DeniaSwallowPowerBase : CustomPowerModel
 
         // 带有集谐·干涉的敌人对你造成的伤害降低
         if (target == Owner && dealer != null && dealer.GetPower<TuneStrainInterferencePower>() != null)
-            return 1m - DamageModifierPercent / 100m;
+        {
+            int responseLayers = TuneStrainState.GetResponsePowerAmount(Owner);
+            decimal reduction = System.Math.Min(MaxReductionPercent, responseLayers * PercentPerResponse);
+            return 1m - reduction / 100m;
+        }
 
         return 1m;
     }
 }
 
-/// <summary>吞没：固定为 20% 减伤。</summary>
+/// <summary>吞没：每层响应降低 2%，最多 30%。</summary>
 public sealed class DeniaSwallowPower : DeniaSwallowPowerBase
 {
-    protected override decimal DamageModifierPercent => 20m;
+    protected override decimal PercentPerResponse => 2m;
+    protected override decimal MaxReductionPercent => 30m;
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "吞没",
-        Description: "带有集谐·干涉的敌人对你造成的伤害-20%。",
-        SmartDescription: "带有集谐·干涉的敌人对你造成的伤害-20%。");
+        Description: "每有一层集谐响应power，带有集谐·干涉的敌人对你造成的伤害降低2%，最多不超过30%。",
+        SmartDescription: "每有一层集谐响应power，带有集谐·干涉的敌人对你造成的伤害降低2%，最多不超过30%。");
 }
 
-/// <summary>吞没+：固定为 30% 减伤。</summary>
+/// <summary>吞没+：每层响应降低 3%，最多 45%。</summary>
 public sealed class DeniaSwallowPlusPower : DeniaSwallowPowerBase
 {
-    protected override decimal DamageModifierPercent => 30m;
+    protected override decimal PercentPerResponse => 3m;
+    protected override decimal MaxReductionPercent => 45m;
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "吞没+",
-        Description: "带有集谐·干涉的敌人对你造成的伤害-30%。",
-        SmartDescription: "带有集谐·干涉的敌人对你造成的伤害-30%。");
+        Description: "每有一层集谐响应power，带有集谐·干涉的敌人对你造成的伤害降低3%，最多不超过45%。",
+        SmartDescription: "每有一层集谐响应power，带有集谐·干涉的敌人对你造成的伤害降低3%，最多不超过45%。");
 }

@@ -22,9 +22,10 @@ public sealed class DeniaVirtualScienceIntuitionPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_virtual_science_intuition_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "虚质科学直觉",
-            Description: "本场战斗每消耗8点虚质，获得1点能量。",
-            SmartDescription: "本场战斗每消耗8点虚质，获得1点能量。");
+        new PowerLoc(
+        Title: "虚质科学直觉",
+        Description: "本场战斗每消耗8点虚质，获得1点能量。",
+        SmartDescription: "本场战斗每消耗8点虚质，获得1点能量。");
 
     /// <summary>累加虚质消耗量（在补丁中调用）。</summary>
     public static async Task AccumulateVM(Creature creature, int amount)

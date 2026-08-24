@@ -25,9 +25,8 @@ public sealed class DeniaGraduationMessage : DeniaCard
     public DeniaGraduationMessage()
         : base(0, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "毕业寄语",
-        Description: "获得1能量。\n黯核强化：再获得1能量。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "毕业寄语",
+            Description: "获得1能量。\n黯核强化：获得1能量。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

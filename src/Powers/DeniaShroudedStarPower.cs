@@ -17,7 +17,7 @@ public sealed class DeniaShroudedStarPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(
-            Title: "蔽星",
-            Description: "每层使由你引发的[gold]聚爆引爆[/gold]伤害提升10%，[gold]熔解[/gold]伤害提升20%。",
-            SmartDescription: "每层使由你引发的[gold]聚爆引爆[/gold]伤害提升10%，[gold]熔解[/gold]伤害提升20%。");
+        Title: "蔽星",
+        Description: "每层使由你引发的聚爆引爆伤害提升10%，熔解伤害提升20%。",
+        SmartDescription: "每层使由你引发的聚爆引爆伤害提升10%，熔解伤害提升20%。");
 }

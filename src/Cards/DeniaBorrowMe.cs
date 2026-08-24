@@ -27,7 +27,7 @@ public sealed class DeniaBorrowMe : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "借我用下",
-            Description: "敌人每有一种[gold]减益[/gold]、自身每有一种[gold]增益[/gold]，获得2点[gold]格挡[/gold]。\n虚质强化：额外获得1格挡。");
+            Description: "敌人每有一种[color=#9A6A18]减益[/color]、自身每有一种[color=#9A6A18]增益[/color]，获得2点[color=#9A6A18]格挡[/color]。\n虚质强化：获得的[color=#9A6A18]格挡[/color]+1。");
 
     /// <summary>统计玩家身上的增益种类数（按 PowerModel 类型去重）。</summary>
     private static int CountBuffTypes(Creature player)

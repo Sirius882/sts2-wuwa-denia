@@ -32,9 +32,8 @@ public sealed class DeniaCurtainEnd : DeniaCard
     public DeniaCurtainEnd()
         : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "帷幕终景",
-        Description: "选择一张手牌，将一张{IfUpgraded:show:升级过的|}复制品放入[gold]抽牌堆[/gold]。{IfUpgraded:show:|复制品获得[gold]消耗[/gold]、[gold]虚无[/gold]。}");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "帷幕终景",
+            Description: "选择一张手牌，将一张{IfUpgraded:show:升级过的|}复制品放入[color=#9A6A18]抽牌堆[/color]。{IfUpgraded:show:|复制品获得[color=#9A6A18]消耗[/color]、[color=#9A6A18]虚无[/color]。}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

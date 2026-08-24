@@ -44,5 +44,5 @@ public sealed class DeniaLookAtMe : DeniaCard
     }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "直视我", Description: "只能在[gold]黑色形态[/gold]下打出。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：进入[gold]共鸣模态·集谐[/gold]。退出[gold]黑色形态[/gold]时，也退出[gold]共鸣模态·集谐[/gold]。");
+        new CardLoc(Title: "直视我", Description: "只在[color=#9A6A18]黑色形态[/color]下有效。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：进入[color=#9A6A18]共鸣模态·集谐[/color]。退出[color=#9A6A18]黑色形态[/color]时，也退出[color=#9A6A18]共鸣模态·集谐[/color]。");
 }

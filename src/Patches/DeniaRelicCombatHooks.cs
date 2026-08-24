@@ -159,7 +159,8 @@ public static class DeniaRelicTurnStartPatch
             if (intentDamage <= 0) continue;
 
             int taken = DeniaKusabimaru.TurnDamage.GetValueOrDefault(enemy, 0);
-            if (taken == intentDamage)
+            // 差值绝对值 ≤ 2
+            if (taken > 0 && System.Math.Abs(taken - intentDamage) <= 2)
                 await CreatureCmd.Stun(enemy);
         }
     }

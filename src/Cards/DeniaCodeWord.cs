@@ -20,9 +20,8 @@ public sealed class DeniaCodeWord : DeniaCard
     public DeniaCodeWord()
         : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "暗号",
-        Description: "切换形态。若切换为[gold]黑色形态[/gold]，获得“直视我”和“怜悯我”。\n{IfUpgraded:show:抽1张牌。|}");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "暗号",
+            Description: "切换形态。\n{IfUpgraded:show:抽1张牌。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

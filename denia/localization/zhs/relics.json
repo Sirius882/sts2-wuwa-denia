@@ -985,10 +985,10 @@
   "DENIA-DENIA_ALBUM.description": "粉色形态下，熔解不消耗聚爆层数；黑色形态下，每个回合开始时，获得1能量。",
   "DENIA-DENIA_ALBUM.flavor": "在达妮娅曾经的“家”里找到的一本精心呵护的相册。全都是达妮娅。每一张照片里，她都在笑。",
   "DENIA-DENIA_COUNTERFEIT_DWARF_STAR.title": "赝作的矮星",
-  "DENIA-DENIA_COUNTERFEIT_DWARF_STAR.description": "每打出2张牌，给随机一张牌附加临时[gold]集谐响应[/gold]（仅本场战斗存在）。若所有牌都已拥有[gold]集谐响应[/gold]，则跳过这一次。\n任何[gold]聚爆上限[/gold]引爆触发后，为触发的对象附加其[gold]聚爆上限[/gold]三分之一的[gold]聚爆[/gold]（向上取整）。",
+  "DENIA-DENIA_COUNTERFEIT_DWARF_STAR.description": "每打出2张牌，给随机一张牌附加临时[gold]集谐响应[/gold]（仅本场战斗存在）。打出攻击牌并造成伤害时，计为打出两张牌。若所有牌都已拥有[gold]集谐响应[/gold]，则跳过这一次。\n任何[gold]聚爆上限[/gold]引爆触发后，为触发的对象附加其[gold]聚爆上限[/gold]三分之一的[gold]聚爆[/gold]（向上取整）。",
   "DENIA-DENIA_COUNTERFEIT_DWARF_STAR.flavor": "如泡沫消解般，褪去梦幻，只留下沉寂的矮星。可即便如此，那曾点亮宇宙的光辉却并未消逝。她静静地等待着，将那借来的光明还给主序星的时刻。",
   "DENIA-DENIA_KUSABIMARU.title": "楔丸",
-  "DENIA-DENIA_KUSABIMARU.description": "在回合结束时，若本回合内有敌人受到的伤害正好等于其攻击意图的总伤害，令其眩晕。",
+  "DENIA-DENIA_KUSABIMARU.description": "在回合结束时，若本回合内，有敌人受到的伤害与其攻击意图的总伤害差值不大于2，令其眩晕。",
   "DENIA-DENIA_KUSABIMARU.flavor": "弹反一切之刀",
   "DENIA-DENIA_MASTER_SWORD.title": "大师之剑",
   "DENIA-DENIA_MASTER_SWORD.description": "初始拥有40点计数。每打出一张攻击牌，消耗1计数。战斗开始时若计数>0，获得2力量和2蔽星；计数归零时失去力量和蔽星。Boss战中不受计数限制且不消耗计数。Boss战胜利后计数恢复40。",
@@ -1006,6 +1006,9 @@
   "DENIA-DENIA_SACRIFICIAL_SWORD.description": "战斗开始时，获得2点[gold]蔽星[/gold]和2点[gold]力量[/gold]。\n第一次失去生命后移除效果。",
   "DENIA-DENIA_SACRIFICIAL_SWORD.flavor": "过去献给黄金树的战斗仪式──参考用于仪式中的剑制成的护符。\n战斗仪式在王夫拉达冈的时代受到废除，散布各处的竞技场是遗留下来的产物。",
   "DENIA-DENIA_TRICKSTER.title": "骗术师",
-  "DENIA-DENIA_TRICKSTER.description": "每打出3张牌，给随机一张牌附加临时[gold]集谐响应[/gold]（仅本场战斗存在）。若所有牌都已拥有[gold]集谐响应[/gold]，则跳过这一次。\n任何[gold]聚爆上限[/gold]引爆触发后，为触发的对象附加其[gold]聚爆上限[/gold]四分之一的[gold]聚爆[/gold]（向下取整）。",
-  "DENIA-DENIA_TRICKSTER.flavor": "“一个破碎又固执的容器，曾被世界所感知，所塑造————如今它正不断央求着：请您带给我一颗心，随便什么样的心都好。”"
+  "DENIA-DENIA_TRICKSTER.description": "每打出3张牌，给随机一张牌附加临时[gold]集谐响应[/gold]（仅本场战斗存在）。打出攻击牌并造成伤害时，计为打出两张牌。若所有牌都已拥有[gold]集谐响应[/gold]，则跳过这一次。\n任何[gold]聚爆上限[/gold]引爆触发后，为触发的对象附加其[gold]聚爆上限[/gold]四分之一的[gold]聚爆[/gold]（向下取整）。",
+  "DENIA-DENIA_TRICKSTER.flavor": "“一个破碎又固执的容器，曾被世界所感知，所塑造————如今它正不断央求着：请您带给我一颗心，随便什么样的心都好。”",
+  "DENIA-DENIA_FREQUENCY_OF_NOTHINGNESS.title": "虚无的频率",
+  "DENIA-DENIA_FREQUENCY_OF_NOTHINGNESS.description": "每个回合开始时，随机免费打出一张达妮娅图鉴中的牌。阿列夫一将会接管你的第一回合。",
+  "DENIA-DENIA_FREQUENCY_OF_NOTHINGNESS.flavor": "从虚无深处传来的鸣式，替你作出了选择。"
 }

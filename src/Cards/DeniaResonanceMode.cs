@@ -28,9 +28,8 @@ public sealed class DeniaResonanceMode : DeniaCard
     public DeniaResonanceMode()
         : base(0, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "共鸣模态·集谐",
-        Description: "进入[gold]共鸣模态·集谐[/gold]，给任意两张手牌附加[gold]集谐响应[/gold]。\n黯核强化：选择范围扩大到整个持有的牌组，可选4张牌。\n[gold]共鸣模态·集谐·达妮娅[/gold]：计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "共鸣模态·集谐",
+            Description: "进入[color=#9A6A18]共鸣模态·集谐[/color]，给任意两张手牌附加[color=#9A6A18]集谐响应[/color]。\n黯核强化：选择范围扩大到整个持有的牌组，可选4张牌。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -92,9 +91,10 @@ public sealed class DeniaResonanceModePower : CustomPowerModel
         "res://images/ui/powers/denia_resonance_mode_tune_strain_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "共鸣模态·集谐",
-            Description: "计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。",
-            SmartDescription: "计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。");
+        new PowerLoc(
+        Title: "共鸣模态·集谐",
+        Description: "计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。",
+        SmartDescription: "计算集谐增伤时，按1.5倍采用你的集谐响应 power 层数（向下取整）。");
 
     static DeniaResonanceModePower()
     {

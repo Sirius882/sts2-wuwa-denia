@@ -28,9 +28,8 @@ public sealed class DeniaCrush : DeniaCard
 
     public DeniaCrush() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "轧碎",
-        Description: "造成{Damage:diff()}点伤害，附加所造成伤害三分之一的[gold]聚爆[/gold]。\n虚质强化：附加聚爆比例改为二分之一。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "轧碎",
+            Description: "造成{Damage:diff()}点伤害，附加所造成伤害三分之一的[color=#9A6A18]聚爆[/color]。\n虚质强化：附加聚爆比例变为二分之一。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

@@ -23,9 +23,8 @@ public sealed class DeniaFinishQuickly : DeniaCard
     public DeniaFinishQuickly()
         : base(1, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "快点结束吧",
-        Description: "令一名敌人晕眩。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "快点结束吧",
+            Description: "令一名敌人晕眩。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

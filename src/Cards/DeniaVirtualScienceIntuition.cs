@@ -21,9 +21,8 @@ public sealed class DeniaVirtualScienceIntuition : DeniaCard
     public DeniaVirtualScienceIntuition()
         : base(1, CardType.Power, CardRarity.Ancient, TargetType.Self, showInCardLibrary: true) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "虚质科学直觉",
-        Description: "本场战斗每消耗8点[gold]虚质[/gold]，获得1点[gold]能量[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "虚质科学直觉",
+            Description: "本场战斗每消耗8点[color=#9A6A18]虚质[/color]，获得1点[color=#9A6A18]能量[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

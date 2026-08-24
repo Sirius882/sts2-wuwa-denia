@@ -32,9 +32,8 @@ public sealed class DeniaExtinguishedDream : DeniaCard
     public DeniaExtinguishedDream()
         : base(1, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "灭却之梦",
-        Description: "获得{Block:diff()}点[gold]格挡[/gold]，附加1[gold]集谐·偏移[/gold]。\n虚质强化：格挡+5。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "灭却之梦",
+            Description: "获得{Block:diff()}点[color=#9A6A18]格挡[/color]，附加1[color=#9A6A18]集谐·偏移[/color]。\n虚质强化：格挡+5。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

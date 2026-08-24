@@ -22,9 +22,8 @@ public sealed class DeniaSeamless : DeniaCard
     public override bool GainsBlock => true;
     public DeniaSeamless() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "天衣无缝",
-        Description: "造成{Damage:diff()}点伤害。\n获得{Block:diff()}点[gold]格挡[/gold]。\n虚质强化：伤害和格挡基础数值+3。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "天衣无缝",
+            Description: "造成{Damage:diff()}点伤害。\n获得{Block:diff()}点[color=#9A6A18]格挡[/color]。\n虚质强化：伤害和格挡+3。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

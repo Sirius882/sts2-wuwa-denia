@@ -46,5 +46,5 @@ public sealed class DeniaPityMe : DeniaCard
     }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "怜悯我", Description: "只能在[gold]黑色形态[/gold]下打出。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：获得2层[gold]蔽星[/gold]（退出[gold]黑色形态[/gold]时失去）。");
+        new CardLoc(Title: "怜悯我", Description: "只在[color=#9A6A18]黑色形态[/color]下有效。\n消耗手牌中的\"直视我\"和\"怜悯我\"。\n虚质强化：获得2层[color=#9A6A18]蔽星[/color]（退出[color=#9A6A18]黑色形态[/color]时失去）。");
 }

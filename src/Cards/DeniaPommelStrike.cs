@@ -31,9 +31,8 @@ public sealed class DeniaPommelStrike : DeniaCard
     public DeniaPommelStrike()
         : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "剑柄打击",
-        Description: "造成{Damage:diff()}点伤害。若此牌打出前目标已有[gold]集谐·偏移[/gold]，再附加1点[gold]集谐·偏移[/gold]{IfUpgraded:show:，然后触发无条件[gold]谐度破坏[/gold]|}。\n虚质强化：最后再造成10点伤害一次。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "剑柄打击",
+            Description: "造成{Damage:diff()}点伤害。若目标已有[color=#9A6A18]集谐·偏移[/color]，再附加1[color=#9A6A18]集谐·偏移[/color]{IfUpgraded:show:，然后触发无条件[color=#9A6A18]谐度破坏[/color]|}。\n虚质强化：造成10点伤害。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

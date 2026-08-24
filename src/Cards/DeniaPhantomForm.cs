@@ -57,5 +57,5 @@ public sealed class DeniaPhantomForm : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "幻灭之形",
-            Description: "附加上限1/2的[gold]聚爆[/gold]，获得{Block:diff()}点[gold]格挡[/gold]。如果这张牌触发[gold]聚爆引爆[/gold]，再获得{Block:diff()}点[gold]格挡[/gold]。\n虚质强化：附加的[gold]聚爆[/gold]层数+3。");
+            Description: "附加上限1/2的[color=#9A6A18]聚爆[/color]，获得{Block:diff()}点[color=#9A6A18]格挡[/color]。如果这张牌触发[color=#9A6A18]引爆[/color]，再获得{Block:diff()}点[color=#9A6A18]格挡[/color]。\n虚质强化：附加的[color=#9A6A18]聚爆[/color]层数+3。");
 }

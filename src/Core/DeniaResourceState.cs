@@ -30,6 +30,7 @@ public static class DeniaResourceState
     public static async Task GainVirtualMatter(Creature creature, int amount, Creature applier, CardModel source)
     {
         if (amount <= 0) return;
+        if (creature.GetPower<DeniaVirtualMatterLockedPower>() != null) return;
         int current = GetVirtualMatter(creature);
         int actual = Math.Min(amount, VirtualMatterMax - current);
         if (actual <= 0) return;
@@ -44,6 +45,9 @@ public static class DeniaResourceState
         if (amount <= 0) return true;
         if (!DeniaFormHelper.IsBlack(creature)) return false;
 
+        if (creature.GetPower<DeniaVirtualMatterLockedPower>() != null)
+            return GetVirtualMatter(creature) >= amount;
+
         var power = creature.GetPower<DeniaVirtualMatterPower>();
         if (power == null || power.Amount < amount) return false;
 
@@ -52,11 +56,27 @@ public static class DeniaResourceState
     }
 
     /// <summary>虚质归零（完全移除 Power）。</summary>
-    public static async Task ClearVirtualMatter(Creature creature, Creature applier, CardModel source)
+    public static async Task ClearVirtualMatter(
+        Creature creature,
+        Creature applier,
+        CardModel source,
+        bool ignoreLock = false)
     {
         _ = applier;
         _ = source;
+        if (!ignoreLock && creature.GetPower<DeniaVirtualMatterLockedPower>() != null) return;
         await PowerCmd.Remove<DeniaVirtualMatterPower>(creature);
+    }
+
+    /// <summary>清空黯核；资源锁定期间普通清空不生效。</summary>
+    public static async Task ClearDarkCore(
+        Creature creature,
+        Creature applier,
+        CardModel source,
+        bool ignoreLock = false)
+    {
+        if (!ignoreLock && creature.GetPower<DeniaDarkCoreLockedPower>() != null) return;
+        await SetDarkCore(creature, 0, applier, source, ignoreLock: true);
     }
 
     // ==================== 黯核 (DarkCore) ====================
@@ -76,6 +96,7 @@ public static class DeniaResourceState
     public static async Task GainDarkCore(Creature creature, int amount, Creature applier, CardModel source)
     {
         if (amount <= 0) return;
+        if (creature.GetPower<DeniaDarkCoreLockedPower>() != null) return;
         int current = GetDarkCore(creature);
         int target = Math.Clamp(current + amount, 0, DarkCoreMax);
         int delta = target - current;
@@ -103,6 +124,7 @@ public static class DeniaResourceState
 
         int current = GetDarkCore(creature);
         if (current < amount) return false;
+        if (creature.GetPower<DeniaDarkCoreLockedPower>() != null) return true;
 
         int newVal = current - amount;
         if (creature.Player?.PlayerCombatState != null)
@@ -114,5 +136,66 @@ public static class DeniaResourceState
             await PowerCmd.ModifyAmount(_throwing, power, -amount, applier, source);
 
         return true;
+    }
+
+    /// <summary>将虚质直接设置为指定值，用于事件卡资源锁定。</summary>
+    public static async Task SetVirtualMatter(
+        Creature creature,
+        int amount,
+        Creature applier,
+        CardModel source,
+        bool ignoreLock = false)
+    {
+        if (!ignoreLock && creature.GetPower<DeniaVirtualMatterLockedPower>() != null) return;
+        amount = Math.Clamp(amount, 0, VirtualMatterMax);
+        var power = creature.GetPower<DeniaVirtualMatterPower>();
+        if (amount == 0)
+        {
+            if (power != null)
+                await PowerCmd.Remove<DeniaVirtualMatterPower>(creature);
+            return;
+        }
+
+        if (power == null)
+        {
+            await PowerCmd.Apply<DeniaVirtualMatterPower>(_throwing, creature, amount, applier, source);
+            return;
+        }
+
+        int delta = amount - (int)power.Amount;
+        if (delta != 0)
+            await PowerCmd.ModifyAmount(_throwing, power, delta, applier, source);
+    }
+
+    /// <summary>将黯核直接设置为指定值，并同步原生 Stars 与兜底 Power。</summary>
+    public static async Task SetDarkCore(
+        Creature creature,
+        int amount,
+        Creature applier,
+        CardModel source,
+        bool ignoreLock = false)
+    {
+        if (!ignoreLock && creature.GetPower<DeniaDarkCoreLockedPower>() != null) return;
+        amount = Math.Clamp(amount, 0, DarkCoreMax);
+        if (creature.Player?.PlayerCombatState != null)
+            await PlayerCmd.SetStars(amount, creature.Player);
+
+        var power = creature.GetPower<DeniaDarkCorePower>();
+        if (amount == 0)
+        {
+            if (power != null)
+                await PowerCmd.Remove<DeniaDarkCorePower>(creature);
+            return;
+        }
+
+        if (power == null)
+        {
+            await PowerCmd.Apply<DeniaDarkCorePower>(_throwing, creature, amount, applier, source);
+            return;
+        }
+
+        int delta = amount - (int)power.Amount;
+        if (delta != 0)
+            await PowerCmd.ModifyAmount(_throwing, power, delta, applier, source);
     }
 }

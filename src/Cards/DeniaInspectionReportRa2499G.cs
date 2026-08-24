@@ -25,9 +25,8 @@ public sealed class DeniaInspectionReportRa2499G : DeniaCard
     public DeniaInspectionReportRa2499G()
         : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "检验报告RA2499-G",
-        Description: "切换形态。对目标附加{IfUpgraded:show:2|1}点[gold]集谐·偏移[/gold]。\n黯核强化：附加的[gold]集谐·偏移[/gold]扩展到所有敌人。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "检验报告RA2499-G",
+            Description: "切换形态。对目标附加{IfUpgraded:show:2|1}[color=#9A6A18]集谐·偏移[/color]。\n黯核强化：附加的[color=#9A6A18]集谐·偏移[/color]扩展到所有敌人。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

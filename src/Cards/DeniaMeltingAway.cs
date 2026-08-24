@@ -25,9 +25,8 @@ public sealed class DeniaMeltingAway : DeniaCard
     public DeniaMeltingAway()
         : base(2, CardType.Skill, CardRarity.Rare, TargetType.AllEnemies) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "熔毁殆尽",
-        Description: "对随机一名敌人触发一次无条件聚爆上限引爆。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]，此后每个回合开始时，对所有敌人提升其聚爆上限1点，并附加上限{IfUpgraded:show:1/3|1/5}的[gold]聚爆[/gold]。\n黯核强化：上述附加的[gold]聚爆[/gold]层数和聚爆上限都+2。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "熔毁殆尽",
+            Description: "随机引爆一名敌人，切换到[color=#9A6A18]粉色形态[/color]。回合开始时，对所有敌人附加1聚爆上限和上限{IfUpgraded:show:1/3|1/5}的[color=#9A6A18]聚爆[/color]。\n黯核强化：上述附加的[color=#9A6A18]聚爆[/color]层数和聚爆上限都+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -72,9 +71,9 @@ public sealed class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(
-            Title: "熔毁殆尽",
-            Description: "每回合开始时对所有敌人先提升聚爆上限，再按上限比例附加聚爆。",
-            SmartDescription: "每回合开始时对所有敌人先提升聚爆上限，再按上限比例附加聚爆。");
+        Title: "熔毁殆尽",
+        Description: "回合开始时对所有敌人提升聚爆上限，再按上限比例附加聚爆。",
+        SmartDescription: "回合开始时对所有敌人提升聚爆上限，再按上限比例附加聚爆。");
 
     public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
     {

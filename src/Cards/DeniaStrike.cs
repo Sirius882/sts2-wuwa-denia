@@ -33,7 +33,7 @@ public sealed class DeniaStrike : DeniaCard
         : base(1, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "打击", Description: "造成{Damage:diff()}点伤害。\n[gold]粉色形态[/gold]：熔解1。\n虚质强化：基础伤害+4。");
+        new CardLoc(Title: "打击", Description: "造成{Damage:diff()}点伤害。\n[color=#9A6A18]粉色形态[/color]：熔解1。\n虚质强化：基础伤害+4。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

@@ -27,7 +27,7 @@ public sealed class DeniaObey : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "听话",
-            Description: "抽2张牌，选择最多{IfUpgraded:show:4|3}张手牌消耗。每消耗1张牌，给自己1层[gold]人工制品[/gold]。");
+            Description: "抽2张牌，选择最多{IfUpgraded:show:4|3}张手牌消耗。每消耗1张牌，给自己1层[color=#9A6A18]人工制品[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

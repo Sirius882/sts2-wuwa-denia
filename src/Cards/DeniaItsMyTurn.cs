@@ -29,9 +29,8 @@ public sealed class DeniaItsMyTurn : DeniaCard
     public DeniaItsMyTurn()
         : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "到我的回合啦",
-        Description: "造成{Damage:diff()}点伤害并附加8层[gold]聚爆[/gold]。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]，抽{IfUpgraded:show:3|2}张牌。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "到我的回合啦",
+            Description: "造成{Damage:diff()}点伤害并附加8[color=#9A6A18]聚爆[/color]。若处于[color=#9A6A18]黑色形态[/color]，切换到[color=#9A6A18]粉色形态[/color]，抽{IfUpgraded:show:3|2}张牌。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

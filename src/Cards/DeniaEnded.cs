@@ -30,9 +30,8 @@ public sealed class DeniaEnded : DeniaCard
     public DeniaEnded()
         : base(0, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "做个了断",
-        Description: "造成{Damage:diff()}点伤害。\n虚质强化：再造成一次等量伤害。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "做个了断",
+            Description: "造成{Damage:diff()}点伤害。\n虚质强化：重复效果。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

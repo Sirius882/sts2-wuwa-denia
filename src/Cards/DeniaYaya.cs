@@ -29,9 +29,8 @@ public sealed class DeniaYaya : DeniaCard
     public DeniaYaya()
         : base(2, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "？！娅娅？！",
-        Description: "造成{Damage:diff()}点伤害，触发无条件[gold]谐度破坏[/gold]。此次[gold]谐度破坏[/gold]只造成五分之一的伤害。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n虚质强化：再造成4点伤害2次。{IfUpgraded:show:\n保留。|}");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "？！娅娅？！",
+            Description: "造成{Damage:diff()}点伤害，无条件[color=#9A6A18]谐度破坏[/color]，切换到[color=#9A6A18]粉色形态[/color]。\n虚质强化：再造成4点伤害2次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

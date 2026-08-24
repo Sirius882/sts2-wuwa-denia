@@ -30,9 +30,8 @@ public sealed class DeniaCannedFishCake : DeniaCard
     public DeniaCannedFishCake()
         : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "鱼罐头松糕",
-        Description: "本回合内，[gold]集谐响应[/gold]层数按2倍计算。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "鱼罐头松糕",
+            Description: "本回合内，[color=#9A6A18]集谐响应[/color]层数按2倍计算。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

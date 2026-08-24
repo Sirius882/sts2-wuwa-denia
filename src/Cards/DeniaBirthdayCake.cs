@@ -24,9 +24,8 @@ public sealed class DeniaBirthdayCake : DeniaCard
     public DeniaBirthdayCake()
         : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "生日蛋糕",
-        Description: "[gold]粉色形态[/gold]下，每回合开始时额外获得1黯核。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "生日蛋糕",
+            Description: "[color=#9A6A18]粉色形态[/color]下，每回合开始时额外获得1黯核。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -49,7 +48,8 @@ public sealed class DeniaBirthdayCakePower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_birthday_cake_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "生日蛋糕",
-            Description: "[gold]粉色形态[/gold]下每回合开始时获得的黯核+1。",
-            SmartDescription: "[gold]粉色形态[/gold]下，每回合开始时黯核额外+{Amount}。");
+        new PowerLoc(
+        Title: "生日蛋糕",
+        Description: "粉色形态下每回合开始时获得的黯核+1。",
+        SmartDescription: "粉色形态下，每回合开始时黯核额外+1。");
 }

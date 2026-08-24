@@ -31,9 +31,8 @@ public sealed class DeniaWorthlessIndividual : DeniaCard, IResonanceBreakCard
     public DeniaWorthlessIndividual()
         : base(2, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "“没有价值的个体”",
-        Description: "给任意{IfUpgraded:show:3|1}张手牌附加[gold]集谐响应[/gold]。无条件[gold]谐度破坏[/gold]。\n虚质强化：附加2层[gold]易伤[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "“没有价值的个体”",
+            Description: "给任意{IfUpgraded:show:3|1}张手牌附加[color=#9A6A18]集谐响应[/color]。无条件[color=#9A6A18]谐度破坏[/color]。\n虚质强化：附加2层[color=#9A6A18]易伤[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

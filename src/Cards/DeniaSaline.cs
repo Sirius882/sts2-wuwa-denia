@@ -20,9 +20,8 @@ public sealed class DeniaSaline : CustomCardModel
     public DeniaSaline()
         : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "生理盐水",
-        Description: "切换形态。给自己附加1层[gold]易伤[/gold]。获得{IfUpgraded:show:3|1}点[gold]力量[/gold]、{IfUpgraded:show:3|1}点[gold]敏捷[/gold]和{IfUpgraded:show:3|1}[gold]蔽星[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "生理盐水",
+            Description: "切换形态。给自己附加1层[color=#9A6A18]易伤[/color]。获得{IfUpgraded:show:3|1}点[color=#9A6A18]力量[/color]、{IfUpgraded:show:3|1}点[color=#9A6A18]敏捷[/color]和{IfUpgraded:show:3|1}[color=#9A6A18]蔽星[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

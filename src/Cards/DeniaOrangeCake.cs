@@ -28,7 +28,7 @@ public sealed class DeniaOrangeCake : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "橘子蛋糕",
-            Description: "获得{Block:diff()}点[gold]格挡[/gold]。抽2张牌。");
+            Description: "获得{Block:diff()}点[color=#9A6A18]格挡[/color]。抽2张牌。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

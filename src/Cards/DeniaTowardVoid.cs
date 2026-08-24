@@ -24,9 +24,8 @@ public sealed class DeniaTowardVoid : DeniaCard
     public DeniaTowardVoid()
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "向虚而行",
-        Description: "触发[gold]黯核强化[/gold]时，获得{IfUpgraded:show:3|2}点[gold]格挡[/gold]。每回合最多触发4次。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "向虚而行",
+            Description: "触发[color=#9A6A18]黯核强化[/color]时，获得{IfUpgraded:show:3|2}点[color=#9A6A18]格挡[/color]。每回合最多触发4次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -56,7 +55,7 @@ public sealed class DeniaTowardVoidPower : CustomPowerModel
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "向虚而行",
-        Description: "触发黯核强化时，获得{Amount}点格挡。每回合最多触发4次。",
+        Description: "触发黯核强化时，获得格挡。每回合最多触发4次。",
         SmartDescription: "触发黯核强化时，获得{Amount}点格挡。每回合最多触发4次。");
 
     public static async Task OnDarkCoreEnhanced(Creature creature)

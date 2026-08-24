@@ -19,7 +19,7 @@ public sealed class DeniaEtchedIridescent : DeniaCard
     public DeniaEtchedIridescent() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "蚀刻繁彩",
-        Description: "[gold]熔解[/gold]1，附加上限{IfUpgraded:show:3/5|1/4}的[gold]聚爆[/gold]。抽{IfUpgraded:show:2|1}张牌。\n黯核强化：主效果每使你抽1张牌，再附加3[gold]聚爆[/gold]1次。");
+            Description: "[color=#9A6A18]熔解[/color]1，附加上限{IfUpgraded:show:3/5|1/4}的[color=#9A6A18]聚爆[/color]。抽{IfUpgraded:show:2|1}张牌。\n黯核强化：主效果每使你抽1张牌，再附加3[color=#9A6A18]聚爆[/color]1次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

@@ -36,9 +36,8 @@ public sealed class DeniaFrozenStarMossCake : DeniaCard
     public DeniaFrozenStarMossCake()
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "寒地星苔团",
-        Description: "造成{Damage:diff()}点伤害x次。\n虚质强化：若虚质≥3，额外造成{Damage:diff()}点伤害(y-2)/4次。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "寒地星苔团",
+            Description: "造成{Damage:diff()}点伤害x次。\n虚质强化：若虚质≥3，额外造成{Damage:diff()}点伤害(y-2)/4次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

@@ -23,9 +23,8 @@ public sealed class DeniaKaNiu : DeniaCard
     public DeniaKaNiu()
         : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "卡纽",
-        Description: "每次切换形态时，获得1点能量。{IfUpgraded:show:获得2点[gold]力量[/gold]和2层[gold]蔽星[/gold]。|}");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "卡纽",
+            Description: "每次切换形态时，获得1能量。{IfUpgraded:show:\n获得2点[color=#9A6A18]力量[/color]和2层[color=#9A6A18]蔽星[/color]。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -51,7 +50,8 @@ public sealed class DeniaKaNiuPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_ka_niu_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "卡纽",
-            Description: "每次切换形态时，获得能量。",
-            SmartDescription: "每次切换形态时，获得{Amount}点能量。");
+        new PowerLoc(
+        Title: "卡纽",
+        Description: "切换形态时，获得1能量。",
+        SmartDescription: "切换形态时，获得{Amount}点能量。");
 }

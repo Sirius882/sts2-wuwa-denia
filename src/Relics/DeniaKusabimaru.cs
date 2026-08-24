@@ -7,11 +7,11 @@ using MegaCrit.Sts2.Core.Models.RelicPools;
 
 namespace Denia;
 
-/// <summary>楔丸 — Common Relic. 回合结束时，若敌人受到的伤害等于其意图伤害，击晕之。</summary>
+/// <summary>楔丸 — Uncommon Relic. 回合结束时，若受伤与意图伤害差值绝对值≤2，击晕之。</summary>
 [BaseLib.Utils.Pool(typeof(SharedRelicPool))]
 public sealed class DeniaKusabimaru : CustomRelicModel
 {
-    public override RelicRarity Rarity => RelicRarity.Common;
+    public override RelicRarity Rarity => RelicRarity.Uncommon;
     protected override string IconBaseName => "denia_kusabimaru";
 
     /// <summary>当前回合每个敌人累计受到的非格挡伤害。</summary>
@@ -20,6 +20,6 @@ public sealed class DeniaKusabimaru : CustomRelicModel
     public override List<(string, string)>? Localization =>
         new RelicLoc(
             Title: "楔丸",
-            Description: "在回合结束时，若本回合内有敌人受到的伤害正好等于其攻击意图的总伤害，令其眩晕。",
+            Description: "在回合结束时，若本回合内，有敌人受到的伤害与其攻击意图的总伤害差值不大于2，令其眩晕。",
             Flavor: "弹反一切之刀");
 }

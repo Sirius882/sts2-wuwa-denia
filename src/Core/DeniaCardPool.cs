@@ -7,9 +7,12 @@ namespace Denia;
 
 public sealed class DeniaCardPool : CustomCardPoolModel
 {
-    private static readonly Texture2D AttackFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_card_frame_attack.png");
-    private static readonly Texture2D SkillFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_card_frame_skill.png");
-    private static readonly Texture2D PowerFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_card_frame_power.png");
+    private static readonly Texture2D BlackAttackFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_card_frame_attack.png");
+    private static readonly Texture2D BlackSkillFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_card_frame_skill.png");
+    private static readonly Texture2D BlackPowerFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_card_frame_power.png");
+    private static readonly Texture2D PinkAttackFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_pink_card_frame_attack.png");
+    private static readonly Texture2D PinkSkillFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_pink_card_frame_skill.png");
+    private static readonly Texture2D PinkPowerFrame = ResourceLoader.Load<Texture2D>("res://images/ui/cards/denia_pink_card_frame_power.png");
 
     public override string Title => "denia";
     public override string EnergyColorName => "denia";
@@ -21,11 +24,15 @@ public sealed class DeniaCardPool : CustomCardPoolModel
 
     public override Texture2D? CustomFrame(CustomCardModel card)
     {
-        return card.Type switch
+        bool isBlack = card.IsMutable && card.Owner?.Creature is { } creature && DeniaFormHelper.IsBlack(creature);
+        return (isBlack, card.Type) switch
         {
-            CardType.Attack => AttackFrame,
-            CardType.Power => PowerFrame,
-            _ => SkillFrame,
+            (true, CardType.Attack) => BlackAttackFrame,
+            (true, CardType.Power) => BlackPowerFrame,
+            (true, _) => BlackSkillFrame,
+            (false, CardType.Attack) => PinkAttackFrame,
+            (false, CardType.Power) => PinkPowerFrame,
+            _ => PinkSkillFrame,
         };
     }
 }

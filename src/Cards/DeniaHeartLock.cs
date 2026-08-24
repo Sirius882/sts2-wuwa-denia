@@ -25,9 +25,8 @@ public sealed class DeniaHeartLock : DeniaCard
     public DeniaHeartLock()
         : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "心锁",
-        Description: "若处于[gold]黑色形态[/gold]，获得8[gold]虚质[/gold]；若处于[gold]粉色形态[/gold]，获得1点能量。{IfUpgraded:show:抽1张牌。|}");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "心锁",
+            Description: "若处于[color=#9A6A18]黑色形态[/color]，获得8[color=#9A6A18]虚质[/color]；若处于[color=#9A6A18]粉色形态[/color]，获得1点能量。{IfUpgraded:show:\n抽1张牌。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

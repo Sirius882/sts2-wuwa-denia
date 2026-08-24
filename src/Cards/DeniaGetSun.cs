@@ -30,9 +30,8 @@ public sealed class DeniaGetSun : DeniaCard
     public DeniaGetSun()
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "得到太阳",
-        Description: "每附加3[gold]聚爆[/gold]，给牌组中随机一张牌附加[gold]集谐响应[/gold]。\n虚质强化：恢复1能量。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "得到太阳",
+            Description: "每附加3[color=#9A6A18]聚爆[/color]，给牌组中随机一张牌附加[color=#9A6A18]集谐响应[/color]。\n虚质强化：恢复1能量。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -70,8 +69,8 @@ public sealed class DeniaGetSunPower : CustomPowerModel, IOnFusionBurstAppliedPo
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "得到太阳",
-        Description: "每附加3聚爆，给牌组中随机一张牌附加集谐响应。进度：{Amount}/3。",
-        SmartDescription: "每附加3聚爆，给牌组中随机一张牌附加集谐响应。进度：{Amount}/3。");
+        Description: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。进度：{Amount}/3。",
+        SmartDescription: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。进度：{Amount}/3。");
 
     public async Task OnFusionBurstApplied(Creature target, int amount)
     {
@@ -92,15 +91,13 @@ public sealed class DeniaGetSunPower : CustomPowerModel, IOnFusionBurstAppliedPo
 
         for (int i = 0; i < triggers; i++)
         {
+            // 与骗术师/赝作矮星同款：只在无集谐响应的牌里随机；全满则跳过
             var candidates = player.Deck.Cards
                 .Where(c => !c.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse)
                             && !TuneStrainState.HasTemporaryResponse(c))
                 .ToList();
             if (candidates.Count == 0)
-            {
-                candidates = player.Deck.Cards.ToList();
-                if (candidates.Count == 0) return;
-            }
+                continue;
 
             var pick = player.RunState.Rng.CombatCardSelection.NextItem(candidates);
             if (pick == null) continue;

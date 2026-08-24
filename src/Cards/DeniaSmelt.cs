@@ -34,9 +34,8 @@ public sealed class DeniaSmelt : DeniaCard
 
     public override bool GainsBlock => true;
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "熔毁",
-        Description: "获得{Block:diff()}点[gold]格挡[/gold]，[gold]熔解[/gold]2，附加2[gold]聚爆[/gold]。\n虚质强化：格挡+2。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "熔毁",
+            Description: "获得{Block:diff()}点[color=#9A6A18]格挡[/color]，[color=#9A6A18]熔解[/color]2，附加2[color=#9A6A18]聚爆[/color]。\n虚质强化：格挡+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

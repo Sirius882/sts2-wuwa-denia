@@ -26,9 +26,8 @@ public sealed class DeniaProofOfPersonality : DeniaCard
     public DeniaProofOfPersonality()
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "人格的证明",
-        Description: "每次附加[gold]集谐·偏移[/gold]时，额外附加1点。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "人格的证明",
+            Description: "每次附加[color=#9A6A18]集谐·偏移[/color]时，额外附加1点。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

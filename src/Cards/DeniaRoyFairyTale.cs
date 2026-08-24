@@ -26,9 +26,8 @@ public sealed class DeniaRoyFairyTale : DeniaCard
     public DeniaRoyFairyTale()
         : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "《罗伊族童话故事》",
-        Description: "本场战斗中，从牌组中选择{IfUpgraded:show:7|4}张牌，附加[gold]集谐响应[/gold]。\n虚质强化：选择的牌数+2。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "《罗伊族童话故事》",
+            Description: "从牌组中选择{IfUpgraded:show:7|4}张牌，附加[color=#9A6A18]集谐响应[/color]。\n虚质强化：选择的牌数+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

@@ -27,9 +27,8 @@ public sealed class DeniaYouTryIt : DeniaCard
     public DeniaYouTryIt()
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "你也试试？",
-        Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:2|1}点[gold]聚爆上限[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "你也试试？",
+            Description: "打出此牌后，本回合内你每打出一张牌，给该敌人附加{IfUpgraded:show:2|1}点[color=#9A6A18]聚爆上限[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -57,9 +56,10 @@ public sealed class DeniaYouTryItPower : CustomPowerModel
     protected override bool IsVisibleInternal => false;
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "你也试试？",
-            Description: "本回合内每打出一张牌，给目标敌人附加聚爆上限。",
-            SmartDescription: "本回合内每打出一张牌，给目标敌人附加{Amount}聚爆上限。");
+        new PowerLoc(
+        Title: "你也试试？",
+        Description: "本回合内每打出一张牌，给目标敌人附加聚爆上限。",
+        SmartDescription: "本回合内每打出一张牌，给目标敌人附加{Amount}聚爆上限。");
 
     public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
     {

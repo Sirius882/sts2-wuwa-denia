@@ -22,9 +22,8 @@ public sealed class DeniaAmaro : DeniaCard
     public DeniaAmaro()
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "阿马罗",
-        Description: "切换形态时，抽1张牌。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "阿马罗",
+            Description: "切换形态时，抽1张牌。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -47,7 +46,8 @@ public sealed class DeniaAmaroPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_amaro_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "阿马罗",
-            Description: "每次切换形态时，抽牌。",
-            SmartDescription: "每次切换形态时，抽{Amount}张牌。");
+        new PowerLoc(
+        Title: "阿马罗",
+        Description: "切换形态时，抽1张牌。",
+        SmartDescription: "切换形态时，抽1张牌。");
 }

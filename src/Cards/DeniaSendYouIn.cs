@@ -32,9 +32,8 @@ public sealed class DeniaSendYouIn : DeniaCard
     public DeniaSendYouIn()
         : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "送你进去",
-        Description: "夺取目标的正面[gold]buff[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "送你进去",
+            Description: "夺取目标的正面[color=#9A6A18]buff[/color]。");
 
     // 可夺取（自己获得）
     private static readonly Type[] StealAndGain =

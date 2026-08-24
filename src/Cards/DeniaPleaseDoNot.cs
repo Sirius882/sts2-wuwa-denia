@@ -18,9 +18,8 @@ public sealed class DeniaPleaseDoNot : DeniaCard, ITranscendenceCard
     public DeniaPleaseDoNot()
         : base(1, CardType.Skill, CardRarity.Basic, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "请您不要···",
-        Description: "只在[gold]粉色形态[/gold]下有效。\n切换到[gold]黑色形态[/gold]");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "请您不要···",
+            Description: "切换到[color=#9A6A18]黑色形态[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

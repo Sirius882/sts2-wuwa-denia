@@ -22,9 +22,8 @@ public sealed class DeniaFruitOfLies : DeniaCard
     public DeniaFruitOfLies()
         : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "谎言之实",
-        Description: "获得1黯核。\n若本回合切换过形态，额外获得1黯核。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "谎言之实",
+            Description: "获得1黯核。\n若本回合切换过形态，额外获得1黯核。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

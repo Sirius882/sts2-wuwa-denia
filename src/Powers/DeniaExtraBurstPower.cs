@@ -21,7 +21,7 @@ public sealed class DeniaExtraBurstPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(
-            Title: "回到远方",
-            Description: "所有附加聚爆效果额外附加目标聚爆上限1/{Amount}的层数。",
-            SmartDescription: "所有附加聚爆效果额外附加目标聚爆上限1/{Amount}的层数。");
+        Title: "回到远方",
+        Description: "所有附加聚爆效果额外附加目标聚爆上限1/{Amount}的层数。",
+        SmartDescription: "所有附加聚爆效果额外附加目标聚爆上限1/{Amount}的层数。");
 }

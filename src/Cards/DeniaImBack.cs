@@ -22,9 +22,8 @@ public sealed class DeniaImBack : DeniaCard
     public DeniaImBack()
         : base(1, CardType.Skill, CardRarity.Ancient, TargetType.Self, autoAdd: true, showInCardLibrary: true) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "我回来了！",
-        Description: "获得12虚质和3黯核。\n若处于[gold]粉色形态[/gold]，切换到[gold]黑色形态[/gold]，获得「直视我」和「怜悯我」。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "我回来了！",
+            Description: "获得12虚质和3黯核，切换到黑色形态。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

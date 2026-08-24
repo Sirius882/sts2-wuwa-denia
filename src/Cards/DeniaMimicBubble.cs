@@ -36,5 +36,5 @@ public sealed class DeniaMimicBubble : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "拟态泡泡",
-            Description: "获得{IfUpgraded:show:2|1}层[gold]滑溜溜[/gold]。\n黯核强化：再获得1层[gold]滑溜溜[/gold]。");
+            Description: "获得{IfUpgraded:show:2|1}层[color=#9A6A18]滑溜溜[/color]。\n黯核强化：再获得1层[color=#9A6A18]滑溜溜[/color]。");
 }

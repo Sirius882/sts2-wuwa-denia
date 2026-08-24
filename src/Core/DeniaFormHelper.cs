@@ -121,6 +121,7 @@ public static class DeniaFormHelper
             await PowerCmd.Apply<DeniaFormPower>(_throwing, creature, 1m, applier, source);
         else if (power.Amount <= 0)
             await PowerCmd.ModifyAmount(_throwing, power, 1m, applier, source);
+        DeniaCardFrameMaterialPatch.RefreshForForm(creature);
         if (wasPink && addBlackFormCards && creature.Player != null)
             await AddBlackFormCards(creature.Player);
         DeniaFormPatch.EndFormTransition(creature);
@@ -149,6 +150,7 @@ public static class DeniaFormHelper
         await Cmd.Wait(DeniaFormPatch.GetFormTransitionWaitDuration());
 
         await PowerCmd.ModifyAmount(_throwing, power, -1m, applier, source);
+        DeniaCardFrameMaterialPatch.RefreshForForm(creature);
 
         if (creature.GetPower<DeniaBlackFormTemporaryResonanceModePower>() != null
             && creature.GetPower<DeniaPermanentResonanceModeSeenPower>() == null)

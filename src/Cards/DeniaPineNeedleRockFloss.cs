@@ -27,9 +27,8 @@ public sealed class DeniaPineNeedleRockFloss : DeniaCard
     public DeniaPineNeedleRockFloss()
         : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "松针岩绒卷",
-        Description: "对目标附加{IfUpgraded:show:6|4}层[gold]易伤[/gold]。\n虚质强化：获得2点[gold]力量[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "松针岩绒卷",
+            Description: "对目标附加{IfUpgraded:show:6|4}层[color=#9A6A18]易伤[/color]。\n虚质强化：获得2点[color=#9A6A18]力量[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

@@ -22,9 +22,8 @@ public sealed class DeniaImmerseIntoVoid : DeniaCard
     public DeniaImmerseIntoVoid()
         : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "没入虚无",
-        Description: "获得{IfUpgraded:show:4|2}[gold]蔽星[/gold]。你所有的[gold]熔解[/gold]都不消耗聚爆层数。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "没入虚无",
+            Description: "获得{IfUpgraded:show:4|2}[color=#9A6A18]蔽星[/color]。本场战斗中，你所有的[color=#9A6A18]熔解[/color]都不消耗聚爆层数。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

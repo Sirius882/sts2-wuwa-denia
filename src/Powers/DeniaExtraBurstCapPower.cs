@@ -17,7 +17,7 @@ public sealed class DeniaExtraBurstCapPower : CustomPowerModel
 
     public override List<(string, string)>? Localization =>
         new PowerLoc(
-            Title: "从远方",
-            Description: "所有附加聚爆上限效果额外附加{Amount}层。若目标聚爆上限已满40，改为熔解{Amount}次。",
-            SmartDescription: "所有附加聚爆上限效果额外附加{Amount}层。若目标聚爆上限已满40，改为熔解{Amount}次。");
+        Title: "从远方",
+        Description: "附加聚爆上限效果额外附加{Amount}层。若目标聚爆上限已满40，改为熔解{Amount}次。",
+        SmartDescription: "附加聚爆上限效果额外附加{Amount}层。若目标聚爆上限已满40，改为熔解{Amount}次。");
 }

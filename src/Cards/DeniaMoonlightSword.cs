@@ -29,7 +29,7 @@ public sealed class DeniaMoonlightSword : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "亚杜拉的月光剑",
-            Description: "令所有没有[gold]冻伤[/gold]的敌人失去其生命上限20%的血量。\n对所有敌人附加[gold]冻伤[/gold]。");
+            Description: "令所有没有[color=#9A6A18]冻伤[/color]的敌人失去其生命上限20%的血量。\n对所有敌人附加[color=#9A6A18]冻伤[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

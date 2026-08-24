@@ -33,9 +33,8 @@ public sealed class DeniaLookAtThis : DeniaCard
     public DeniaLookAtThis()
         : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AllEnemies) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "你看见了什么？",
-        Description: "对所有敌人附加1[gold]集谐·偏移[/gold]。造成{Damage:diff()}点伤害。本场战斗中，从牌组中选择{IfUpgraded:show:4|2}张牌，附加[gold]集谐响应[/gold]。\n虚质强化：多附加1[gold]集谐·偏移[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "你看见了什么？",
+            Description: "对所有敌人附加1[color=#9A6A18]集谐·偏移[/color]。造成{Damage:diff()}点伤害。从牌组中选择{IfUpgraded:show:4|2}张牌，附加[color=#9A6A18]集谐响应[/color]。\n虚质强化：多附加1[color=#9A6A18]集谐·偏移[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

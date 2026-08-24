@@ -19,7 +19,7 @@ using MegaCrit.Sts2.Core.ValueProps;
 namespace Denia;
 
 /// <summary>
-/// 污涌之暗 — Rare Attack。立即 7 点伤害 3 次，然后 7 回合结束各打 5 点；
+/// 污涌之暗 — Rare Attack。立即 5 点伤害 7 次，然后 3 回合结束各打 7 点；
 /// 期间若玩家受到未被格挡的伤害则取消后续。黯核强化每段基础伤害 +2。
 /// </summary>
 [Pool(typeof(DeniaCardPool))]
@@ -30,20 +30,20 @@ public sealed class DeniaTaintedDarkness : DeniaCard
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new DynamicVar[]
         {
-            new DamageVar(7m, ValueProp.Move),
-            new DamageVar("DelayedDamage", 5m, ValueProp.Move),
+            new DamageVar(5m, ValueProp.Move),
+            new DamageVar("DelayedDamage", 7m, ValueProp.Move),
         };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_tainted_darkness.png";
 
     public DeniaTaintedDarkness()
-        : base(4, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(3, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(
         Title: "污涌之暗",
         Description:
-            "造成{Damage:diff()}点伤害3次。在你接下来的7回合，在回合结束时，对该目标造成{DelayedDamage:diff()}点伤害。" +
+            "造成{Damage:diff()}点伤害7次。在你接下来的3回合，在回合结束时，对该目标造成{DelayedDamage:diff()}点伤害。" +
             "但如果期间你受到了未被格挡的伤害，则取消后续的攻击。" +
             "\n黯核强化：每一段伤害的基础数值都+2。");
 
@@ -56,7 +56,7 @@ public sealed class DeniaTaintedDarkness : DeniaCard
         decimal delayed = DynamicVars["DelayedDamage"].BaseValue + bonus;
 
         await DamageCmd.Attack(immediate)
-            .WithHitCount(3)
+            .WithHitCount(7)
             .FromCard(this)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
@@ -73,7 +73,7 @@ public sealed class DeniaTaintedDarkness : DeniaCard
 
         // 用独立实例记录：剩余回合 / 伤害 / 目标索引（多人安全）。
         var power = await PowerCmd.Apply<DeniaTaintedDarknessPower>(
-            ctx, Owner.Creature, 7m, Owner.Creature, this);
+            ctx, Owner.Creature, 3m, Owner.Creature, this);
         power?.Configure(delayed, targetIndex + 1);
     }
 
@@ -102,13 +102,13 @@ public sealed class DeniaTaintedDarknessPower : CustomPowerModel
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new DynamicVar[]
         {
-            new DamageVar(5m, ValueProp.Move),
+            new DamageVar(7m, ValueProp.Move),
             new DynamicVar(TargetIndexKey, 0m),
         };
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "污涌之暗",
-        Description: "接下来{Amount}回合，在你的回合结束时对目标造成伤害。若你受到未被格挡的伤害，取消后续攻击。",
+        Description: "接下来若干回合，在你的回合结束时对目标造成伤害。若你受到未被格挡的伤害，取消后续攻击。",
         SmartDescription: "接下来{Amount}回合，在你的回合结束时对目标造成{Damage}点伤害。若你受到未被格挡的伤害，取消后续攻击。");
 
     public void Configure(decimal damage, int targetIndex1Based)

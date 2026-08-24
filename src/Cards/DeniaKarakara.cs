@@ -25,9 +25,8 @@ public sealed class DeniaKarakara : DeniaCard
     public DeniaKarakara()
         : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "喀拉喀拉",
-        Description: "获得等同于目标[gold]易伤[/gold]层数三分之一的[gold]力量[/gold]。\n虚质强化：获得等同于目标[gold]聚爆上限[/gold]三分之二的[gold]力量[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "喀拉喀拉",
+            Description: "获得等同于目标[color=#9A6A18]易伤[/color]层数三分之一的[color=#9A6A18]力量[/color]。\n虚质强化：获得等同于目标[color=#9A6A18]聚爆上限[/color]三分之二的[color=#9A6A18]力量[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

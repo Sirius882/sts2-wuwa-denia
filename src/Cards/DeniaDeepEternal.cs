@@ -31,7 +31,7 @@ public sealed class DeniaDeepEternal : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "深黯、终末、恒常",
-            Description: "对全体敌人提升3点聚爆上限，然后对随机一位敌人触发一次无条件引爆。在接下来2回合内，每回合对全体敌人附加上限1/3的[gold]聚爆[/gold]，并提升3点聚爆上限。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n黯核强化：持续回合数变为3。");
+            Description: "全体敌人附加3聚爆上限，引爆随机一名敌人，切换到[color=#9A6A18]粉色形态[/color]。后续2回合开始时，全体敌人附加上限1/3的[color=#9A6A18]聚爆[/color]和3聚爆上限。\n黯核强化：持续回合数+1。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -75,9 +75,10 @@ public sealed class DeniaDeepEternalPower : CustomPowerModel
     public override string? CustomBigIconPath => "res://images/ui/powers/denia_deep_eternal_power.png";
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "深黯、终末、恒常",
-            Description: "每回合开始时，对所有敌人附加上限1/3的聚爆，并提升3点聚爆上限。",
-            SmartDescription: "每回合开始时，对所有敌人附加上限1/3的聚爆，并提升3点聚爆上限。");
+        new PowerLoc(
+        Title: "深黯、终末、恒常",
+        Description: "回合开始时，对所有敌人附加上限1/3的聚爆，并提升3点聚爆上限。",
+        SmartDescription: "回合开始时，对所有敌人附加上限1/3的聚爆，并提升3点聚爆上限。");
 
     public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
     {

@@ -21,9 +21,8 @@ public sealed class DeniaSunshineSeason : DeniaCard
     public DeniaSunshineSeason()
         : base(2, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "阳光季节",
-        Description: "切换形态。抽1张牌。获得1点能量和1黯核。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "阳光季节",
+            Description: "切换形态。抽1张牌。获得1点能量和1黯核。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

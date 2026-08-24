@@ -33,9 +33,8 @@ public sealed class DeniaGiveItBack : DeniaCard
     public DeniaGiveItBack()
         : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "还给你",
-        Description: "造成{Damage}点伤害。将此名敌人身上的负面效果给予其他敌人，包括聚爆、额外聚爆上限、偏谐、干涉、集谐·干涉、集谐·偏移等。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "还给你",
+            Description: "造成{Damage}点伤害。将此名敌人身上的负面效果给予其他敌人。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

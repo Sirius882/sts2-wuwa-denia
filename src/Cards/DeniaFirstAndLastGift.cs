@@ -23,9 +23,8 @@ public sealed class DeniaFirstAndLastGift : DeniaCard
     public DeniaFirstAndLastGift()
         : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "最初和最后的礼物",
-        Description: "附加2[gold]集谐·偏移[/gold]，无条件[gold]谐度破坏[/gold]。{IfUpgraded:show:\n保留。|}");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "最初和最后的礼物",
+            Description: "附加2[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

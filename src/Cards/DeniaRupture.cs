@@ -13,7 +13,7 @@ namespace Denia;
 
 /// <summary>
 /// 破裂 — Rare Attack, AoE。
-/// 未升级：10×2 + 聚爆上限之和×1；升级：13×2 + 聚爆上限之和×2。
+/// 未升级：8×2 + 聚爆上限之和×1；升级：10×2 + 聚爆上限之和×2。
 /// 黯核：每段基础 +5（含上限之和段；升级满段理想 +20）。
 /// </summary>
 [Pool(typeof(DeniaCardPool))]
@@ -31,12 +31,12 @@ public sealed class DeniaRupture : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "破裂",
-            Description: "对全体敌人造成{IfUpgraded:show:13|10}点伤害2次。\n再造成等于全体敌人聚爆上限之和的伤害{IfUpgraded:show:2|1}次。\n黯核强化：每段基础数值+5。");
+            Description: "对全体敌人造成{IfUpgraded:show:10|8}点伤害2次。\n再造成等于全体敌人聚爆上限之和的伤害{IfUpgraded:show:2|1}次。\n黯核强化：每段伤害+5。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int dcBonus = await TrySpendDarkCore(play) ? 5 : 0;
-        int baseDmg = (IsUpgraded ? 13 : 10) + dcBonus;
+        int baseDmg = (IsUpgraded ? 10 : 8) + dcBonus;
         int capHitCount = IsUpgraded ? 2 : 1;
 
         var combatState = Owner.Creature.CombatState;

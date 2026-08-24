@@ -24,7 +24,7 @@ public sealed class DeniaSoTired : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "好累，让我歇会\u2026\u2026",
-            Description: "获得9点[gold]格挡[/gold]。若本回合施加过增益或减益，额外获得9点[gold]格挡[/gold]。\n黯核强化：两段格挡均+4。");
+            Description: "获得9点[color=#9A6A18]格挡[/color]。若本回合施加过增益或减益，额外获得9点[color=#9A6A18]格挡[/color]。\n黯核强化：两段格挡均+4。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

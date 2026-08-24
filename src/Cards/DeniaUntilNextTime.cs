@@ -16,9 +16,8 @@ public sealed class DeniaUntilNextTime : DeniaCard
 
     public DeniaUntilNextTime() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "直到下次再见",
-        Description: "切换形态，抽2张牌。若为黑变粉，不清空[gold]虚质[/gold]；若为粉变黑，额外获得10[gold]虚质[/gold]。获得1[gold]黯核[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "直到下次再见",
+            Description: "切换形态，抽2张牌。若为黑变粉，不清空[color=#9A6A18]虚质[/color]；若为粉变黑，额外获得10[color=#9A6A18]虚质[/color]。获得1[color=#9A6A18]黯核[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

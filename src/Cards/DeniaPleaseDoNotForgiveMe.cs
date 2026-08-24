@@ -22,9 +22,8 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
     public DeniaPleaseDoNotForgiveMe()
         : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "请您不要···宽恕我",
-        Description: "在[gold]粉色形态[/gold]下，切换到[gold]黑色形态[/gold]，不获得\"直视我\"和\"怜悯我\"，获得2层[gold]蔽星[/gold]并进入[gold]共鸣模态·集谐[/gold]。退出[gold]黑色形态[/gold]时，失去由此获得的蔽星并退出[gold]共鸣模态·集谐[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "请您不要···宽恕我",
+            Description: "在[color=#9A6A18]粉色形态[/color]下，切换到[color=#9A6A18]黑色形态[/color]，不获得\"直视我\"和\"怜悯我\"，获得2层[color=#9A6A18]蔽星[/color]并进入[color=#9A6A18]共鸣模态·集谐[/color]。退出[color=#9A6A18]黑色形态[/color]时，失去由此获得的buff。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

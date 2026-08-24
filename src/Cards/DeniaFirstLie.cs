@@ -24,9 +24,8 @@ public sealed class DeniaFirstLie : DeniaCard
     public DeniaFirstLie()
         : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "最初的谎言",
-        Description: "无条件[gold]谐度破坏[/gold]。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "最初的谎言",
+            Description: "无条件[color=#9A6A18]谐度破坏[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

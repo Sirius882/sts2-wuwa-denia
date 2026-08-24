@@ -31,9 +31,8 @@ public sealed class DeniaBubbleMachine : DeniaCard
     public DeniaBubbleMachine()
         : base(0, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "泡泡机",
-        Description: "获得{Block:diff()}点[gold]格挡[/gold]。\n若本回合切换过形态，再获得{Block:diff()}点[gold]格挡[/gold]。\n虚质强化：两段格挡基础数值均+2。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "泡泡机",
+            Description: "获得{Block:diff()}点[color=#9A6A18]格挡[/color]。若本回合切换过形态，再获得{Block:diff()}点[color=#9A6A18]格挡[/color]。\n虚质强化：两段格挡基础数值均+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {

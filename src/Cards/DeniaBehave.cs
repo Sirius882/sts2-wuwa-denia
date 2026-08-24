@@ -44,5 +44,5 @@ public sealed class DeniaBehave : DeniaCard
     protected override void OnUpgrade() { DynamicVars.Damage.UpgradeValueBy(5m); }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "乖~", Description: "造成{Damage:diff()}点伤害。\n获得2点[gold]力量[/gold]。\n虚质强化：再造成一段伤害。");
+        new CardLoc(Title: "乖~", Description: "造成{Damage:diff()}点伤害。\n获得2点[color=#9A6A18]力量[/color]。\n虚质强化：再造成一段伤害。");
 }

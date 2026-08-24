@@ -36,9 +36,8 @@ public sealed class DeniaRadianceDissolved : DeniaCard
     public DeniaRadianceDissolved()
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies) { }
 
-    public override List<(string, string)>? Localization => new CardLoc(
-        Title: "光辉，自此消融",
-        Description: "无论形态，消耗所有[gold]虚质[/gold]和黯核。对全体敌人造成y/2+4z+力量点伤害x次。若处于[gold]黑色形态[/gold]，切换到[gold]粉色形态[/gold]。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
+    public override List<(string, string)>? Localization => new CardLoc(Title: "光辉，自此消融",
+            Description: "消耗所有[color=#9A6A18]虚质[/color]和黯核。对全体敌人造成y/2+4z+力量点伤害x次。切换到[color=#9A6A18]粉色形态[/color]。\n打出此牌后，若没有在{IfUpgraded:show:3|2}回合内获胜，给自己附加80层灾厄。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -47,15 +46,7 @@ public sealed class DeniaRadianceDissolved : DeniaCard
         int dcSpent = DeniaResourceState.GetDarkCore(Owner.Creature);
 
         await DeniaResourceState.ClearVirtualMatter(Owner.Creature, Owner.Creature, this);
-        // 直接清零黯核，绕过 TrySpendDarkCore 的[gold]黑色形态[/gold]检查
-        if (dcSpent > 0)
-        {
-            if (Owner.Creature.Player?.PlayerCombatState != null)
-                await PlayerCmd.SetStars(0, Owner.Creature.Player);
-            var dcPower = Owner.Creature.GetPower<DeniaDarkCorePower>();
-            if (dcPower != null)
-                await PowerCmd.ModifyAmount(new ThrowingPlayerChoiceContext(), dcPower, -(decimal)dcSpent, Owner.Creature, this);
-        }
+        await DeniaResourceState.ClearDarkCore(Owner.Creature, Owner.Creature, this);
 
         int hits = energyX;
 
@@ -87,9 +78,10 @@ public sealed class DeniaCataclysmTimerPower : CustomPowerModel
     protected override bool IsVisibleInternal => false;
 
     public override List<(string, string)>? Localization =>
-        new PowerLoc(Title: "灾厄倒数",
-            Description: "回合结束后若未获胜，给自己附加80层灾厄。",
-            SmartDescription: "{Amount}回合后若未获胜，给自己附加80层灾厄。");
+        new PowerLoc(
+        Title: "灾厄倒数",
+        Description: "{Amount}回合后若未获胜，给自己附加80层灾厄。",
+        SmartDescription: "{Amount}回合后若未获胜，给自己附加80层灾厄。");
 
     public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
     {
