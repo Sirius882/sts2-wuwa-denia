@@ -36,4 +36,8 @@
       <HintPath>..\..\threeDLLs\0Harmony.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="src\Cards\DeniaCrush.cs" />
+    <Compile Remove="src\Cards\DeniaEtchedIridescent.cs" />
+  </ItemGroup>
 </Project>
