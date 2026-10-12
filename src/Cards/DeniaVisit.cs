@@ -46,6 +46,7 @@ public sealed class DeniaVisit : DeniaCard
 /// <summary>
 /// Single（无层数显示）。上限存在字段里。
 /// 用 ModifyDamageCap 做剩余额度上限，AfterDamageReceived / AfterDamageGiven 累计本回合已结算量。
+/// 修正：受伤额度在 BeforeDamageReceived 按格挡前伤害累计，输出仍在 AfterDamageGiven 累计。
 /// </summary>
 public sealed class DeniaVisitPower : CustomPowerModel
 {
@@ -95,13 +96,15 @@ public sealed class DeniaVisitPower : CustomPowerModel
         return decimal.MaxValue;
     }
 
-    public override async Task AfterDamageReceived(
-        PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
+    public override async Task BeforeDamageReceived(
+        PlayerChoiceContext choiceContext, Creature target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
     {
         if (target != Owner) return;
+        // 旧实现依据（保留历史注释；现按格挡前总伤害累计）：
         // 累计实际造成的生命伤害（含格挡前的 raw? 设计是“受到伤害”，取 UnblockedDamage 更符合“生命损失”语义；
         // 但“受到N点伤害”在 STS 语境常指 HP 扣减。用 UnblockedDamage。）
-        int dmg = (int)result.UnblockedDamage;
+        // 此时 amount 已经过伤害上限截断、尚未消耗格挡或修正扣血，避免护盾或缓冲返还额度。
+        int dmg = (int)amount;
         if (dmg <= 0) return;
         _takenThisTurn += dmg;
         await Task.CompletedTask;
