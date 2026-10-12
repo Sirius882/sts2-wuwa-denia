@@ -20,7 +20,7 @@
     <AemeathDll Condition="'$(AemeathDll)' == ''">$(AEMEATH_DLL)</AemeathDll>
     <!-- sts2 固定从当前游戏安装目录解析，避免与 threeDLLs 中的陈旧副本不一致 -->
     <Sts2Dll Condition="'$(Sts2Dll)' == ''">$(STS2_DLL)</Sts2Dll>
-    <Sts2Dll Condition="'$(Sts2Dll)' == ''">E:\SteamLibrary\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\sts2.dll</Sts2Dll>
+    <Sts2Dll Condition="'$(Sts2Dll)' == ''">F:\SteamLibrary\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\sts2.dll</Sts2Dll>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="sts2">
