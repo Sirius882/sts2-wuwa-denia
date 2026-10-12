@@ -3,7 +3,7 @@
   "name": "Denia",
   "author": "Claude Play",
   "description": "Denia character mod",
-  "version": "3.0.1",
+  "version": "3.0.3",
   "min_game_version": "0.107.1",
   "has_pck": true,
   "has_dll": true,
