@@ -1,4 +1,27 @@
-# Godot 4+ specific ignores
+# Godot caches and exports
 .godot/
 /android/
 *.pck
+/data_*/
+
+# .NET build output
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.user
+*.suo
+
+# Local caches, logs and editor state
+.cache/
+__pycache__/
+*.pyc
+*.log
+.vs/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Keep *.import, *.uid and export_presets.cfg: they contain resource metadata.

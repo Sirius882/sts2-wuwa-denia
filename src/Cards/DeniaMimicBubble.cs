@@ -15,7 +15,7 @@ public sealed class DeniaMimicBubble : DeniaCard
 {
     public override int CurrentDarkCoreCost => 1;
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { CardKeyword.Exhaust };
+        new CardKeyword[0];
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_mimic_bubble.png";

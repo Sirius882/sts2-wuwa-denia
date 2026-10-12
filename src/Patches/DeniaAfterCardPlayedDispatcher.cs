@@ -29,6 +29,7 @@ public static class DeniaAfterCardPlayedDispatcher
         _ = choiceContext;
         var player = cardPlay.Card.Owner;
         if (player == null) return;
+        DeniaCardVoice.TryPlay(cardPlay.Card);   // 卡牌语音/音效（互不干扰游戏逻辑）
         __result = Dispatch(__result, player, cardPlay);
     }
 

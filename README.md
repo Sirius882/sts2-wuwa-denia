@@ -1,3 +1,7 @@
+## Source branches
+
+`main` targets the stable game; `fit_beta` targets the beta game. Both branches share this repository and the same local source directory. See [Git workflow](docs/git-workflow.md) for switching, building and pushing. TuneStrain development has stopped; `main` retains its legacy DLL dependency, while `fit_beta` embeds its implementation.
+
 ◆ 全新的可玩角色 达妮娅
 
 ◆ 现有90+新卡
