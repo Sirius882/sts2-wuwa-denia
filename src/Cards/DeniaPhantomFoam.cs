@@ -25,23 +25,23 @@ public sealed class DeniaPhantomFoam : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "幻沫",
-            Description: "触发[color=#9A6A18]虚质强化[/color]时，获得1点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:8|6}次。");
+            Description: "触发[color=#9A6A18]虚质强化[/color]时，获得3点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:5|3}次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         _ = play;
-        int max = IsUpgraded ? 8 : 6;
+        int max = IsUpgraded ? 5 : 3;
         var existing = Owner.Creature.GetPower<DeniaPhantomFoamPower>();
         if (existing == null)
         {
-            var applied = await PowerCmd.Apply<DeniaPhantomFoamPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
+            var applied = await PowerCmd.Apply<DeniaPhantomFoamPower>(ctx, Owner.Creature, 3m, Owner.Creature, this);
             if (applied is DeniaPhantomFoamPower p) p.MaxTriggers = max;
         }
         else
         {
             existing.MaxTriggers = System.Math.Max(existing.MaxTriggers, max);
-            if (existing.Amount < 1)
-                await PowerCmd.ModifyAmount(ctx, existing, 1m - existing.Amount, Owner.Creature, this);
+            if (existing.Amount < 3)
+                await PowerCmd.ModifyAmount(ctx, existing, 3m - existing.Amount, Owner.Creature, this);
         }
     }
 
@@ -50,7 +50,7 @@ public sealed class DeniaPhantomFoam : DeniaCard
 
 public sealed class DeniaPhantomFoamPower : CustomPowerModel
 {
-    public int MaxTriggers = 6;
+    public int MaxTriggers = 3;
 
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;

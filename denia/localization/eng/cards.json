@@ -1422,7 +1422,7 @@
   "DENIA-DENIA_EXTINGUISHED_DREAM.title": "Extinguished Dream",
   "DENIA-DENIA_EXTINGUISHED_DREAM.description": "Gain {Block:diff()} [color=#9A6A18]Block[/color]. Apply 1 [color=#9A6A18]Tune Strain Bias[/color].\nVirtual Matter Enhancement: Block +5.",
   "DENIA-DENIA_PHANTOM_FOAM.title": "Phantom Foam",
-  "DENIA-DENIA_PHANTOM_FOAM.description": "Whenever you trigger a [color=#9A6A18]Virtual Matter Enhancement[/color], gain 1 [color=#9A6A18]Block[/color]. Max {IfUpgraded:show:8|6} times per turn.",
+  "DENIA-DENIA_PHANTOM_FOAM.description": "Whenever you trigger a [color=#9A6A18]Virtual Matter Enhancement[/color], gain 3 [color=#9A6A18]Block[/color]. Max {IfUpgraded:show:5|3} times per turn.",
   "DENIA-DENIA_TOWARD_VOID.title": "Toward the Void",
   "DENIA-DENIA_TOWARD_VOID.description": "Whenever you trigger a [color=#9A6A18]Dark Core Enhancement[/color], gain {IfUpgraded:show:3|2} [color=#9A6A18]Block[/color]. Max 4 times per turn.",
   "DENIA-DENIA_VIRTUAL_MATTER_MAGNETIC_BURST.title": "Virtual Matter Magnetic Burst",

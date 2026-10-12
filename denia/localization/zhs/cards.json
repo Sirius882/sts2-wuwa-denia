@@ -1403,7 +1403,7 @@
   "DENIA-DENIA_EXTINGUISHED_DREAM.title": "灭却之梦",
   "DENIA-DENIA_EXTINGUISHED_DREAM.description": "获得{Block:diff()}点[color=#9A6A18]格挡[/color]，附加1[color=#9A6A18]集谐·偏移[/color]。\n虚质强化：格挡+5。",
   "DENIA-DENIA_PHANTOM_FOAM.title": "幻沫",
-  "DENIA-DENIA_PHANTOM_FOAM.description": "触发[color=#9A6A18]虚质强化[/color]时，获得1点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:8|6}次。",
+  "DENIA-DENIA_PHANTOM_FOAM.description": "触发[color=#9A6A18]虚质强化[/color]时，获得3点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:5|3}次。",
   "DENIA-DENIA_TOWARD_VOID.title": "向虚而行",
   "DENIA-DENIA_TOWARD_VOID.description": "触发[color=#9A6A18]黯核强化[/color]时，获得{IfUpgraded:show:3|2}点[color=#9A6A18]格挡[/color]。每回合最多触发4次。",
   "DENIA-DENIA_VIRTUAL_MATTER_MAGNETIC_BURST.title": "虚质磁爆",
