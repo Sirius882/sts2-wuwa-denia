@@ -16,11 +16,12 @@
     <PackageReference Include="SmartFormat" Version="3.3.0" />
   </ItemGroup>
   <PropertyGroup>
-    <!-- aemeath-ww 固定从 Steam 工坊订阅路径解析（由环境变量 AEMEATH_DLL 传入），不使用 threeDLLs 副本 -->
-    <AemeathDll Condition="'$(AemeathDll)' == ''">$(AEMEATH_DLL)</AemeathDll>
-    <!-- sts2 固定从当前游戏安装目录解析，避免与 threeDLLs 中的陈旧副本不一致 -->
+    <!-- 测试版分支默认引用本工作区刚构建的 beta Aemeath；仍允许环境变量或 /p:AemeathDll 覆盖。 -->
+    <AemeathDll Condition="'$(AemeathDll)' == '' and '$(AEMEATH_DLL)' != ''">$(AEMEATH_DLL)</AemeathDll>
+    <AemeathDll Condition="'$(AemeathDll)' == ''">$(MSBuildProjectDirectory)\..\..\AemeathSourceCode\.godot\mono\temp\bin\Debug\aemeath-ww.dll</AemeathDll>
+    <!-- 测试版分支：sts2 默认指向 GameBeta 的调试构建产物；可用环境变量 STS2_DLL 覆盖为你的测试版游戏安装路径 -->
     <Sts2Dll Condition="'$(Sts2Dll)' == ''">$(STS2_DLL)</Sts2Dll>
-    <Sts2Dll Condition="'$(Sts2Dll)' == ''">E:\SteamLibrary\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\sts2.dll</Sts2Dll>
+    <Sts2Dll Condition="'$(Sts2Dll)' == ''">$(MSBuildProjectDirectory)\..\..\GameBeta\.godot\mono\temp\bin\Debug\sts2.dll</Sts2Dll>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="sts2">
@@ -28,9 +29,6 @@
     </Reference>
     <Reference Include="aemeath-ww">
       <HintPath>$(AemeathDll)</HintPath>
-    </Reference>
-    <Reference Include="tune_strain">
-      <HintPath>..\tune_strain\.godot\mono\temp\bin\Debug\tune_strain.dll</HintPath>
     </Reference>
     <Reference Include="0Harmony">
       <HintPath>..\..\threeDLLs\0Harmony.dll</HintPath>

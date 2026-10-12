@@ -2,18 +2,12 @@ using System.Collections.Generic;
 using BaseLib.Abstracts;
 using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.Models.RelicPools;
-using MegaCrit.Sts2.Core.Saves.Runs;
 
 namespace Denia;
 
 [BaseLib.Utils.Pool(typeof(SharedRelicPool))]
 public sealed class DeniaSacrificialSword : CustomRelicModel
 {
-    static DeniaSacrificialSword()
-    {
-        SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaSacrificialSword));
-    }
-
     public override RelicRarity Rarity => RelicRarity.Uncommon;
     protected override string IconBaseName => "denia_sacrificial_sword";
 

@@ -73,7 +73,7 @@ public sealed class DeniaVisitPower : CustomPowerModel
         Description: "你每回合受到的伤害和造成的伤害都有上限。",
         SmartDescription: "你每回合受到的伤害和造成的伤害都有上限。");
 
-    public override decimal ModifyDamageCap(Creature? target, ValueProp props, Creature? dealer, CardModel? cardSource)
+    public override decimal ModifyDamageCap(Creature? target, ValueProp props, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
     {
         // 自己受伤上限：剩余 = maxTaken - takenThisTurn
         if (target == Owner)

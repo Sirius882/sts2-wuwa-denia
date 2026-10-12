@@ -43,7 +43,7 @@ public sealed class DeniaPineNeedleRockFloss : DeniaCard
         // 升级后额外造成4点伤害
         if (IsUpgraded)
             await DamageCmd.Attack(4m)
-                .FromCard(this)
+                .FromCard(this, play)
                 .Targeting(play.Target)
                 .Execute(ctx);
     }

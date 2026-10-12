@@ -37,7 +37,7 @@ public sealed class DeniaItsMyTurn : DeniaCard
         ArgumentNullException.ThrowIfNull(play.Target);
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this)
+            .FromCard(this, play)
             .Targeting(play.Target)
             .Execute(ctx);
 

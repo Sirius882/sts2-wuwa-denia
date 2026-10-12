@@ -48,7 +48,7 @@ public sealed class DeniaLastLie : DeniaCard
             damage += 8m;
 
         await DamageCmd.Attack(damage)
-            .FromCard(this)
+            .FromCard(this, play)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);

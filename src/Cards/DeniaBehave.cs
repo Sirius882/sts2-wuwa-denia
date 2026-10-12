@@ -35,7 +35,7 @@ public sealed class DeniaBehave : DeniaCard
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
             .WithHitCount(hitCount)
-            .FromCard(this).Targeting(play.Target)
+            .FromCard(this, play).Targeting(play.Target)
             .WithHitFx("vfx/vfx_heavy_blunt").Execute(ctx);
 
         await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, 2m, Owner.Creature, this);

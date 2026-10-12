@@ -12,5 +12,7 @@
   "DENIA-BLACK_FORM.title": "Black Form",
   "DENIA-BLACK_FORM.description": "Denia's Resonator form. Can enhance cards with Virtual Matter and Dark Core.",
   "DENIA-SHROUDED_STAR.title": "Shrouded Star",
-  "DENIA-SHROUDED_STAR.description": "Each stack increases Fusion Burst detonation damage you trigger by 10%, and Melt damage by 20%."
+  "DENIA-SHROUDED_STAR.description": "Each stack increases Fusion Burst detonation damage you trigger by 10%, and Melt damage by 20%.",
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE.description": "When Tune Strain Resonance Break triggers, this is converted into Tune Strain Response stacks. Tune Strain Response added during combat is cleared after Tune Strain Resonance Break.",
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE.title": "Tune Strain Response"
 }

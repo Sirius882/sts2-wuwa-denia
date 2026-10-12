@@ -10,7 +10,6 @@ using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
-using MegaCrit.Sts2.Core.Saves.Runs;
 using TuneStrain;
 
 namespace Denia;
@@ -50,7 +49,6 @@ public sealed class DeniaCannedFishCakePower : CustomPowerModel
 
     static DeniaCannedFishCakePower()
     {
-        SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaCannedFishCakePower));
         TuneStrainState.RegisterResponseDegreeMultiplier(creature =>
         {
             var power = creature.GetPower<DeniaCannedFishCakePower>();

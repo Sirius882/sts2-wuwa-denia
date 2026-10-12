@@ -47,7 +47,7 @@ public sealed class DeniaLookAtThis : DeniaCard
             await TuneStrainState.TryAddBias(enemy, bias, Owner.Creature, this);
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this)
+            .FromCard(this, play)
             .TargetingAllOpponents(combatState)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);

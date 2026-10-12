@@ -1,0 +1,4 @@
+{
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE.description": "触发集谐谐度破坏时，转化为集谐响应层数。战斗中添加的集谐响应会在集谐谐度破坏后清除。",
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE.title": "集谐响应"
+}

@@ -39,7 +39,7 @@ public sealed class DeniaYaya : DeniaCard
         bool spentVirtualMatter = await TrySpendVirtualMatter(play);
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this)
+            .FromCard(this, play)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
@@ -53,7 +53,7 @@ public sealed class DeniaYaya : DeniaCard
             for (int i = 0; i < 2; i++)
             {
                 await DamageCmd.Attack(4m)
-                    .FromCard(this)
+                    .FromCard(this, play)
                     .Targeting(play.Target)
                     .WithHitFx("vfx/vfx_attack_slash")
                     .Execute(ctx);

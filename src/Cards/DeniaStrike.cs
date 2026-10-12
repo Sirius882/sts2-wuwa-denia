@@ -44,7 +44,7 @@ public sealed class DeniaStrike : DeniaCard
             dmg += 4m;
 
         await DamageCmd.Attack(dmg)
-            .FromCard(this).Targeting(play.Target)
+            .FromCard(this, play).Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
 

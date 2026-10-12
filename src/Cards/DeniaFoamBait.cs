@@ -34,7 +34,7 @@ public sealed class DeniaFoamBait : DeniaCard
         if (await TrySpendVirtualMatter(play)) damage += 5;
 
         await DamageCmd.Attack(damage)
-            .FromCard(this).TargetingAllOpponents(Owner.Creature.CombatState)
+            .FromCard(this, play).TargetingAllOpponents(Owner.Creature.CombatState)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
     }

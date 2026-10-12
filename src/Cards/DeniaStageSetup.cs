@@ -34,7 +34,7 @@ public sealed class DeniaStageSetup : DeniaCard
         var snapshot = Owner.Creature.CombatState.Enemies.Where(e => !e.IsDead).ToArray();
         foreach (var enemy in snapshot)
         {
-            await DamageCmd.Attack(dmg).FromCard(this).Targeting(enemy)
+            await DamageCmd.Attack(dmg).FromCard(this, play).Targeting(enemy)
                 .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
             if (!enemy.IsDead)
             {

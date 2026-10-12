@@ -55,7 +55,7 @@ public sealed class DeniaRadianceDissolved : DeniaCard
         {
             await DamageCmd.Attack(dmg)
                 .WithHitCount(hits)
-                .FromCard(this)
+                .FromCard(this, play)
                 .TargetingAllOpponents(Owner.Creature.CombatState)
                 .Execute(ctx);
         }

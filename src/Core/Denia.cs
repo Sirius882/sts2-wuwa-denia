@@ -16,7 +16,7 @@ public sealed class Denia : PlaceholderCharacterModel
     public override string PlaceholderID => "necrobinder";
     public override string CustomIconTexturePath =>
         "res://images/ui/top_panel/character_icon_denia.png";
-    public override string? CustomIconPath =>
+    public override string CustomIconPath =>
         "res://scenes/ui/character_icons/denia_icon.tscn";
     public override string? CustomCharacterSelectIconPath =>
         "res://images/char_select/denia_icon.jpg";

@@ -35,7 +35,7 @@ public sealed class DeniaSeamless : DeniaCard
             dmg += 3m;
             blk += 3m;
         }
-        await DamageCmd.Attack(dmg).FromCard(this).Targeting(play.Target)
+        await DamageCmd.Attack(dmg).FromCard(this, play).Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
         await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(blk, ValueProp.Move), play);
     }

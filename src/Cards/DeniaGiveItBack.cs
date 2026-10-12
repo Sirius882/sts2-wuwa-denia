@@ -41,14 +41,26 @@ public sealed class DeniaGiveItBack : DeniaCard
         ArgumentNullException.ThrowIfNull(play.Target);
 
         // 照抄 Misery: 伤害前先克隆目标所有减益
-        var originalDebuffs = play.Target.Powers
+        var debuffAmounts = play.Target.Powers
             .Where(p => p.TypeForCurrentAmount == PowerType.Debuff || p is AemeathFusionBurstCapPower)
-            .Select(p => (PowerModel)p.ClonePreservingMutability())
-            .ToList();
+            .Select(p => ((PowerModel)p.ClonePreservingMutability(), Amount: p.Amount))
+            .ToDictionary();
+
+        // Beta 将临时 Power 的防重复逻辑改为：把对应的内部 Power 数值合并进待复制结果。
+        // 这样复制时不会再次额外施加临时 Power 的内部减益。
+        foreach (var pair in debuffAmounts)
+        {
+            if (pair.Key is not ITemporaryPower temporaryPower) continue;
+
+            var internalPower = debuffAmounts.FirstOrDefault(
+                entry => entry.Key.Id == temporaryPower.InternallyAppliedPower.Id);
+            if (internalPower.Key != null)
+                debuffAmounts[internalPower.Key] += pair.Value;
+        }
 
         // 打伤害
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this).Targeting(play.Target)
+            .FromCard(this, play).Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
 
         var combatState = Owner.Creature.CombatState;
@@ -59,28 +71,22 @@ public sealed class DeniaGiveItBack : DeniaCard
         {
             if (enemy == play.Target || enemy.IsDead) continue;
 
-            foreach (var debuff in originalDebuffs)
+            foreach (var debuff in debuffAmounts)
             {
-                var existing = PowerCmd.FindExistingInstanceForStacking(debuff, enemy, debuff.Applier);
+                if (debuff.Value == 0) continue;
+
+                var existing = PowerCmd.FindExistingInstanceForStacking(debuff.Key, enemy, debuff.Key.Applier);
                 if (existing != null)
                 {
-                    DoHackyThings(existing);
-                    await PowerCmd.ModifyAmount(ctx, existing, debuff.Amount, debuff.Applier, this);
+                    await PowerCmd.ModifyAmount(ctx, existing, debuff.Value, debuff.Key.Applier, this);
                 }
                 else
                 {
-                    var cloned = (PowerModel)debuff.ClonePreservingMutability();
-                    DoHackyThings(cloned);
-                    await PowerCmd.Apply(ctx, cloned, enemy, debuff.Amount, debuff.Applier, this);
+                    var cloned = (PowerModel)debuff.Key.ClonePreservingMutability();
+                    await PowerCmd.Apply(ctx, cloned, enemy, debuff.Value, debuff.Key.Applier, this);
                 }
             }
         }
-    }
-
-    private static void DoHackyThings(PowerModel power)
-    {
-        if (power is ITemporaryPower temp)
-            temp.IgnoreNextInstance();
     }
 
     protected override void OnUpgrade()

@@ -57,7 +57,7 @@ public sealed class DeniaFrozenStarMossCake : DeniaCard
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
             .WithHitCount(totalHits)
-            .FromCard(this)
+            .FromCard(this, play)
             .Targeting(play.Target)
             .Execute(ctx);
     }

@@ -12,7 +12,6 @@ using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Models;
-using MegaCrit.Sts2.Core.Saves.Runs;
 using TuneStrain;
 
 namespace Denia;
@@ -98,7 +97,6 @@ public sealed class DeniaResonanceModePower : CustomPowerModel
 
     static DeniaResonanceModePower()
     {
-        SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaResonanceModePower));
         // 注册一次：回调在每次计算响应度时被询问；返回 1.5 表示本玩家处于共鸣模态则按 1.5 倍采用层数（GetResponseDegree 内再向下取整）。
         TuneStrainState.RegisterResponseDegreeMultiplier(creature =>
             creature.GetPower<DeniaResonanceModePower>() != null ? 1.5 : 1.0);

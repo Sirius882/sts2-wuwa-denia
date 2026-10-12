@@ -55,7 +55,7 @@ public sealed class DeniaTribeEvolutionError : DeniaCard
             damage += 10m;
 
         await DamageCmd.Attack(damage)
-            .FromCard(this)
+            .FromCard(this, play)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);

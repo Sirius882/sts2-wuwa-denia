@@ -36,7 +36,7 @@ public sealed class DeniaFernAlgaeCake : DeniaCard
         int dc = DeniaResourceState.GetDarkCore(Owner.Creature);
         int dcExtraHits = dc;
         bool dcSpent = false;
-        if (dcExtraHits > 0 && !play.IsAutoPlay)
+        if (dcExtraHits > 0 && !play.IsAutoPlay && DeniaFormHelper.IsBlack(Owner.Creature))
         {
             dcSpent = true;
             await DeniaResourceState.ClearDarkCore(Owner.Creature, Owner.Creature, this);
@@ -47,7 +47,7 @@ public sealed class DeniaFernAlgaeCake : DeniaCard
         {
             await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
                 .WithHitCount(baseHits)
-                .FromCard(this)
+                .FromCard(this, play)
                 .TargetingAllOpponents(Owner.Creature.CombatState)
                 .Execute(ctx);
         }
@@ -57,7 +57,7 @@ public sealed class DeniaFernAlgaeCake : DeniaCard
         {
             await DamageCmd.Attack(9m)
                 .WithHitCount(dcExtraHits)
-                .FromCard(this)
+                .FromCard(this, play)
                 .TargetingAllOpponents(Owner.Creature.CombatState)
                 .Execute(ctx);
         }

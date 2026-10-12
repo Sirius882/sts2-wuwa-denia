@@ -1,0 +1,4 @@
+{
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE.description": "When Tune Strain Resonance Break triggers, this is converted into Tune Strain Response stacks. Tune Strain Response added during combat is cleared after Tune Strain Resonance Break.",
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE.title": "Tune Strain Response"
+}

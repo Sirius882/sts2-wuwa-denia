@@ -12,6 +12,7 @@
 	"DENIA-BLACK_FORM.title": "黑色形态",
 	"DENIA-BLACK_FORM.description": "达妮娅的鸣式共鸣者形态，能以虚质和黯核强化卡牌。",
 	"DENIA-SHROUDED_STAR.title": "蔽星",
-	"DENIA-SHROUDED_STAR.description": "每层使由你触发的聚爆引爆伤害提高10%，熔解伤害提高20%。"
+	"DENIA-SHROUDED_STAR.description": "每层使由你触发的聚爆引爆伤害提高10%，熔解伤害提高20%。",
+	"TUNESTRAIN-TUNE_STRAIN_RESPONSE.description": "触发集谐谐度破坏时，转化为集谐响应层数。战斗中添加的集谐响应会在集谐谐度破坏后清除。",
+	"TUNESTRAIN-TUNE_STRAIN_RESPONSE.title": "集谐响应"
 }
-

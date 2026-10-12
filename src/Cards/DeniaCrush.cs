@@ -36,7 +36,7 @@ public sealed class DeniaCrush : DeniaCard
         ArgumentNullException.ThrowIfNull(play.Target);
 
         var attack = await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this)
+            .FromCard(this, play)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_heavy_blunt")
             .Execute(ctx);

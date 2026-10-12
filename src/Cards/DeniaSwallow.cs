@@ -73,7 +73,7 @@ public abstract class DeniaSwallowPowerBase : CustomPowerModel
     protected abstract decimal MaxReductionPercent { get; }
 
     public override decimal ModifyDamageMultiplicative(
-        Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
+        Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)
     {
         // 仅 powered 攻击伤害（与集谐干涉易伤同环）。
         if (!props.IsPoweredAttack())
