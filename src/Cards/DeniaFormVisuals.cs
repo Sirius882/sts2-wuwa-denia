@@ -16,7 +16,7 @@ using MegaCrit.Sts2.Core.Settings;
 namespace Denia;
 
 /// <summary>
-/// 双形态战斗立绘覆盖 + 呼吸/武器/黑攻特效/变形/死亡视觉。
+/// 双形态战斗立绘覆盖 + 呼吸/黑攻特效/变形/死亡视觉。
 /// 覆盖层挂在 Visuals 下：缩小 debuff 走 Visuals.Scale；左右朝向同步 Body.Scale.X。
 /// 术语「黑色形态攻击特效」：denia_black_attack_fx.png，左下角对齐黑立绘中心。
 /// </summary>
@@ -29,23 +29,19 @@ public static class DeniaFormPatch
     private const string MidToBlackNodeName = "DeniaFormToBlackOverlay";
     private const string MidToPinkNodeName = "DeniaFormToPinkOverlay";
     private const string CorpseNodeName = "DeniaCorpseOverlay";
-    private const string WeaponNodeName = "DeniaWeaponOverlay";
     private const string BlackFxNodeName = "DeniaBlackAttackFx";
 
     internal const string PinkTexPath = "res://images/packed/character_select/denia_pink.png";
     internal const string BlackTexPath = "res://images/packed/character_select/denia_black.png";
     internal const string FormToBlackTexPath = "res://images/packed/character_select/denia_form_to_black.png";
     internal const string FormToPinkTexPath = "res://images/packed/character_select/denia_form_to_pink.png";
-    internal const string WeaponTexPath = "res://images/packed/character_select/denia_weapon.png";
     /// <summary>能量 UI 大图标兼尸体形态。</summary>
     internal const string CorpseTexPath = "res://images/ui/combat/denia_energy_icon_big.png";
     /// <summary>黑色形态攻击特效（常态透明，左下角对齐黑立绘中心）。</summary>
     internal const string BlackAttackFxTexPath = "res://images/ui/combat/denia_black_attack_fx.png";
 
     public const float FormTransitionDuration = 1.5f;
-    public const float WeaponSwingDuration = 0.2f;
     public const float BlackFxDuration = 0.2f;
-    public const float WeaponDeathAnimDuration = 0.5f; // 0.1 rotate + 0.2 up + 0.2 down
 
     /// <summary>设置里的加速模式（Fast）。Instant 由 Cmd.Wait 自行跳过。</summary>
     internal static bool IsFastMode()
@@ -67,7 +63,7 @@ public static class DeniaFormPatch
     public static float GetFormTransitionWaitDuration()
         => IsFastMode() ? FormTransitionDuration * 0.5f : FormTransitionDuration;
 
-    /// <summary>Fast 下武器/黑态特效改为 fire-and-forget（速度仍 0.2s）。</summary>
+    /// <summary>Fast 下黑态特效改为 fire-and-forget（速度仍 0.2s）。</summary>
     public static bool ShouldSkipCombatFxWait() => IsFastMode();
 
     private static readonly Dictionary<NCreature, TextureRect> _pinkOverlay = new();
@@ -75,7 +71,6 @@ public static class DeniaFormPatch
     private static readonly Dictionary<NCreature, TextureRect> _midToBlackOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _midToPinkOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _corpseOverlay = new();
-    private static readonly Dictionary<NCreature, TextureRect> _weaponOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _blackFxOverlay = new();
     private static readonly HashSet<NCreature> _formTransitioning = new();
     private static readonly HashSet<NCreature> _dying = new();
@@ -166,19 +161,6 @@ public static class DeniaFormPatch
         catch { }
     }
 
-    /// <summary>粉色：武器挥动。clockwise=true 攻击，false 技能/能力。</summary>
-    public static void PlayWeaponSwing(Creature creature, bool clockwise)
-    {
-        try
-        {
-            var node = GetCreatureNode(creature);
-            if (node == null || IsDying(node)) return;
-            EnsureOverlays(node);
-            GetSyncNode(node)?.PlayWeaponSwing(clockwise);
-        }
-        catch { }
-    }
-
     /// <summary>黑色形态攻击特效：攻击挥砍 0.2s。</summary>
     public static void BeginBlackFormCardPlay(Creature creature, bool isAttackCard)
     {
@@ -222,13 +204,6 @@ public static class DeniaFormPatch
         catch { }
     }
 
-    public static async Task AwaitWeaponSwing(Creature creature)
-    {
-        // Fast：视觉仍按 0.2s 播，但不等待（instant 手感）
-        if (ShouldSkipCombatFxWait()) return;
-        await Cmd.Wait(WeaponSwingDuration);
-    }
-
     public static async Task AwaitBlackFx(Creature creature)
     {
         if (ShouldSkipCombatFxWait()) return;
@@ -267,7 +242,6 @@ public static class DeniaFormPatch
         catch { return null; }
     }
 
-
     private static void EnsureOverlays(NCreature nc)
     {
         if (_pinkOverlay.TryGetValue(nc, out var existingPink)
@@ -277,7 +251,6 @@ public static class DeniaFormPatch
             HidePlaceholderBodies(nc.Visuals);
             EnsureMidOverlays(nc);
             EnsureCorpseOverlay(nc);
-            EnsureWeaponOverlay(nc);
             EnsureBlackFxOverlay(nc);
             RebindSync(nc);
             SyncOverlayLayout(nc);
@@ -308,7 +281,6 @@ public static class DeniaFormPatch
 
             EnsureMidOverlays(nc);
             EnsureCorpseOverlay(nc);
-            EnsureWeaponOverlay(nc);
             EnsureBlackFxOverlay(nc);
             RebindSync(nc);
             SyncOverlayLayout(nc);
@@ -340,9 +312,8 @@ public static class DeniaFormPatch
         _midToBlackOverlay.TryGetValue(nc, out var mB);
         _midToPinkOverlay.TryGetValue(nc, out var mP);
         _corpseOverlay.TryGetValue(nc, out var corpse);
-        _weaponOverlay.TryGetValue(nc, out var weapon);
         _blackFxOverlay.TryGetValue(nc, out var blackFx);
-        EnsureSyncNode(nc, p, b, mB, mP, corpse, weapon, blackFx);
+        EnsureSyncNode(nc, p, b, mB, mP, corpse, blackFx);
     }
 
     private static void EnsureMidOverlays(NCreature nc)
@@ -382,25 +353,6 @@ public static class DeniaFormPatch
             if (corpse == null) return;
             visuals.AddChild(corpse);
             _corpseOverlay[nc] = corpse;
-        }
-        catch { }
-    }
-
-    private static void EnsureWeaponOverlay(NCreature nc)
-    {
-        try
-        {
-            var visuals = nc.Visuals;
-            if (visuals == null || !GodotObject.IsInstanceValid(visuals)) return;
-            if (_weaponOverlay.TryGetValue(nc, out var existing)
-                && existing != null && GodotObject.IsInstanceValid(existing) && existing.IsInsideTree())
-                return;
-            var weapon = TryMakeOptionalOverlay(WeaponNodeName, WeaponTexPath);
-            if (weapon == null) return;
-            visuals.AddChild(weapon);
-            // 武器在粉立绘之上
-            visuals.MoveChild(weapon, visuals.GetChildCount() - 1);
-            _weaponOverlay[nc] = weapon;
         }
         catch { }
     }
@@ -457,7 +409,6 @@ public static class DeniaFormPatch
         TextureRect? midToBlack,
         TextureRect? midToPink,
         TextureRect? corpse,
-        TextureRect? weapon,
         TextureRect? blackFx)
     {
         try
@@ -475,13 +426,13 @@ public static class DeniaFormPatch
             var existing = visuals.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
             if (existing != null && GodotObject.IsInstanceValid(existing))
             {
-                existing.Bind(nc, pink, black, midToBlack, midToPink, corpse, weapon, blackFx);
+                existing.Bind(nc, pink, black, midToBlack, midToPink, corpse, blackFx);
                 return;
             }
 
             var sync = new DeniaFormOverlaySync { Name = SyncNodeName };
             visuals.AddChild(sync);
-            sync.Bind(nc, pink, black, midToBlack, midToPink, corpse, weapon, blackFx);
+            sync.Bind(nc, pink, black, midToBlack, midToPink, corpse, blackFx);
         }
         catch { }
     }
@@ -521,7 +472,6 @@ public static class DeniaFormPatch
             ApplyBaseLayout(_midToBlackOverlay, nc, localPos, size);
             ApplyBaseLayout(_midToPinkOverlay, nc, localPos, size);
             ApplyBaseLayout(_corpseOverlay, nc, localPos, size);
-            ApplyBaseLayout(_weaponOverlay, nc, localPos, size);
             // 黑攻特效：尺寸跟 Bounds，pivot 左下角，位置在 ApplyTransforms 对齐中心
             ApplyBaseLayout(_blackFxOverlay, nc, localPos, size);
 
@@ -571,7 +521,6 @@ public static class DeniaFormPatch
             SetFlip(_midToBlackOverlay, nc, flip);
             SetFlip(_midToPinkOverlay, nc, flip);
             SetFlip(_corpseOverlay, nc, flip);
-            SetFlip(_weaponOverlay, nc, flip);
             SetFlip(_blackFxOverlay, nc, flip);
         }
         catch { }
@@ -626,14 +575,6 @@ public static class DeniaFormPatch
                     black.Scale = Vector2.One;
                     black.Rotation = 0f;
                 }
-                if (_weaponOverlay.TryGetValue(node, out var weapon) && weapon != null && GodotObject.IsInstanceValid(weapon))
-                {
-                    // 仅粉色显示武器
-                    weapon.Visible = !isBlack;
-                    weapon.Modulate = Colors.White;
-                    weapon.Scale = Vector2.One;
-                    weapon.Rotation = 0f;
-                }
                 if (_blackFxOverlay.TryGetValue(node, out var fx) && fx != null && GodotObject.IsInstanceValid(fx))
                 {
                     fx.Visible = true; // 始终挂着，靠 alpha 控制
@@ -680,7 +621,6 @@ public static class DeniaFormPatch
                 _midToBlackOverlay.Remove(k);
                 _midToPinkOverlay.Remove(k);
                 _corpseOverlay.Remove(k);
-                _weaponOverlay.Remove(k);
                 _blackFxOverlay.Remove(k);
                 _formTransitioning.Remove(k);
                 _dying.Remove(k);
@@ -690,9 +630,8 @@ public static class DeniaFormPatch
     }
 }
 
-
 /// <summary>
-/// 战斗立绘动画：Idle 呼吸 / 武器挥动 / 黑攻特效 / FormTransition / 死亡。
+/// 战斗立绘动画：Idle 呼吸 / 黑攻特效 / FormTransition / 死亡。
 /// 视觉-only，不改游戏状态。等待由调用方 Cmd.Wait。
 /// </summary>
 public partial class DeniaFormOverlaySync : Node
@@ -702,19 +641,15 @@ public partial class DeniaFormOverlaySync : Node
     private enum AnimState
     {
         Idle,
-        WeaponSwing,
         BlackFxSlash,
         BlackFxPulse,
         FormTransition,
-        WeaponDeathDrop,
         Dead
     }
 
     private const float BreathPeriod = 4.4f; // 原 2.2s，减半速度 → 周期加倍
     /// <summary>仅竖直方向正弦拉伸幅度（相对 Scale.Y）。</summary>
     private const float BreathScaleAmpY = 0.035f / 3f; // 原 0.035，缩到三分之一
-    /// <summary>武器中心相对角色中心上移像素。</summary>
-    private const float WeaponCenterOffsetY = -30f;
 
     private const float FormPhaseShrinkInSec = 0.5f;
     private const float FormPhaseHoldSec = 0.5f;
@@ -724,15 +659,8 @@ public partial class DeniaFormOverlaySync : Node
     private const float FormMidFullScale = 2.0f;
     private const float FormMidSlamDistance = 320f;
 
-    private const float WeaponSwingSec = 0.2f;
-    private const float WeaponSwingDeg = 30f;
     private const float BlackFxSec = 0.2f;
     private const float BlackFxRotDeg = 90f;
-    private const float WeaponDeathRotSec = 0.1f;
-    private const float WeaponDeathUpSec = 0.2f;
-    private const float WeaponDeathDownSec = 0.2f;
-    private const float WeaponDeathDropPx = 30f;
-    private const float WeaponDeathG = 10f; // 伪重力，用于上下位移 ease
 
     private const string FormSfxPhase1 = FmodSfx.block;
 
@@ -742,7 +670,6 @@ public partial class DeniaFormOverlaySync : Node
     private TextureRect? _midToBlack;
     private TextureRect? _midToPink;
     private TextureRect? _corpse;
-    private TextureRect? _weapon;
     private TextureRect? _blackFx;
 
     private Vector2 _baseLocalPos = Vector2.Zero;
@@ -761,7 +688,6 @@ public partial class DeniaFormOverlaySync : Node
     private double _animTime;
     private double _breathPhase;
     private TransitionKind _transitionKind = TransitionKind.ToBlack;
-    private bool _weaponClockwise = true;
     private bool _playedPhase1Sfx;
     private bool _playedPhase2Sfx;
 
@@ -770,9 +696,6 @@ public partial class DeniaFormOverlaySync : Node
     private Vector2 _motionScale = Vector2.One;
     private Vector2 _midExtraOffset = Vector2.Zero;
 
-    private float _weaponExtraRot;
-    private Vector2 _weaponDeathOffset = Vector2.Zero;
-    private float _weaponDeathRot;
     private float _blackFxAlpha;
     private float _blackFxRot;
 
@@ -783,7 +706,6 @@ public partial class DeniaFormOverlaySync : Node
         TextureRect? midToBlack,
         TextureRect? midToPink,
         TextureRect? corpse,
-        TextureRect? weapon,
         TextureRect? blackFx)
     {
         _creatureNode = creatureNode;
@@ -792,7 +714,6 @@ public partial class DeniaFormOverlaySync : Node
         _midToBlack = midToBlack;
         _midToPink = midToPink;
         _corpse = corpse;
-        _weapon = weapon;
         _blackFx = blackFx;
         _hasIdleFrames = pink.GetNodeOrNull<AnimatedSprite2D>("Idle") != null
                          || black.GetNodeOrNull<AnimatedSprite2D>("Idle") != null;
@@ -813,35 +734,14 @@ public partial class DeniaFormOverlaySync : Node
         _state = AnimState.Idle;
         _animTime = 0;
         ResetMotion();
-        _weaponExtraRot = 0f;
-        _weaponDeathOffset = Vector2.Zero;
-        _weaponDeathRot = 0f;
         _blackFxAlpha = 0f;
         _blackFxRot = 0f;
         try
         {
             if (_corpse != null && GodotObject.IsInstanceValid(_corpse))
                 SetRectVisual(_corpse, false, 1f, 1f, 0f);
-            if (_weapon != null && GodotObject.IsInstanceValid(_weapon))
-            {
-                _weapon.Visible = true;
-                _weapon.Modulate = Colors.White;
-                _weapon.Rotation = 0f;
-            }
         }
         catch { }
-    }
-
-    public void PlayWeaponSwing(bool clockwise)
-    {
-        if (_state == AnimState.FormTransition || _state == AnimState.Dead || _state == AnimState.WeaponDeathDrop)
-            return;
-        // 黑形态不挥武器
-        if (IsCurrentlyBlack()) return;
-        _weaponClockwise = clockwise;
-        _state = AnimState.WeaponSwing;
-        _animTime = 0;
-        _weaponExtraRot = 0f;
     }
 
     public void PlayBlackFxSlash()
@@ -886,7 +786,6 @@ public partial class DeniaFormOverlaySync : Node
         _playedPhase1Sfx = false;
         _playedPhase2Sfx = false;
         _midExtraOffset = Vector2.Zero;
-        _weaponExtraRot = 0f;
         DeniaFormPatch.SetFormTransitioning(_creatureNode, true);
         SetupFormTransitionVisibility(kind);
         ApplyTransforms();
@@ -907,10 +806,6 @@ public partial class DeniaFormOverlaySync : Node
         _playedPhase2Sfx = false;
         DeniaFormPatch.SetFormTransitioning(_creatureNode, true);
         SetupFormTransitionVisibility(TransitionKind.ToCorpse);
-        // 同时启动武器脱手
-        _weaponDeathOffset = Vector2.Zero;
-        _weaponDeathRot = 0f;
-        // 武器死亡动画与尸体变形并行，状态在 Finish 时切到 WeaponDeathDrop/Dead
         ApplyTransforms();
     }
 
@@ -931,10 +826,6 @@ public partial class DeniaFormOverlaySync : Node
         _motionScale = Vector2.One;
     }
 
-
-    private double _weaponDeathTime;
-    private bool _weaponDeathActive;
-
     private void SetupFormTransitionVisibility(TransitionKind kind)
     {
         try
@@ -944,30 +835,6 @@ public partial class DeniaFormOverlaySync : Node
             SetRectVisual(to, false, 0f, FormPixelScale, 0f);
             foreach (var other in others)
                 SetRectVisual(other, false, 0f, 1f, 0f);
-
-            if (_weapon != null && GodotObject.IsInstanceValid(_weapon))
-            {
-                if (kind == TransitionKind.ToBlack)
-                {
-                    _weapon.Visible = true;
-                    _weapon.Modulate = Colors.White;
-                }
-                else if (kind == TransitionKind.ToPink)
-                {
-                    // 与粉一起从透明恢复（阶段3）
-                    _weapon.Visible = true;
-                    _weapon.Modulate = new Color(1, 1, 1, 0);
-                }
-                else
-                {
-                    _weapon.Visible = true;
-                    _weapon.Modulate = Colors.White;
-                    _weaponDeathActive = true;
-                    _weaponDeathTime = 0;
-                    _weaponDeathOffset = Vector2.Zero;
-                    _weaponDeathRot = 0f;
-                }
-            }
 
             // 粉↔黑 / 死亡：中间图入场相同——原地小尺寸+透明生成
             SetRectVisual(mid, mid != null, 0f, FormPixelScale, 0f);
@@ -1041,9 +908,7 @@ public partial class DeniaFormOverlaySync : Node
             {
                 // 战斗卸载后 NCreature 可能已释放，但死亡/尸体动画仍需继续播完。
                 if (_state == AnimState.Dead
-                    || _state == AnimState.FormTransition
-                    || _state == AnimState.WeaponDeathDrop
-                    || _weaponDeathActive)
+                    || _state == AnimState.FormTransition)
                 {
                     UpdateAnimation(delta);
                     ApplyTransforms();
@@ -1109,17 +974,10 @@ public partial class DeniaFormOverlaySync : Node
 
     private void UpdateAnimation(double delta)
     {
-        // 武器死亡脱手可与尸体变形并行
-        if (_weaponDeathActive)
-            StepWeaponDeath(delta);
-
         switch (_state)
         {
             case AnimState.Idle:
                 UpdateBreath(delta);
-                break;
-            case AnimState.WeaponSwing:
-                UpdateWeaponSwing(delta);
                 break;
             case AnimState.BlackFxSlash:
                 UpdateBlackFxSlash(delta);
@@ -1146,27 +1004,6 @@ public partial class DeniaFormOverlaySync : Node
         _motionRot = 0f;
         // 帧动画已包含呼吸，不再叠加整张立绘拉伸；静态立绘保留原有呼吸。
         _motionScale = _hasIdleFrames ? Vector2.One : new Vector2(1f, 1f + BreathScaleAmpY * sin);
-        if (!_weaponDeathActive)
-            _weaponExtraRot = 0f;
-    }
-
-    private void UpdateWeaponSwing(double delta)
-    {
-        UpdateBreath(delta);
-        _animTime += delta;
-        float half = WeaponSwingSec * 0.5f;
-        float sign = _weaponClockwise ? 1f : -1f;
-        float peak = Mathf.DegToRad(WeaponSwingDeg) * sign;
-        if (_animTime >= WeaponSwingSec)
-        {
-            _weaponExtraRot = 0f;
-            _state = AnimState.Idle;
-            return;
-        }
-        if (_animTime <= half)
-            _weaponExtraRot = Mathf.Lerp(0f, peak, (float)(_animTime / half));
-        else
-            _weaponExtraRot = Mathf.Lerp(peak, 0f, (float)((_animTime - half) / half));
     }
 
     private void UpdateBlackFxSlash(double delta)
@@ -1200,64 +1037,6 @@ public partial class DeniaFormOverlaySync : Node
         }
     }
 
-    /// <summary>
-    /// 武器死亡：0.1s 绕左下角顺时针 30° → 0.2s 上移 30px → 0.2s 下移 30px（重力感 g=10）。
-    /// </summary>
-    private void StepWeaponDeath(double delta)
-    {
-        _weaponDeathTime += delta;
-        float t = (float)_weaponDeathTime;
-        float peakRot = Mathf.DegToRad(30f);
-
-        if (t <= WeaponDeathRotSec)
-        {
-            float u = t / WeaponDeathRotSec;
-            _weaponDeathRot = peakRot * u;
-            _weaponDeathOffset = Vector2.Zero;
-        }
-        else if (t <= WeaponDeathRotSec + WeaponDeathUpSec)
-        {
-            float u = (t - WeaponDeathRotSec) / WeaponDeathUpSec;
-            // 重力减速上抛：位移 = h * (1 - (1-u)^2) 的反向，用 ease-out 近似
-            // s = 0.5*g*t^2 归一化：上移阶段速度先快后慢 → easeOutQuad
-            float ease = 1f - (1f - u) * (1f - u);
-            // 掺 g=10 的手感：u' = clamp(g*u*u,0,1) 混合
-            float gBlend = Mathf.Clamp(WeaponDeathG * u * u / 10f, 0f, 1f);
-            float k = Mathf.Lerp(ease, gBlend, 0.35f);
-            _weaponDeathRot = peakRot;
-            _weaponDeathOffset = new Vector2(0f, -WeaponDeathDropPx * k);
-        }
-        else if (t <= WeaponDeathRotSec + WeaponDeathUpSec + WeaponDeathDownSec)
-        {
-            float u = (t - WeaponDeathRotSec - WeaponDeathUpSec) / WeaponDeathDownSec;
-            // 下落加速：easeInQuad + g
-            float ease = u * u;
-            float gBlend = Mathf.Clamp(WeaponDeathG * u * u / 10f, 0f, 1f);
-            float k = Mathf.Lerp(ease, gBlend, 0.5f);
-            _weaponDeathRot = peakRot;
-            _weaponDeathOffset = new Vector2(0f, -WeaponDeathDropPx * (1f - k));
-        }
-        else
-        {
-            // 落地后停在地上，保持可见；旋转保持 30°
-            _weaponDeathRot = peakRot;
-            _weaponDeathOffset = Vector2.Zero;
-            _weaponDeathActive = false;
-            if (_weapon != null && GodotObject.IsInstanceValid(_weapon))
-            {
-                _weapon.Visible = true;
-                // 确保盖在尸体之上
-                try
-                {
-                    var parent = _weapon.GetParent();
-                    if (parent != null)
-                        parent.MoveChild(_weapon, parent.GetChildCount() - 1);
-                }
-                catch { }
-            }
-        }
-    }
-
     private void UpdateFormTransition(double delta)
     {
         // Fast 粉↔黑：_formAnimSpeed=2；死亡 ToCorpse 恒为 1
@@ -1282,7 +1061,6 @@ public partial class DeniaFormOverlaySync : Node
                 float u = Mathf.Clamp(time / FormTransitionSec, 0f, 1f);
                 SetRectVisual(from, true, 1f - u, Mathf.Lerp(1f, FormPixelScale, u), 0f);
                 SetRectVisual(to, true, u, Mathf.Lerp(FormPixelScale, 1f, u), 0f);
-                SyncWeaponWithFormAlpha(kindFromAlpha: 1f - u, kindToAlpha: u);
                 if (!_playedPhase2Sfx && u >= 0.5f)
                 {
                     PlayFormSfxPhase2();
@@ -1300,17 +1078,6 @@ public partial class DeniaFormOverlaySync : Node
                 float midScale = Mathf.Lerp(FormPixelScale, FormMidFullScale, u);
                 SetRectVisual(mid, true, u, midScale, 0f);
                 _midExtraOffset = Vector2.Zero;
-                if (_transitionKind == TransitionKind.ToPink)
-                {
-                    // 武器仍藏着，阶段3再随粉出现
-                    SyncWeaponWithFormAlpha(kindFromAlpha: 0f, kindToAlpha: 0f);
-                }
-                else if (_transitionKind == TransitionKind.ToBlack)
-                {
-                    // 粉→黑：武器与粉一起缩虚化
-                    SyncWeaponWithFormAlpha(kindFromAlpha: 1f - u, kindToAlpha: 0f);
-                }
-                // ToCorpse: 武器不随粉缩放
             }
             else if (time < FormPhaseShrinkInSec + FormPhaseHoldSec)
             {
@@ -1323,8 +1090,6 @@ public partial class DeniaFormOverlaySync : Node
                 SetRectVisual(from, false, 0f, FormPixelScale, 0f);
                 SetRectVisual(mid, true, 1f, FormMidFullScale, 0f);
                 SetRectVisual(to, false, 0f, FormPixelScale, 0f);
-                if (_transitionKind == TransitionKind.ToBlack)
-                    SyncWeaponWithFormAlpha(0f, 0f);
             }
             else
             {
@@ -1341,7 +1106,6 @@ public partial class DeniaFormOverlaySync : Node
                     float fly = GetMidSlamDistance() * u * 1.2f;
                     _midExtraOffset = new Vector2(0f, -fly);
                     SetRectVisual(mid, true, 1f, FormMidFullScale, 0f);
-                    SyncWeaponWithFormAlpha(0f, u);
                 }
                 else
                 {
@@ -1349,8 +1113,6 @@ public partial class DeniaFormOverlaySync : Node
                     float midScale = Mathf.Lerp(FormMidFullScale, FormPixelScale, u);
                     _midExtraOffset = Vector2.Zero;
                     SetRectVisual(mid, true, 1f - u, midScale, 0f);
-                    if (_transitionKind == TransitionKind.ToBlack)
-                        SyncWeaponWithFormAlpha(0f, 0f);
                 }
             }
         }
@@ -1358,31 +1120,6 @@ public partial class DeniaFormOverlaySync : Node
 
         if (_animTime >= FormTransitionSec)
             FinishFormTransition();
-    }
-
-    private void SyncWeaponWithFormAlpha(float kindFromAlpha, float kindToAlpha)
-    {
-        if (_weaponDeathActive) return; // 死亡脱手中不改
-        if (_weapon == null || !GodotObject.IsInstanceValid(_weapon)) return;
-        float a = Mathf.Max(kindFromAlpha, kindToAlpha);
-        // 黑形态目标时武器最终 alpha=0
-        if (_transitionKind == TransitionKind.ToBlack)
-            a = kindFromAlpha;
-        else if (_transitionKind == TransitionKind.ToPink)
-            a = kindToAlpha;
-        else
-            return;
-
-        _weapon.Visible = a > 0.01f || _transitionKind == TransitionKind.ToPink;
-        var m = _weapon.Modulate;
-        m.A = Mathf.Clamp(a, 0f, 1f);
-        _weapon.Modulate = m;
-        // 与粉同 scale：from/to 缩放在 ApplyTransforms 用 _motionScale；此处用 form 阶段 scale
-        // 武器 scale 直接跟粉当前 scale（from 或 to）
-        if (_transitionKind == TransitionKind.ToBlack && _pink != null && GodotObject.IsInstanceValid(_pink))
-            _weapon.Scale = _pink.Scale;
-        else if (_transitionKind == TransitionKind.ToPink && _pink != null && GodotObject.IsInstanceValid(_pink))
-            _weapon.Scale = _pink.Scale;
     }
 
     private void FinishFormTransition()
@@ -1397,41 +1134,11 @@ public partial class DeniaFormOverlaySync : Node
                 if (other != null && other != to)
                     SetRectVisual(other, false, 1f, 1f, 0f);
 
-            if (_weapon != null && GodotObject.IsInstanceValid(_weapon) && !_weaponDeathActive)
-            {
-                if (_transitionKind == TransitionKind.ToBlack)
-                {
-                    _weapon.Visible = false;
-                    _weapon.Modulate = Colors.White;
-                    _weapon.Scale = Vector2.One;
-                    _weapon.Rotation = 0f;
-                }
-                else if (_transitionKind == TransitionKind.ToPink)
-                {
-                    _weapon.Visible = true;
-                    _weapon.Modulate = Colors.White;
-                    _weapon.Scale = Vector2.One;
-                    _weapon.Rotation = 0f;
-                }
-            }
-
             if (_transitionKind == TransitionKind.ToCorpse)
             {
                 _state = AnimState.Dead;
                 _animTime = 0;
                 ResetMotion();
-                // 武器落地后保持显示并置顶
-                if (_weapon != null && GodotObject.IsInstanceValid(_weapon))
-                {
-                    _weapon.Visible = true;
-                    try
-                    {
-                        var parent = _weapon.GetParent();
-                        if (parent != null)
-                            parent.MoveChild(_weapon, parent.GetChildCount() - 1);
-                    }
-                    catch { }
-                }
                 if (_creatureNode != null && GodotObject.IsInstanceValid(_creatureNode))
                     DeniaFormPatch.SetFormTransitioning(_creatureNode, false);
                 return;
@@ -1443,14 +1150,13 @@ public partial class DeniaFormOverlaySync : Node
         _animTime = 0;
         ResetMotion();
         _midExtraOffset = Vector2.Zero;
-        _weaponExtraRot = 0f;
     }
 
     private void EnsureParentAllowsOverflow()
     {
         try
         {
-            foreach (var rect in new[] { _midToBlack, _midToPink, _pink, _black, _corpse, _weapon, _blackFx })
+            foreach (var rect in new[] { _midToBlack, _midToPink, _pink, _black, _corpse, _blackFx })
             {
                 if (rect == null || !GodotObject.IsInstanceValid(rect)) continue;
                 rect.ClipContents = false;
@@ -1510,47 +1216,6 @@ public partial class DeniaFormOverlaySync : Node
         ApplyBody(_midToPink, midPinkPos, centerPivot: true);
         ApplyBody(_corpse, pos, centerPivot: true);
 
-        // 武器：中心在角色中心上方 30px；旋转绕武器自身中心；呼吸同竖直拉伸
-        if (_weapon != null && GodotObject.IsInstanceValid(_weapon))
-        {
-            _weapon.Size = _baseSize;
-            bool deadWeapon = _weaponDeathActive
-                || (_state == AnimState.Dead)
-                || (_transitionKind == TransitionKind.ToCorpse && _corpse != null && _corpse.Visible);
-
-            if (deadWeapon || _weaponDeathActive || (_state == AnimState.Dead && _weapon.Visible))
-            {
-                // 死亡脱手：绕左下角；落地后保持
-                _weapon.PivotOffset = new Vector2(0f, _baseSize.Y);
-                Vector2 weaponRestCenter = center + new Vector2(0f, WeaponCenterOffsetY);
-                // 脱手起点：武器中心位置对应的左下角
-                Vector2 bottomLeftRest = weaponRestCenter + new Vector2(-_baseSize.X * 0.5f, _baseSize.Y * 0.5f);
-                Vector2 bottomLeftTarget = bottomLeftRest + _weaponDeathOffset;
-                _weapon.Position = bottomLeftTarget - _weapon.PivotOffset;
-                _weapon.Rotation = _weaponDeathRot;
-                _weapon.Scale = Vector2.One;
-                _weapon.Visible = true;
-                try
-                {
-                    var parent = _weapon.GetParent();
-                    if (parent != null)
-                        parent.MoveChild(_weapon, parent.GetChildCount() - 1);
-                }
-                catch { }
-            }
-            else
-            {
-                // 常态/挥动：中心上移 30px，绕自身中心旋转
-                _weapon.PivotOffset = _baseSize * 0.5f;
-                Vector2 weaponPos = pos + new Vector2(0f, WeaponCenterOffsetY);
-                // 竖直拉伸时保持中心：Scale.Y 变化绕中心 pivot 即可
-                _weapon.Position = weaponPos;
-                _weapon.Rotation = _weaponExtraRot; // 不叠加身体旋转（呼吸已无旋转）
-                if (_state != AnimState.FormTransition)
-                    _weapon.Scale = _motionScale;
-            }
-        }
-
         // 黑色形态攻击特效：左下角对齐黑立绘中心
         if (_blackFx != null && GodotObject.IsInstanceValid(_blackFx))
         {
@@ -1601,7 +1266,7 @@ public partial class DeniaFormOverlaySync : Node
 }
 
 /// <summary>
-/// Death/revive triggers; pink attack swing via Attack; skill/power and black FX via BeforeCardPlayed.
+/// Death/revive triggers; black FX via BeforeCardPlayed.
 /// </summary>
 [HarmonyPatch(typeof(NCreature), nameof(NCreature.SetAnimationTrigger))]
 public static class DeniaAnimTriggerPatch
@@ -1629,14 +1294,6 @@ public static class DeniaAnimTriggerPatch
                 return;
             }
 
-            if (DeniaFormPatch.IsFormTransitioning(__instance) || DeniaFormPatch.IsDying(__instance))
-                return;
-
-            if (string.Equals(trigger, "Attack", StringComparison.OrdinalIgnoreCase)
-                && !DeniaFormHelper.IsBlack(creature))
-            {
-                DeniaFormPatch.PlayWeaponSwing(creature, clockwise: true);
-            }
         }
         catch { }
     }
@@ -1679,13 +1336,6 @@ public static class DeniaBeforeCardPlayedAnimPatch
                     DeniaFormPatch.PlayBlackAttackFxSlash(creature);
                     await DeniaFormPatch.AwaitBlackFx(creature);
                 }
-                return;
-            }
-
-            if (card.Type == CardType.Skill || card.Type == CardType.Power)
-            {
-                DeniaFormPatch.PlayWeaponSwing(creature, clockwise: false);
-                await DeniaFormPatch.AwaitWeaponSwing(creature);
             }
         }
         catch { }
@@ -1701,7 +1351,7 @@ public static class DeniaStartDeathAnimPatch
         {
             if (__instance?.Entity?.Player?.Character is not Denia) return;
             DeniaFormPatch.PlayDeath(__instance.Entity);
-            // 尸体变形 1.5s，武器脱手 0.5s 并行，取较长
+            // 尸体变形 1.5s
             __result = DeniaFormPatch.FormTransitionDuration;
         }
         catch { }

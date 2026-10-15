@@ -94,16 +94,10 @@ public partial class DeniaGameOverDeathOverlay : Node2D
     private const float PhaseDuration = TransitionDuration / 3f;
     private const float PixelScale = 0.02f;
     private const float MidFullScale = 1.2f;
-    private const float WeaponCenterOffsetY = -30f;
-    private const float WeaponRotationDuration = 0.1f;
-    private const float WeaponRiseDuration = 0.2f;
-    private const float WeaponFallDuration = 0.2f;
-    private const float WeaponDropPixels = 30f;
 
     private Sprite2D? _pink;
     private Sprite2D? _mid;
     private Sprite2D? _corpse;
-    private Sprite2D? _weapon;
     private Vector2 _baseSize = new(200f, 300f);
     private double _elapsed;
 
@@ -217,20 +211,17 @@ public partial class DeniaGameOverDeathOverlay : Node2D
             Texture2D? pinkTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.PinkTexPath);
             Texture2D? midTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.FormToBlackTexPath);
             Texture2D? corpseTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.CorpseTexPath);
-            Texture2D? weaponTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.WeaponTexPath);
-            if (pinkTexture == null || midTexture == null || corpseTexture == null || weaponTexture == null)
+            if (pinkTexture == null || midTexture == null || corpseTexture == null)
                 return false;
 
             _baseSize = size;
             _pink = CreateSprite("DeniaGameOverPink", pinkTexture, flipH);
             _mid = CreateSprite("DeniaGameOverTransition", midTexture, flipH);
             _corpse = CreateSprite("DeniaGameOverCorpse", corpseTexture, flipH);
-            _weapon = CreateSprite("DeniaGameOverWeapon", weaponTexture, flipH);
 
             AddChild(_pink);
             AddChild(_mid);
             AddChild(_corpse);
-            AddChild(_weapon);
             return true;
         }
         catch
@@ -284,7 +275,6 @@ public partial class DeniaGameOverDeathOverlay : Node2D
             SetBody(_corpse, visible: true, alpha: u, scale: Mathf.Lerp(PixelScale, 1f, u));
         }
 
-        ApplyWeapon(time);
     }
 
     private static Sprite2D CreateSprite(string name, Texture2D texture, bool flipH)
@@ -316,65 +306,6 @@ public partial class DeniaGameOverDeathOverlay : Node2D
         sprite.Rotation = 0f;
         sprite.Visible = visible;
         sprite.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp(alpha, 0f, 1f));
-    }
-
-    private void ApplyWeapon(float time)
-    {
-        if (_weapon == null || !GodotObject.IsInstanceValid(_weapon) || _weapon.Texture == null)
-            return;
-
-        float rotation;
-        float offsetY;
-        if (time <= WeaponRotationDuration)
-        {
-            rotation = Mathf.DegToRad(30f) * (time / WeaponRotationDuration);
-            offsetY = 0f;
-        }
-        else if (time <= WeaponRotationDuration + WeaponRiseDuration)
-        {
-            float u = (time - WeaponRotationDuration) / WeaponRiseDuration;
-            rotation = Mathf.DegToRad(30f);
-            offsetY = -WeaponDropPixels * (1f - (1f - u) * (1f - u));
-        }
-        else if (time <= WeaponRotationDuration + WeaponRiseDuration + WeaponFallDuration)
-        {
-            float u = (time - WeaponRotationDuration - WeaponRiseDuration) / WeaponFallDuration;
-            rotation = Mathf.DegToRad(30f);
-            offsetY = -WeaponDropPixels * (1f - u * u);
-        }
-        else
-        {
-            rotation = Mathf.DegToRad(30f);
-            offsetY = 0f;
-        }
-
-        Vector2 texSize = _weapon.Texture.GetSize();
-        if (texSize.X <= 0f || texSize.Y <= 0f)
-            return;
-
-        float fit = Mathf.Min(_baseSize.X / texSize.X, _baseSize.Y / texSize.Y);
-        _weapon.Scale = new Vector2(fit, fit);
-
-        // 以左下角为 pivot 做脱手旋转：先把原点放到左下，再旋转/位移。
-        Vector2 half = texSize * 0.5f * fit;
-        Vector2 bottomLeftOffset = new(-half.X, half.Y);
-        Vector2 weaponCenter = new(0f, WeaponCenterOffsetY);
-        float cos = Mathf.Cos(rotation);
-        float sin = Mathf.Sin(rotation);
-        Vector2 leftBottom = weaponCenter + bottomLeftOffset;
-        Vector2 centerRel = weaponCenter - leftBottom;
-        Vector2 rotatedRel = new(centerRel.X * cos - centerRel.Y * sin, centerRel.X * sin + centerRel.Y * cos);
-        _weapon.Position = leftBottom + rotatedRel + new Vector2(0f, offsetY);
-        _weapon.Rotation = rotation;
-        _weapon.Modulate = Colors.White;
-        _weapon.Visible = true;
-
-        try
-        {
-            // 武器始终置顶。
-            MoveChild(_weapon, GetChildCount() - 1);
-        }
-        catch { }
     }
 
     private static void HideCreaturePlaceholder(NCreatureVisuals visuals)
