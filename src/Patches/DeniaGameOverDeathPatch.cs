@@ -214,7 +214,7 @@ public partial class DeniaGameOverDeathOverlay : Node2D
             _pink = new AnimatedSprite2D
             {
                 Name = "DeniaGameOverPink", SpriteFrames = frames, FlipH = flipH,
-                Scale = Vector2.One * (size.Y / frames.GetFrameTexture("idle", 0).GetHeight()),
+                Scale = Vector2.One * (size.Y / DeniaFormPatch.BodyReferenceHeight),
                 Animation = "death", Visible = !isBlack
             };
             Vector2 texSize = corpseTexture.GetSize();

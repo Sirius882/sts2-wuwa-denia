@@ -36,6 +36,8 @@ public static class DeniaFormPatch
     /// <summary>黑色形态攻击特效（常态透明，左下角对齐黑立绘中心）。</summary>
     internal const string BlackAttackFxTexPath = "res://images/ui/combat/denia_black_attack_fx.png";
 
+    // 动画可增加透明留边，人物大小仍按最初 512 像素画布标定。
+    internal const float BodyReferenceHeight = 512f;
     public const float PinkDeathDuration = 2f;
     public const float BlackFxDuration = 0.2f;
 
@@ -439,9 +441,8 @@ public static class DeniaFormPatch
         var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Idle");
         if (idle != null && GodotObject.IsInstanceValid(idle))
         {
-            var frameSize = idle.SpriteFrames.GetFrameTexture("idle", 0).GetSize();
             idle.Position = size * 0.5f;
-            idle.Scale = Vector2.One * (size.Y / frameSize.Y);
+            idle.Scale = Vector2.One * (size.Y / BodyReferenceHeight);
         }
     }
 
