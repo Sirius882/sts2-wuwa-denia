@@ -26,19 +26,17 @@ public static class DeniaFormPatch
     internal const string SyncNodeName = "DeniaFormOverlaySync";
     private const string PinkNodeName = "DeniaPinkOverlay";
     private const string BlackNodeName = "DeniaBlackOverlay";
-    private const string MidToBlackNodeName = "DeniaFormToBlackOverlay";
     private const string CorpseNodeName = "DeniaCorpseOverlay";
     private const string BlackFxNodeName = "DeniaBlackAttackFx";
 
     internal const string PinkTexPath = "res://images/packed/character_select/denia_pink.png";
     internal const string BlackTexPath = "res://images/packed/character_select/denia_black.png";
-    internal const string FormToBlackTexPath = "res://images/packed/character_select/denia_form_to_black.png";
     /// <summary>能量 UI 大图标兼尸体形态。</summary>
     internal const string CorpseTexPath = "res://images/ui/combat/denia_energy_icon_big.png";
     /// <summary>黑色形态攻击特效（常态透明，左下角对齐黑立绘中心）。</summary>
     internal const string BlackAttackFxTexPath = "res://images/ui/combat/denia_black_attack_fx.png";
 
-    public const float FormTransitionDuration = 1.5f;
+    public const float PinkDeathDuration = 2f;
     public const float BlackFxDuration = 0.2f;
 
     /// <summary>设置里的加速模式（Fast）。Instant 由 Cmd.Wait 自行跳过。</summary>
@@ -59,10 +57,8 @@ public static class DeniaFormPatch
 
     private static readonly Dictionary<NCreature, TextureRect> _pinkOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _blackOverlay = new();
-    private static readonly Dictionary<NCreature, TextureRect> _midToBlackOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _corpseOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _blackFxOverlay = new();
-    private static readonly HashSet<NCreature> _formTransitioning = new();
     private static readonly HashSet<NCreature> _dying = new();
     // 同一张攻击牌若已播 slash，则强化脉冲跳过（满足 if attack elif enhance）
     /// <summary>本张牌为攻击牌时置位：强化脉冲不得播放（if 攻击 elif 强化）。</summary>
@@ -82,14 +78,8 @@ public static class DeniaFormPatch
         catch { }
     }
 
-    internal static bool IsFormTransitioning(NCreature nc) => nc != null && _formTransitioning.Contains(nc);
     internal static bool IsDying(NCreature nc) => nc != null && _dying.Contains(nc);
-
-    internal static void SetFormTransitioning(NCreature nc, bool active)
-    {
-        if (nc == null) return;
-        if (active) _formTransitioning.Add(nc); else _formTransitioning.Remove(nc);
-    }
+    internal static float GetDeathDuration(NCreature nc) => GetSyncNode(nc)?.DeathDuration ?? PinkDeathDuration;
 
     internal static void SetDying(NCreature nc, bool active)
     {
@@ -118,7 +108,6 @@ public static class DeniaFormPatch
             if (node != null)
             {
                 SetDying(node, false);
-                SetFormTransitioning(node, false);
                 GetSyncNode(node)?.ClearDeadState();
             }
             RefreshForCreature(creature);
@@ -147,7 +136,7 @@ public static class DeniaFormPatch
         try
         {
             var node = GetCreatureNode(creature);
-            if (node == null || IsDying(node) || IsFormTransitioning(node)) return;
+            if (node == null || IsDying(node)) return;
             EnsureOverlays(node);
             GetSyncNode(node)?.PlayAttack(isBlack);
         }
@@ -226,7 +215,6 @@ public static class DeniaFormPatch
             && existingPink.IsInsideTree())
         {
             HidePlaceholderBodies(nc.Visuals);
-            EnsureMidOverlays(nc);
             EnsureCorpseOverlay(nc);
             EnsureBlackFxOverlay(nc);
             RebindSync(nc);
@@ -256,7 +244,6 @@ public static class DeniaFormPatch
             AttachIdleAnimation(visuals, pink, "PinkVisuals");
             AttachIdleAnimation(visuals, black, "DarkVisuals");
 
-            EnsureMidOverlays(nc);
             EnsureCorpseOverlay(nc);
             EnsureBlackFxOverlay(nc);
             RebindSync(nc);
@@ -294,29 +281,9 @@ public static class DeniaFormPatch
     {
         if (!_pinkOverlay.TryGetValue(nc, out var p) || p == null) return;
         if (!_blackOverlay.TryGetValue(nc, out var b) || b == null) return;
-        _midToBlackOverlay.TryGetValue(nc, out var mB);
         _corpseOverlay.TryGetValue(nc, out var corpse);
         _blackFxOverlay.TryGetValue(nc, out var blackFx);
-        EnsureSyncNode(nc, p, b, mB, corpse, blackFx);
-    }
-
-    private static void EnsureMidOverlays(NCreature nc)
-    {
-        try
-        {
-            var visuals = nc.Visuals;
-            if (visuals == null || !GodotObject.IsInstanceValid(visuals)) return;
-
-            if (!_midToBlackOverlay.TryGetValue(nc, out var midBlack)
-                || midBlack == null || !GodotObject.IsInstanceValid(midBlack) || !midBlack.IsInsideTree())
-            {
-                midBlack = TryMakeOptionalOverlay(MidToBlackNodeName, FormToBlackTexPath);
-                if (midBlack != null) { visuals.AddChild(midBlack); _midToBlackOverlay[nc] = midBlack; }
-            }
-
-
-        }
-        catch { }
+        EnsureSyncNode(nc, p, b, corpse, blackFx);
     }
 
     private static void EnsureCorpseOverlay(NCreature nc)
@@ -385,7 +352,6 @@ public static class DeniaFormPatch
         NCreature nc,
         TextureRect pink,
         TextureRect black,
-        TextureRect? midToBlack,
         TextureRect? corpse,
         TextureRect? blackFx)
     {
@@ -404,13 +370,13 @@ public static class DeniaFormPatch
             var existing = visuals.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
             if (existing != null && GodotObject.IsInstanceValid(existing))
             {
-                existing.Bind(nc, pink, black, midToBlack, corpse, blackFx);
+                existing.Bind(nc, pink, black, corpse, blackFx);
                 return;
             }
 
             var sync = new DeniaFormOverlaySync { Name = SyncNodeName };
             visuals.AddChild(sync);
-            sync.Bind(nc, pink, black, midToBlack, corpse, blackFx);
+            sync.Bind(nc, pink, black, corpse, blackFx);
         }
         catch { }
     }
@@ -447,7 +413,6 @@ public static class DeniaFormPatch
 
             ApplyBaseLayout(_pinkOverlay, nc, localPos, size);
             ApplyBaseLayout(_blackOverlay, nc, localPos, size);
-            ApplyBaseLayout(_midToBlackOverlay, nc, localPos, size);
             ApplyBaseLayout(_corpseOverlay, nc, localPos, size);
             // 黑攻特效：尺寸跟 Bounds，pivot 左下角，位置在 ApplyTransforms 对齐中心
             ApplyBaseLayout(_blackFxOverlay, nc, localPos, size);
@@ -495,7 +460,6 @@ public static class DeniaFormPatch
             catch { }
             SetFlip(_pinkOverlay, nc, flip);
             SetFlip(_blackOverlay, nc, flip);
-            SetFlip(_midToBlackOverlay, nc, flip);
             SetFlip(_corpseOverlay, nc, flip);
             SetFlip(_blackFxOverlay, nc, flip);
         }
@@ -534,7 +498,7 @@ public static class DeniaFormPatch
             if (node == null || !GodotObject.IsInstanceValid(node)) return;
             EnsureOverlays(node);
 
-            if (!IsFormTransitioning(node) && !IsDying(node))
+            if (!IsDying(node))
             {
                 bool isBlack = DeniaFormHelper.GetForm(creature) == DeniaForm.Black;
                 if (_pinkOverlay.TryGetValue(node, out var current) && current.Visible == isBlack)
@@ -571,7 +535,6 @@ public static class DeniaFormPatch
 
     private static void HideTransient(NCreature node)
     {
-        HideOne(_midToBlackOverlay, node);
         HideOne(_corpseOverlay, node);
     }
 
@@ -595,10 +558,8 @@ public static class DeniaFormPatch
             {
                 _pinkOverlay.Remove(k);
                 _blackOverlay.Remove(k);
-                _midToBlackOverlay.Remove(k);
                 _corpseOverlay.Remove(k);
                 _blackFxOverlay.Remove(k);
-                _formTransitioning.Remove(k);
                 _dying.Remove(k);
             }
         }
@@ -607,7 +568,7 @@ public static class DeniaFormPatch
 }
 
 /// <summary>
-/// 战斗立绘动画：Idle 呼吸 / 黑攻特效 / FormTransition / 死亡。
+/// 战斗立绘动画：Idle 呼吸 / 黑攻特效 / 两态死亡。
 /// 视觉-only，不改游戏状态。等待由调用方 Cmd.Wait。
 /// </summary>
 public partial class DeniaFormOverlaySync : Node
@@ -625,22 +586,13 @@ public partial class DeniaFormOverlaySync : Node
     /// <summary>仅竖直方向正弦拉伸幅度（相对 Scale.Y）。</summary>
     private const float BreathScaleAmpY = 0.035f / 3f; // 原 0.035，缩到三分之一
 
-    private const float FormPhaseShrinkInSec = 0.5f;
-    private const float FormPhaseHoldSec = 0.5f;
-    private const float FormPhaseShrinkOutSec = 0.5f;
-    private const float FormTransitionSec = FormPhaseShrinkInSec + FormPhaseHoldSec + FormPhaseShrinkOutSec;
-    private const float FormPixelScale = 0.02f;
-    private const float FormMidFullScale = 2.0f;
-
     private const float BlackFxSec = 0.2f;
     private const float BlackFxRotDeg = 90f;
 
-    private const string FormSfxPhase1 = FmodSfx.block;
 
     private NCreature? _creatureNode;
     private TextureRect? _pink;
     private TextureRect? _black;
-    private TextureRect? _midToBlack;
     private TextureRect? _corpse;
     private TextureRect? _blackFx;
 
@@ -654,11 +606,12 @@ public partial class DeniaFormOverlaySync : Node
     private Vector2 _lastBoundsSize = Vector2.Zero;
     private double _layoutTimer;
 
+    private bool _deathWasBlack;
+    public float DeathDuration => _deathWasBlack ? 0f : DeniaFormPatch.PinkDeathDuration;
+
     private AnimState _state = AnimState.Idle;
     private double _animTime;
     private double _breathPhase;
-    private bool _playedPhase1Sfx;
-    private bool _playedPhase2Sfx;
 
     private Vector2 _motionOffset = Vector2.Zero;
     private float _motionRot;
@@ -671,14 +624,12 @@ public partial class DeniaFormOverlaySync : Node
         NCreature creatureNode,
         TextureRect pink,
         TextureRect black,
-        TextureRect? midToBlack,
         TextureRect? corpse,
         TextureRect? blackFx)
     {
         _creatureNode = creatureNode;
         _pink = pink;
         _black = black;
-        _midToBlack = midToBlack;
         _corpse = corpse;
         _blackFx = blackFx;
         _hasIdleFrames = pink.GetNodeOrNull<AnimatedSprite2D>("Idle") != null
@@ -701,19 +652,19 @@ public partial class DeniaFormOverlaySync : Node
         var sprite = (isBlack ? _black : _pink)?.GetNodeOrNull<AnimatedSprite2D>("Idle");
         if (sprite == null || !GodotObject.IsInstanceValid(sprite)
             || !sprite.SpriteFrames.HasAnimation("attack")) return;
-        ResetAttack();
+        ResetBodyAnimation();
         sprite.SpeedScale = DeniaFormPatch.IsFastMode() ? 3f : 1f;
         sprite.Play("attack");
         sprite.SetFrameAndProgress(0, 0);
     }
 
-    private void ResetAttack()
+    private void ResetBodyAnimation()
     {
         foreach (var overlay in new[] { _pink, _black })
         {
             if (overlay == null || !GodotObject.IsInstanceValid(overlay)) continue;
             var sprite = overlay.GetNodeOrNull<AnimatedSprite2D>("Idle");
-            if (sprite != null && GodotObject.IsInstanceValid(sprite) && sprite.Animation == "attack")
+            if (sprite != null && GodotObject.IsInstanceValid(sprite) && (sprite.Animation == "attack" || sprite.Animation == "death"))
             {
                 sprite.SpeedScale = 1f;
                 sprite.Play("idle");
@@ -723,7 +674,7 @@ public partial class DeniaFormOverlaySync : Node
 
     public void ClearDeadState()
     {
-        ResetAttack();
+        ResetBodyAnimation();
         _state = AnimState.Idle;
         _animTime = 0;
         ResetMotion();
@@ -770,7 +721,7 @@ public partial class DeniaFormOverlaySync : Node
     public void SetForm(bool isBlack)
     {
         if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
-        ResetAttack();
+        ResetBodyAnimation();
         _state = AnimState.Idle;
         _animTime = 0;
         ResetMotion();
@@ -782,18 +733,31 @@ public partial class DeniaFormOverlaySync : Node
 
     public void PlayDeath()
     {
-        ResetAttack();
-        if (_creatureNode == null || !GodotObject.IsInstanceValid(_creatureNode)) return;
-        DeniaFormPatch.SetDying(_creatureNode, true);
-        // 粉立绘 → 尸体（复用 ToCorpse 三段）
-        _state = AnimState.DeathTransition;
+        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
+        _deathWasBlack = IsCurrentlyBlack(); // 在死亡清除形态 Power 之前记住形态。
+        ResetBodyAnimation();
+        if (_creatureNode != null && GodotObject.IsInstanceValid(_creatureNode))
+            DeniaFormPatch.SetDying(_creatureNode, true);
+        // 原粉立绘 → 尸体三段过渡已改为粉态跌倒 / 黑态直接显示能量图。
+        _state = _deathWasBlack ? AnimState.Dead : AnimState.DeathTransition;
         _animTime = 0;
-        // 死亡动画不受加速模式影响
         ResetMotion();
-        _playedPhase1Sfx = false;
-        _playedPhase2Sfx = false;
-        DeniaFormPatch.SetFormTransitioning(_creatureNode, true);
-        SetupFormTransitionVisibility();
+        _blackFxAlpha = _blackFxRot = 0f;
+        SetRectVisual(_pink, !_deathWasBlack, 1f, 1f, 0f);
+        SetRectVisual(_black, false, 1f, 1f, 0f);
+        SetRectVisual(_corpse, _deathWasBlack, 1f, 1f, 0f);
+        if (!_deathWasBlack)
+        {
+            var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Idle");
+            if (sprite != null && sprite.SpriteFrames.HasAnimation("death"))
+            {
+                // 死亡动画不受加速模式影响，结束后保留伏地末帧。
+                sprite.SpeedScale = 1f;
+                sprite.Play("death");
+                sprite.SetFrameAndProgress(0, 0);
+            }
+        }
+        EnsureParentAllowsOverflow();
         ApplyTransforms();
     }
 
@@ -801,7 +765,7 @@ public partial class DeniaFormOverlaySync : Node
     {
         try
         {
-            if (_creatureNode?.Entity == null) return false;
+            if (_creatureNode?.Entity == null) return _black?.Visible == true;
             return DeniaFormHelper.IsBlack(_creatureNode.Entity);
         }
         catch { return false; }
@@ -812,41 +776,6 @@ public partial class DeniaFormOverlaySync : Node
         _motionOffset = Vector2.Zero;
         _motionRot = 0f;
         _motionScale = Vector2.One;
-    }
-
-    private void SetupFormTransitionVisibility()
-    {
-        try
-        {
-            ResolveTransitionTargets(out var from, out var to, out var mid, out var others);
-            SetRectVisual(from, true, 1f, 1f, 0f);
-            SetRectVisual(to, false, 0f, FormPixelScale, 0f);
-            foreach (var other in others)
-                SetRectVisual(other, false, 0f, 1f, 0f);
-
-            // 粉↔黑 / 死亡：中间图入场相同——原地小尺寸+透明生成
-            SetRectVisual(mid, mid != null, 0f, FormPixelScale, 0f);
-
-            if (_blackFx != null && GodotObject.IsInstanceValid(_blackFx))
-            {
-                _blackFxAlpha = 0f;
-                _blackFxRot = 0f;
-                _blackFx.Modulate = new Color(1, 1, 1, 0);
-            }
-        }
-        catch { }
-    }
-
-    private void ResolveTransitionTargets(
-        out TextureRect? from,
-        out TextureRect? to,
-        out TextureRect? mid,
-        out List<TextureRect?> others)
-    {
-        from = _pink;
-        to = _corpse;
-        mid = _midToBlack;
-        others = new List<TextureRect?> { _black };
     }
 
     private static void SetRectVisual(TextureRect? rect, bool visible, float alpha, float? scale, float? rotation)
@@ -954,7 +883,7 @@ public partial class DeniaFormOverlaySync : Node
                 UpdateBlackFxPulse(delta);
                 break;
             case AnimState.DeathTransition:
-                UpdateFormTransition(delta);
+                UpdateDeath(delta);
                 break;
             case AnimState.Dead:
                 ResetMotion();
@@ -1005,104 +934,26 @@ public partial class DeniaFormOverlaySync : Node
         }
     }
 
-    private void UpdateFormTransition(double delta)
+    private void UpdateDeath(double delta)
     {
-        // 死亡动画保持原速。
+        // 死亡动画保持原速；Visuals 转交 Game Over 后仍能完成。
         _animTime += delta;
-        float time = (float)_animTime;
-        ResolveTransitionTargets(out var from, out var to, out var mid, out _);
-        bool hasMid = mid != null && GodotObject.IsInstanceValid(mid) && mid.Texture != null;
-
         ResetMotion();
-        EnsureParentAllowsOverflow();
-
-        try
+        if (_animTime < DeniaFormPatch.PinkDeathDuration) return;
+        var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        if (sprite != null && sprite.SpriteFrames.HasAnimation("death"))
         {
-            if (!_playedPhase1Sfx)
-            {
-                PlayFormSfxPhase1();
-                _playedPhase1Sfx = true;
-            }
-
-            if (!hasMid)
-            {
-                float u = Mathf.Clamp(time / FormTransitionSec, 0f, 1f);
-                SetRectVisual(from, true, 1f - u, Mathf.Lerp(1f, FormPixelScale, u), 0f);
-                SetRectVisual(to, true, u, Mathf.Lerp(FormPixelScale, 1f, u), 0f);
-                if (!_playedPhase2Sfx && u >= 0.5f)
-                {
-                    PlayFormSfxPhase2();
-                    _playedPhase2Sfx = true;
-                }
-            }
-            else if (time < FormPhaseShrinkInSec)
-            {
-                float u = Mathf.Clamp(time / FormPhaseShrinkInSec, 0f, 1f);
-                float fromScale = Mathf.Lerp(1f, FormPixelScale, u);
-                SetRectVisual(from, true, 1f - u, fromScale, 0f);
-                SetRectVisual(to, false, 0f, FormPixelScale, 0f);
-
-                // 中间图入场：粉↔黑相同——原地放大 + 变不透明
-                float midScale = Mathf.Lerp(FormPixelScale, FormMidFullScale, u);
-                SetRectVisual(mid, true, u, midScale, 0f);
-            }
-            else if (time < FormPhaseShrinkInSec + FormPhaseHoldSec)
-            {
-                if (!_playedPhase2Sfx)
-                {
-                    PlayFormSfxPhase2();
-                    _playedPhase2Sfx = true;
-                }
-                SetRectVisual(from, false, 0f, FormPixelScale, 0f);
-                SetRectVisual(mid, true, 1f, FormMidFullScale, 0f);
-                SetRectVisual(to, false, 0f, FormPixelScale, 0f);
-            }
-            else
-            {
-                float u = Mathf.Clamp(
-                    (time - FormPhaseShrinkInSec - FormPhaseHoldSec) / FormPhaseShrinkOutSec,
-                    0f, 1f);
-                float toScale = Mathf.Lerp(FormPixelScale, 1f, u);
-                SetRectVisual(from, false, 0f, FormPixelScale, 0f);
-                SetRectVisual(to, true, u, toScale, 0f);
-
-                // 粉→黑 / 死亡：中间图仍缩虚化
-                float midScale = Mathf.Lerp(FormMidFullScale, FormPixelScale, u);
-                SetRectVisual(mid, true, 1f - u, midScale, 0f);
-            }
+            sprite.Pause();
+            sprite.SetFrameAndProgress(sprite.SpriteFrames.GetFrameCount("death") - 1, 1f);
         }
-        catch { }
-
-        if (_animTime >= FormTransitionSec)
-            FinishFormTransition();
-    }
-
-    private void FinishFormTransition()
-    {
-        try
-        {
-            ResolveTransitionTargets(out var from, out var to, out var mid, out var others);
-            SetRectVisual(from, false, 1f, 1f, 0f);
-            SetRectVisual(to, true, 1f, 1f, 0f);
-            SetRectVisual(mid, false, 1f, 1f, 0f);
-            foreach (var other in others)
-                if (other != null && other != to)
-                    SetRectVisual(other, false, 1f, 1f, 0f);
-
-            _state = AnimState.Dead;
-            _animTime = 0;
-            ResetMotion();
-            if (_creatureNode != null && GodotObject.IsInstanceValid(_creatureNode))
-                DeniaFormPatch.SetFormTransitioning(_creatureNode, false);
-        }
-        catch { }
+        _state = AnimState.Dead;
     }
 
     private void EnsureParentAllowsOverflow()
     {
         try
         {
-            foreach (var rect in new[] { _midToBlack, _pink, _black, _corpse, _blackFx })
+            foreach (var rect in new[] { _pink, _black, _corpse, _blackFx })
             {
                 if (rect == null || !GodotObject.IsInstanceValid(rect)) continue;
                 rect.ClipContents = false;
@@ -1118,31 +969,6 @@ public partial class DeniaFormOverlaySync : Node
         catch { }
     }
 
-    private void PlayFormSfxPhase1()
-    {
-        try { SfxCmd.Play(FormSfxPhase1); } catch { }
-    }
-
-    private void PlayFormSfxPhase2()
-    {
-        try
-        {
-            string sfx = "event:/sfx/characters/ironclad/ironclad_attack";
-            try
-            {
-                var ch = _creatureNode?.Entity?.Player?.Character;
-                if (ch is BaseLib.Abstracts.CustomCharacterModel custom
-                    && !string.IsNullOrEmpty(custom.CustomAttackSfx))
-                    sfx = custom.CustomAttackSfx;
-                else if (ch != null && !string.IsNullOrEmpty(ch.AttackSfx))
-                    sfx = ch.AttackSfx;
-            }
-            catch { }
-            SfxCmd.Play(sfx);
-        }
-        catch { }
-    }
-
     private void ApplyTransforms()
     {
         if (!_hasBaseLayout) return;
@@ -1152,7 +978,6 @@ public partial class DeniaFormOverlaySync : Node
         ApplyBody(_pink, pos, centerPivot: true);
         ApplyBody(_black, pos, centerPivot: true);
 
-        ApplyBody(_midToBlack, pos, centerPivot: true);
         ApplyBody(_corpse, pos, centerPivot: true);
 
         // 黑色形态攻击特效：左下角对齐黑立绘中心
@@ -1179,26 +1004,14 @@ public partial class DeniaFormOverlaySync : Node
             rect.Size = _baseSize;
             rect.Rotation = 0f;
 
-            if (_state != AnimState.DeathTransition)
-                rect.Scale = _motionScale;
-
+            rect.Scale = _motionScale;
             Vector2 s = rect.Scale;
-            // Control.Scale + PivotOffset 不可靠，用位置补偿钉锚点（PivotOffset=0）
+            // Control.Scale + PivotOffset 不可靠，用位置补偿钉锚点（PivotOffset=0）。
+            // 呼吸与死亡共用固定底边，动画本身负责跌倒运动。
             rect.PivotOffset = Vector2.Zero;
-            if (_state == AnimState.DeathTransition)
-            {
-                // 形态切换：绕几何中心缩放
-                rect.Position = pos + new Vector2(
-                    _baseSize.X * 0.5f * (1f - s.X),
-                    _baseSize.Y * 0.5f * (1f - s.Y));
-            }
-            else
-            {
-                // 呼吸等：竖直钉底边，脚底不飘
-                rect.Position = pos + new Vector2(
-                    _baseSize.X * 0.5f * (1f - s.X),
-                    _baseSize.Y * (1f - s.Y));
-            }
+            rect.Position = pos + new Vector2(
+                _baseSize.X * 0.5f * (1f - s.X),
+                _baseSize.Y * (1f - s.Y));
         }
         catch { }
     }
@@ -1261,7 +1074,7 @@ public static class DeniaBeforeCardPlayedAnimPatch
             if (creature == null) return;
 
             var node = NCombatRoom.Instance?.GetCreatureNode(creature);
-            if (node != null && (DeniaFormPatch.IsFormTransitioning(node) || DeniaFormPatch.IsDying(node)))
+            if (node != null && DeniaFormPatch.IsDying(node))
                 return;
 
             bool isAttack = card.Type == CardType.Attack;
@@ -1286,14 +1099,24 @@ public static class DeniaBeforeCardPlayedAnimPatch
 [HarmonyPatch(typeof(NCreature), nameof(NCreature.StartDeathAnim))]
 public static class DeniaStartDeathAnimPatch
 {
+    public static void Prefix(NCreature __instance)
+    {
+        try
+        {
+            // AnimDie 在原方法返回前读取等待时长，先启动自定义死亡并记住形态。
+            if (__instance?.Entity?.Player?.Character is Denia)
+                DeniaFormPatch.PlayDeath(__instance.Entity);
+        }
+        catch { }
+    }
+
     public static void Postfix(NCreature __instance, bool shouldRemove, ref float __result)
     {
         try
         {
             if (__instance?.Entity?.Player?.Character is not Denia) return;
-            DeniaFormPatch.PlayDeath(__instance.Entity);
-            // 尸体变形 1.5s
-            __result = DeniaFormPatch.FormTransitionDuration;
+            // 粉态跌倒 2s，黑态直接显示能量图。
+            __result = DeniaFormPatch.GetDeathDuration(__instance);
         }
         catch { }
     }
@@ -1308,7 +1131,7 @@ public static class DeniaDeathWaitLengthPatch
         {
             if (__instance?.Entity?.Player?.Character is not Denia) return;
             if (!DeniaFormPatch.IsDying(__instance)) return;
-            __result = 1.0f; // +0.5 in AnimDie => 1.5s
+            __result = Math.Max(0f, DeniaFormPatch.GetDeathDuration(__instance) - 0.5f); // AnimDie adds 0.5s.
         }
         catch { }
     }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=339 format=3]
+[gd_scene load_steps=387 format=3]
 
 [ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_pink_idle.png" id="1"]
 
@@ -6,6 +6,8 @@
 
 [ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_pink_attack.png" id="pink_attack"]
 [ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_dark_attack.png" id="dark_attack"]
+
+[ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_pink_death.png" id="pink_death"]
 
 [sub_resource type="AtlasTexture" id="pink_0"]
 atlas = ExtResource("1")
@@ -671,6 +673,194 @@ region = Rect2(2580, 4608, 516, 576)
 atlas = ExtResource("pink_attack")
 region = Rect2(3096, 4608, 516, 576)
 
+[sub_resource type="AtlasTexture" id="pink_death_1"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 0, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_2"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 0, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_3"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 0, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_4"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 0, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_5"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 0, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_6"]
+atlas = ExtResource("pink_death")
+region = Rect2(0, 640, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_7"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 640, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_8"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 640, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_9"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 640, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_10"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 640, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_11"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 640, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_12"]
+atlas = ExtResource("pink_death")
+region = Rect2(0, 1280, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_13"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 1280, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_14"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 1280, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_15"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 1280, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_16"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 1280, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_17"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 1280, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_18"]
+atlas = ExtResource("pink_death")
+region = Rect2(0, 1920, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_19"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 1920, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_20"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 1920, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_21"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 1920, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_22"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 1920, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_23"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 1920, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_24"]
+atlas = ExtResource("pink_death")
+region = Rect2(0, 2560, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_25"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 2560, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_26"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 2560, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_27"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 2560, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_28"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 2560, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_29"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 2560, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_30"]
+atlas = ExtResource("pink_death")
+region = Rect2(0, 3200, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_31"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 3200, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_32"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 3200, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_33"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 3200, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_34"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 3200, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_35"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 3200, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_36"]
+atlas = ExtResource("pink_death")
+region = Rect2(0, 3840, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_37"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 3840, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_38"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 3840, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_39"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 3840, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_40"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 3840, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_41"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 3840, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_42"]
+atlas = ExtResource("pink_death")
+region = Rect2(0, 4480, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_43"]
+atlas = ExtResource("pink_death")
+region = Rect2(672, 4480, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_44"]
+atlas = ExtResource("pink_death")
+region = Rect2(1344, 4480, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_45"]
+atlas = ExtResource("pink_death")
+region = Rect2(2016, 4480, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_46"]
+atlas = ExtResource("pink_death")
+region = Rect2(2688, 4480, 672, 640)
+
+[sub_resource type="AtlasTexture" id="pink_death_47"]
+atlas = ExtResource("pink_death")
+region = Rect2(3360, 4480, 672, 640)
+
 [sub_resource type="SpriteFrames" id="pink_frames"]
 animations = [{
 "frames": [{"duration": 1.0, "texture": SubResource("pink_0")},
@@ -847,6 +1037,58 @@ animations = [{
 {"duration": 1.0, "texture": SubResource("pink_0")}],
 "loop": false,
 "name": &"attack",
+"speed": 24.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("pink_0")},
+{"duration": 1.0, "texture": SubResource("pink_death_1")},
+{"duration": 1.0, "texture": SubResource("pink_death_2")},
+{"duration": 1.0, "texture": SubResource("pink_death_3")},
+{"duration": 1.0, "texture": SubResource("pink_death_4")},
+{"duration": 1.0, "texture": SubResource("pink_death_5")},
+{"duration": 1.0, "texture": SubResource("pink_death_6")},
+{"duration": 1.0, "texture": SubResource("pink_death_7")},
+{"duration": 1.0, "texture": SubResource("pink_death_8")},
+{"duration": 1.0, "texture": SubResource("pink_death_9")},
+{"duration": 1.0, "texture": SubResource("pink_death_10")},
+{"duration": 1.0, "texture": SubResource("pink_death_11")},
+{"duration": 1.0, "texture": SubResource("pink_death_12")},
+{"duration": 1.0, "texture": SubResource("pink_death_13")},
+{"duration": 1.0, "texture": SubResource("pink_death_14")},
+{"duration": 1.0, "texture": SubResource("pink_death_15")},
+{"duration": 1.0, "texture": SubResource("pink_death_16")},
+{"duration": 1.0, "texture": SubResource("pink_death_17")},
+{"duration": 1.0, "texture": SubResource("pink_death_18")},
+{"duration": 1.0, "texture": SubResource("pink_death_19")},
+{"duration": 1.0, "texture": SubResource("pink_death_20")},
+{"duration": 1.0, "texture": SubResource("pink_death_21")},
+{"duration": 1.0, "texture": SubResource("pink_death_22")},
+{"duration": 1.0, "texture": SubResource("pink_death_23")},
+{"duration": 1.0, "texture": SubResource("pink_death_24")},
+{"duration": 1.0, "texture": SubResource("pink_death_25")},
+{"duration": 1.0, "texture": SubResource("pink_death_26")},
+{"duration": 1.0, "texture": SubResource("pink_death_27")},
+{"duration": 1.0, "texture": SubResource("pink_death_28")},
+{"duration": 1.0, "texture": SubResource("pink_death_29")},
+{"duration": 1.0, "texture": SubResource("pink_death_30")},
+{"duration": 1.0, "texture": SubResource("pink_death_31")},
+{"duration": 1.0, "texture": SubResource("pink_death_32")},
+{"duration": 1.0, "texture": SubResource("pink_death_33")},
+{"duration": 1.0, "texture": SubResource("pink_death_34")},
+{"duration": 1.0, "texture": SubResource("pink_death_35")},
+{"duration": 1.0, "texture": SubResource("pink_death_36")},
+{"duration": 1.0, "texture": SubResource("pink_death_37")},
+{"duration": 1.0, "texture": SubResource("pink_death_38")},
+{"duration": 1.0, "texture": SubResource("pink_death_39")},
+{"duration": 1.0, "texture": SubResource("pink_death_40")},
+{"duration": 1.0, "texture": SubResource("pink_death_41")},
+{"duration": 1.0, "texture": SubResource("pink_death_42")},
+{"duration": 1.0, "texture": SubResource("pink_death_43")},
+{"duration": 1.0, "texture": SubResource("pink_death_44")},
+{"duration": 1.0, "texture": SubResource("pink_death_45")},
+{"duration": 1.0, "texture": SubResource("pink_death_46")},
+{"duration": 1.0, "texture": SubResource("pink_death_47")}],
+"loop": false,
+"name": &"death",
 "speed": 24.0
 }]
 

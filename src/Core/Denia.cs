@@ -91,7 +91,7 @@ public sealed class Denia : PlaceholderCharacterModel
     public override IReadOnlyList<RelicModel> StartingRelics =>
         new RelicModel[] { ModelDb.Relic<DeniaTrickster>() };
 
-    public override float DeathAnimTime => 1.5f;
+    public override float DeathAnimTime => DeniaFormPatch.PinkDeathDuration;
     public override float AttackAnimDelay => 0.2f;
     public override float CastAnimDelay => 0.2f;
 
@@ -110,8 +110,7 @@ public sealed class Denia : PlaceholderCharacterModel
         // 双形态立绘
         "res://images/packed/character_select/denia_pink.png",
         "res://images/packed/character_select/denia_black.png",
-        // 形态切换中间图
-        "res://images/packed/character_select/denia_form_to_black.png",
+        // 形态切换中间图已停用；保留黑态攻击特效预加载。
         "res://images/ui/combat/denia_black_attack_fx.png",
         // 战斗UI图标
         "res://images/ui/combat/denia_virtual_matter.png",

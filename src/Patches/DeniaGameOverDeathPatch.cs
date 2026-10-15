@@ -53,7 +53,7 @@ public static class DeniaGameOverDeathPatch
                         continue;
 
                     // 仅在达妮娅丢失战斗 sync 时兜底补挂。
-                    DeniaGameOverDeathOverlay.TryAttachToCreatureVisuals(deniaVisuals);
+                    DeniaGameOverDeathOverlay.TryAttachToCreatureVisuals(deniaVisuals, DeniaFormHelper.IsBlack(creatureNode.Entity));
                 }
                 return;
             }
@@ -90,18 +90,11 @@ public static class DeniaGameOverDeathPatch
 public partial class DeniaGameOverDeathOverlay : Node2D
 {
     private const string NodeName = "DeniaGameOverDeathOverlay";
-    private const float TransitionDuration = DeniaFormPatch.FormTransitionDuration;
-    private const float PhaseDuration = TransitionDuration / 3f;
-    private const float PixelScale = 0.02f;
-    private const float MidFullScale = 1.2f;
-
-    private Sprite2D? _pink;
-    private Sprite2D? _mid;
+    private AnimatedSprite2D? _pink;
     private Sprite2D? _corpse;
-    private Vector2 _baseSize = new(200f, 300f);
     private double _elapsed;
 
-    public static void TryAttachToCreatureVisuals(NCreatureVisuals visuals)
+    public static void TryAttachToCreatureVisuals(NCreatureVisuals visuals, bool isBlack = false)
     {
         try
         {
@@ -132,7 +125,7 @@ public partial class DeniaGameOverDeathOverlay : Node2D
             }
             catch { }
 
-            TryCreate(visuals, center, size, flip, () => HideCreaturePlaceholder(visuals));
+            TryCreate(visuals, center, size, flip, () => HideCreaturePlaceholder(visuals), isBlack);
         }
         catch
         {
@@ -184,14 +177,15 @@ public partial class DeniaGameOverDeathOverlay : Node2D
         Vector2 center,
         Vector2 size,
         bool flipH,
-        Action hidePlaceholder)
+        Action hidePlaceholder,
+        bool isBlack = false)
     {
         DeniaGameOverDeathOverlay overlay = new()
         {
             Name = NodeName,
             Position = center
         };
-        if (!overlay.Initialize(size, flipH))
+        if (!overlay.Initialize(size, flipH, isBlack))
         {
             overlay.QueueFree();
             return;
@@ -199,28 +193,38 @@ public partial class DeniaGameOverDeathOverlay : Node2D
 
         host.AddChild(overlay);
         hidePlaceholder();
-        overlay.SetProcess(true);
+        overlay.SetProcess(!isBlack);
         // 立刻画第一帧，避免等下一帧 _Process 才出现。
-        overlay.ApplyFrame(0f);
+        if (!isBlack) overlay._pink!.Play("death");
     }
 
-    private bool Initialize(Vector2 size, bool flipH)
+    private bool Initialize(Vector2 size, bool flipH, bool isBlack)
     {
         try
         {
-            Texture2D? pinkTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.PinkTexPath);
-            Texture2D? midTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.FormToBlackTexPath);
             Texture2D? corpseTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.CorpseTexPath);
-            if (pinkTexture == null || midTexture == null || corpseTexture == null)
-                return false;
+            var scene = ResourceLoader.Load<PackedScene>("res://scenes/creature_visuals/denia_pink.tscn");
+            if (corpseTexture == null || scene == null) return false;
+            var source = scene.Instantiate();
+            var frames = source.GetNode<AnimatedSprite2D>("PinkVisuals").SpriteFrames;
+            source.Free();
+            if (!frames.HasAnimation("death")) return false;
 
-            _baseSize = size;
-            _pink = CreateSprite("DeniaGameOverPink", pinkTexture, flipH);
-            _mid = CreateSprite("DeniaGameOverTransition", midTexture, flipH);
-            _corpse = CreateSprite("DeniaGameOverCorpse", corpseTexture, flipH);
-
+            // 使用 Sprite2D 挂在 Node2D 宿主；粉态共享战斗帧动画及同一像素比例。
+            _pink = new AnimatedSprite2D
+            {
+                Name = "DeniaGameOverPink", SpriteFrames = frames, FlipH = flipH,
+                Scale = Vector2.One * (size.Y / frames.GetFrameTexture("idle", 0).GetHeight()),
+                Animation = "death", Visible = !isBlack
+            };
+            Vector2 texSize = corpseTexture.GetSize();
+            _corpse = new Sprite2D
+            {
+                Name = "DeniaGameOverCorpse", Texture = corpseTexture, FlipH = flipH,
+                Scale = Vector2.One * Mathf.Min(size.X / texSize.X, size.Y / texSize.Y),
+                Visible = isBlack
+            };
             AddChild(_pink);
-            AddChild(_mid);
             AddChild(_corpse);
             return true;
         }
@@ -239,12 +243,11 @@ public partial class DeniaGameOverDeathOverlay : Node2D
                 SetProcess(false);
                 return;
             }
-
             _elapsed += delta;
-            float time = Mathf.Min((float)_elapsed, TransitionDuration);
-            ApplyFrame(time);
-            if (_elapsed >= TransitionDuration)
-                SetProcess(false);
+            if (_elapsed < DeniaFormPatch.PinkDeathDuration) return;
+            _pink!.Pause();
+            _pink.SetFrameAndProgress(_pink.SpriteFrames.GetFrameCount("death") - 1, 1f);
+            SetProcess(false);
         }
         catch
         {
@@ -252,66 +255,15 @@ public partial class DeniaGameOverDeathOverlay : Node2D
         }
     }
 
-    private void ApplyFrame(float time)
-    {
-        if (time < PhaseDuration)
-        {
-            float u = time / PhaseDuration;
-            SetBody(_pink, visible: true, alpha: 1f - u, scale: Mathf.Lerp(1f, PixelScale, u));
-            SetBody(_mid, visible: true, alpha: u, scale: Mathf.Lerp(PixelScale, MidFullScale, u));
-            SetBody(_corpse, visible: false, alpha: 0f, scale: PixelScale);
-        }
-        else if (time < PhaseDuration * 2f)
-        {
-            SetBody(_pink, visible: false, alpha: 0f, scale: PixelScale);
-            SetBody(_mid, visible: true, alpha: 1f, scale: MidFullScale);
-            SetBody(_corpse, visible: false, alpha: 0f, scale: PixelScale);
-        }
-        else
-        {
-            float u = Mathf.Clamp((time - PhaseDuration * 2f) / PhaseDuration, 0f, 1f);
-            SetBody(_pink, visible: false, alpha: 0f, scale: PixelScale);
-            SetBody(_mid, visible: true, alpha: 1f - u, scale: Mathf.Lerp(MidFullScale, PixelScale, u));
-            SetBody(_corpse, visible: true, alpha: u, scale: Mathf.Lerp(PixelScale, 1f, u));
-        }
-
-    }
-
-    private static Sprite2D CreateSprite(string name, Texture2D texture, bool flipH)
-    {
-        return new Sprite2D
-        {
-            Name = name,
-            Texture = texture,
-            Centered = true,
-            FlipH = flipH,
-            Visible = false
-        };
-    }
-
-    private void SetBody(Sprite2D? sprite, bool visible, float alpha, float scale)
-    {
-        if (sprite == null || !GodotObject.IsInstanceValid(sprite) || sprite.Texture == null)
-            return;
-
-        Vector2 texSize = sprite.Texture.GetSize();
-        if (texSize.X <= 0f || texSize.Y <= 0f)
-            return;
-
-        // 将贴图缩放到目标 Bounds 尺寸，再乘动画 scale。
-        float fit = Mathf.Min(_baseSize.X / texSize.X, _baseSize.Y / texSize.Y);
-        float s = fit * scale;
-        sprite.Scale = new Vector2(s, s);
-        sprite.Position = Vector2.Zero;
-        sprite.Rotation = 0f;
-        sprite.Visible = visible;
-        sprite.Modulate = new Color(1f, 1f, 1f, Mathf.Clamp(alpha, 0f, 1f));
-    }
-
     private static void HideCreaturePlaceholder(NCreatureVisuals visuals)
     {
         try
         {
+            foreach (string name in new[] { "PinkVisuals", "DarkVisuals", "DeniaPinkOverlay", "DeniaBlackOverlay" })
+            {
+                var body = visuals.GetNodeOrNull<CanvasItem>(name);
+                if (body != null) body.Visible = false;
+            }
             Node2D? normalBody = visuals.GetNodeOrNull<Node2D>("%Visuals");
             Node2D? phobiaBody = visuals.GetNodeOrNull<Node2D>("%PhobiaModeVisuals");
             if (normalBody != null && GodotObject.IsInstanceValid(normalBody))
