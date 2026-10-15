@@ -748,6 +748,7 @@ public partial class DeniaFormOverlaySync : Node
     private Vector2 _baseLocalPos = Vector2.Zero;
     private Vector2 _baseSize = new(200f, 300f);
     private bool _hasBaseLayout;
+    private bool _hasIdleFrames;
 
     private Vector2 _lastBodyScale = Vector2.One;
     private Vector2 _lastVisualsScale = Vector2.One;
@@ -793,6 +794,8 @@ public partial class DeniaFormOverlaySync : Node
         _corpse = corpse;
         _weapon = weapon;
         _blackFx = blackFx;
+        _hasIdleFrames = pink.GetNodeOrNull<AnimatedSprite2D>("Idle") != null
+                         || black.GetNodeOrNull<AnimatedSprite2D>("Idle") != null;
         _layoutTimer = 0;
         SetProcess(true);
     }
@@ -1141,7 +1144,8 @@ public partial class DeniaFormOverlaySync : Node
         // 仅竖直正弦拉伸；水平不动、不旋转、不位移
         _motionOffset = Vector2.Zero;
         _motionRot = 0f;
-        _motionScale = new Vector2(1f, 1f + BreathScaleAmpY * sin);
+        // 帧动画已包含呼吸，不再叠加整张立绘拉伸；静态立绘保留原有呼吸。
+        _motionScale = _hasIdleFrames ? Vector2.One : new Vector2(1f, 1f + BreathScaleAmpY * sin);
         if (!_weaponDeathActive)
             _weaponExtraRot = 0f;
     }
