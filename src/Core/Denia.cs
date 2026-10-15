@@ -112,7 +112,6 @@ public sealed class Denia : PlaceholderCharacterModel
         "res://images/packed/character_select/denia_black.png",
         // 形态切换中间图
         "res://images/packed/character_select/denia_form_to_black.png",
-        "res://images/packed/character_select/denia_form_to_pink.png",
         "res://images/ui/combat/denia_black_attack_fx.png",
         // 战斗UI图标
         "res://images/ui/combat/denia_virtual_matter.png",
