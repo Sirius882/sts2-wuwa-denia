@@ -177,6 +177,18 @@ public static class DeniaFormPatch
     public static bool IsBlackFormAttackCardActive(Creature creature)
         => creature != null && _blackFormAttackCardActive.Contains(creature);
 
+    public static void PlayAttack(Creature creature, bool isBlack)
+    {
+        try
+        {
+            var node = GetCreatureNode(creature);
+            if (node == null || IsDying(node) || IsFormTransitioning(node)) return;
+            EnsureOverlays(node);
+            GetSyncNode(node)?.PlayAttack(isBlack);
+        }
+        catch { }
+    }
+
     public static void PlayBlackAttackFxSlash(Creature creature)
     {
         try
@@ -302,6 +314,11 @@ public static class DeniaFormPatch
         sprite.Name = "Idle";
         sprite.Visible = true;
         sprite.Play("idle");
+        sprite.AnimationFinished += () =>
+        {
+            if (GodotObject.IsInstanceValid(sprite) && sprite.Animation == "attack")
+                sprite.Play("idle");
+        };
         overlay.Texture = null;
     }
 
@@ -729,8 +746,31 @@ public partial class DeniaFormOverlaySync : Node
         ApplyTransforms();
     }
 
+    public void PlayAttack(bool isBlack)
+    {
+        if (_state == AnimState.FormTransition || _state == AnimState.Dead) return;
+        var sprite = (isBlack ? _black : _pink)?.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        if (sprite == null || !GodotObject.IsInstanceValid(sprite)
+            || !sprite.SpriteFrames.HasAnimation("attack")) return;
+        ResetAttack();
+        sprite.Play("attack");
+        sprite.SetFrameAndProgress(0, 0);
+    }
+
+    private void ResetAttack()
+    {
+        foreach (var overlay in new[] { _pink, _black })
+        {
+            if (overlay == null || !GodotObject.IsInstanceValid(overlay)) continue;
+            var sprite = overlay.GetNodeOrNull<AnimatedSprite2D>("Idle");
+            if (sprite != null && GodotObject.IsInstanceValid(sprite) && sprite.Animation == "attack")
+                sprite.Play("idle");
+        }
+    }
+
     public void ClearDeadState()
     {
+        ResetAttack();
         _state = AnimState.Idle;
         _animTime = 0;
         ResetMotion();
@@ -776,6 +816,7 @@ public partial class DeniaFormOverlaySync : Node
 
     public void PlayFormTransition(TransitionKind kind)
     {
+        ResetAttack();
         if (_creatureNode == null || !GodotObject.IsInstanceValid(_creatureNode)) return;
         _state = AnimState.FormTransition;
         _animTime = 0;
@@ -793,6 +834,7 @@ public partial class DeniaFormOverlaySync : Node
 
     public void PlayDeath()
     {
+        ResetAttack();
         if (_creatureNode == null || !GodotObject.IsInstanceValid(_creatureNode)) return;
         DeniaFormPatch.SetDying(_creatureNode, true);
         // 粉立绘 → 尸体（复用 ToCorpse 三段）
@@ -1329,6 +1371,8 @@ public static class DeniaBeforeCardPlayedAnimPatch
             DeniaFormPatch.BeginBlackFormCardPlay(creature, isAttack);
 
             bool isBlack = DeniaFormHelper.IsBlack(creature);
+            // 身体动作独立播放三秒，不延迟出牌结算或替换既有黑态特效。
+            if (isAttack) DeniaFormPatch.PlayAttack(creature, isBlack);
             if (isBlack)
             {
                 if (isAttack)

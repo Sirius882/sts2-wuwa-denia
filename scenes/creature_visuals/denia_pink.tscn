@@ -1,8 +1,11 @@
-[gd_scene load_steps=197 format=3]
+[gd_scene load_steps=339 format=3]
 
 [ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_pink_idle.png" id="1"]
 
 [ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_dark_idle.png" id="2"]
+
+[ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_pink_attack.png" id="pink_attack"]
+[ext_resource type="Texture2D" path="res://images/characters/denia/sprite_sheets/denia_dark_attack.png" id="dark_attack"]
 
 [sub_resource type="AtlasTexture" id="pink_0"]
 atlas = ExtResource("1")
@@ -388,6 +391,286 @@ region = Rect2(848, 4608, 212, 512)
 atlas = ExtResource("1")
 region = Rect2(1060, 4608, 212, 512)
 
+[sub_resource type="AtlasTexture" id="pink_attack_1"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_2"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_3"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_4"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_5"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_6"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_7"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_8"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_9"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_10"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_11"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_12"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_13"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_14"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_15"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_16"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_17"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_18"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_19"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_20"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_21"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_22"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_23"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_24"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_25"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_26"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_27"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_28"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_29"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_30"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_31"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_32"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_33"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_34"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_35"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_36"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_37"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_38"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_39"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_40"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_41"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_42"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_43"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_44"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_45"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_46"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_47"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_48"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_49"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_50"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_51"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_52"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_53"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_54"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_55"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_56"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_57"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_58"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_59"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_60"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_61"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_62"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_63"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3612, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_64"]
+atlas = ExtResource("pink_attack")
+region = Rect2(0, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_65"]
+atlas = ExtResource("pink_attack")
+region = Rect2(516, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_66"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1032, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_67"]
+atlas = ExtResource("pink_attack")
+region = Rect2(1548, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_68"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2064, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_69"]
+atlas = ExtResource("pink_attack")
+region = Rect2(2580, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="pink_attack_70"]
+atlas = ExtResource("pink_attack")
+region = Rect2(3096, 4608, 516, 576)
+
 [sub_resource type="SpriteFrames" id="pink_frames"]
 animations = [{
 "frames": [{"duration": 1.0, "texture": SubResource("pink_0")},
@@ -488,6 +771,82 @@ animations = [{
 {"duration": 1.0, "texture": SubResource("pink_95")}],
 "loop": true,
 "name": &"idle",
+"speed": 24.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("pink_0")},
+{"duration": 1.0, "texture": SubResource("pink_attack_1")},
+{"duration": 1.0, "texture": SubResource("pink_attack_2")},
+{"duration": 1.0, "texture": SubResource("pink_attack_3")},
+{"duration": 1.0, "texture": SubResource("pink_attack_4")},
+{"duration": 1.0, "texture": SubResource("pink_attack_5")},
+{"duration": 1.0, "texture": SubResource("pink_attack_6")},
+{"duration": 1.0, "texture": SubResource("pink_attack_7")},
+{"duration": 1.0, "texture": SubResource("pink_attack_8")},
+{"duration": 1.0, "texture": SubResource("pink_attack_9")},
+{"duration": 1.0, "texture": SubResource("pink_attack_10")},
+{"duration": 1.0, "texture": SubResource("pink_attack_11")},
+{"duration": 1.0, "texture": SubResource("pink_attack_12")},
+{"duration": 1.0, "texture": SubResource("pink_attack_13")},
+{"duration": 1.0, "texture": SubResource("pink_attack_14")},
+{"duration": 1.0, "texture": SubResource("pink_attack_15")},
+{"duration": 1.0, "texture": SubResource("pink_attack_16")},
+{"duration": 1.0, "texture": SubResource("pink_attack_17")},
+{"duration": 1.0, "texture": SubResource("pink_attack_18")},
+{"duration": 1.0, "texture": SubResource("pink_attack_19")},
+{"duration": 1.0, "texture": SubResource("pink_attack_20")},
+{"duration": 1.0, "texture": SubResource("pink_attack_21")},
+{"duration": 1.0, "texture": SubResource("pink_attack_22")},
+{"duration": 1.0, "texture": SubResource("pink_attack_23")},
+{"duration": 1.0, "texture": SubResource("pink_attack_24")},
+{"duration": 1.0, "texture": SubResource("pink_attack_25")},
+{"duration": 1.0, "texture": SubResource("pink_attack_26")},
+{"duration": 1.0, "texture": SubResource("pink_attack_27")},
+{"duration": 1.0, "texture": SubResource("pink_attack_28")},
+{"duration": 1.0, "texture": SubResource("pink_attack_29")},
+{"duration": 1.0, "texture": SubResource("pink_attack_30")},
+{"duration": 1.0, "texture": SubResource("pink_attack_31")},
+{"duration": 1.0, "texture": SubResource("pink_attack_32")},
+{"duration": 1.0, "texture": SubResource("pink_attack_33")},
+{"duration": 1.0, "texture": SubResource("pink_attack_34")},
+{"duration": 1.0, "texture": SubResource("pink_attack_35")},
+{"duration": 1.0, "texture": SubResource("pink_attack_36")},
+{"duration": 1.0, "texture": SubResource("pink_attack_37")},
+{"duration": 1.0, "texture": SubResource("pink_attack_38")},
+{"duration": 1.0, "texture": SubResource("pink_attack_39")},
+{"duration": 1.0, "texture": SubResource("pink_attack_40")},
+{"duration": 1.0, "texture": SubResource("pink_attack_41")},
+{"duration": 1.0, "texture": SubResource("pink_attack_42")},
+{"duration": 1.0, "texture": SubResource("pink_attack_43")},
+{"duration": 1.0, "texture": SubResource("pink_attack_44")},
+{"duration": 1.0, "texture": SubResource("pink_attack_45")},
+{"duration": 1.0, "texture": SubResource("pink_attack_46")},
+{"duration": 1.0, "texture": SubResource("pink_attack_47")},
+{"duration": 1.0, "texture": SubResource("pink_attack_48")},
+{"duration": 1.0, "texture": SubResource("pink_attack_49")},
+{"duration": 1.0, "texture": SubResource("pink_attack_50")},
+{"duration": 1.0, "texture": SubResource("pink_attack_51")},
+{"duration": 1.0, "texture": SubResource("pink_attack_52")},
+{"duration": 1.0, "texture": SubResource("pink_attack_53")},
+{"duration": 1.0, "texture": SubResource("pink_attack_54")},
+{"duration": 1.0, "texture": SubResource("pink_attack_55")},
+{"duration": 1.0, "texture": SubResource("pink_attack_56")},
+{"duration": 1.0, "texture": SubResource("pink_attack_57")},
+{"duration": 1.0, "texture": SubResource("pink_attack_58")},
+{"duration": 1.0, "texture": SubResource("pink_attack_59")},
+{"duration": 1.0, "texture": SubResource("pink_attack_60")},
+{"duration": 1.0, "texture": SubResource("pink_attack_61")},
+{"duration": 1.0, "texture": SubResource("pink_attack_62")},
+{"duration": 1.0, "texture": SubResource("pink_attack_63")},
+{"duration": 1.0, "texture": SubResource("pink_attack_64")},
+{"duration": 1.0, "texture": SubResource("pink_attack_65")},
+{"duration": 1.0, "texture": SubResource("pink_attack_66")},
+{"duration": 1.0, "texture": SubResource("pink_attack_67")},
+{"duration": 1.0, "texture": SubResource("pink_attack_68")},
+{"duration": 1.0, "texture": SubResource("pink_attack_69")},
+{"duration": 1.0, "texture": SubResource("pink_attack_70")},
+{"duration": 1.0, "texture": SubResource("pink_0")}],
+"loop": false,
+"name": &"attack",
 "speed": 24.0
 }]
 
@@ -875,6 +1234,286 @@ region = Rect2(848, 4608, 212, 512)
 atlas = ExtResource("2")
 region = Rect2(1060, 4608, 212, 512)
 
+[sub_resource type="AtlasTexture" id="dark_attack_1"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_2"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_3"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_4"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_5"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_6"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_7"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 0, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_8"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_9"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_10"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_11"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_12"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_13"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_14"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_15"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 576, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_16"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_17"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_18"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_19"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_20"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_21"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_22"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_23"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 1152, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_24"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_25"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_26"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_27"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_28"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_29"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_30"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_31"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 1728, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_32"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_33"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_34"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_35"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_36"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_37"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_38"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_39"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 2304, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_40"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_41"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_42"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_43"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_44"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_45"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_46"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_47"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 2880, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_48"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_49"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_50"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_51"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_52"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_53"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_54"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_55"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 3456, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_56"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_57"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_58"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_59"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_60"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_61"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_62"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_63"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3612, 4032, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_64"]
+atlas = ExtResource("dark_attack")
+region = Rect2(0, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_65"]
+atlas = ExtResource("dark_attack")
+region = Rect2(516, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_66"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1032, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_67"]
+atlas = ExtResource("dark_attack")
+region = Rect2(1548, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_68"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2064, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_69"]
+atlas = ExtResource("dark_attack")
+region = Rect2(2580, 4608, 516, 576)
+
+[sub_resource type="AtlasTexture" id="dark_attack_70"]
+atlas = ExtResource("dark_attack")
+region = Rect2(3096, 4608, 516, 576)
+
 [sub_resource type="SpriteFrames" id="dark_frames"]
 animations = [{
 "frames": [{"duration": 1.0, "texture": SubResource("dark_0")},
@@ -975,6 +1614,82 @@ animations = [{
 {"duration": 1.0, "texture": SubResource("dark_95")}],
 "loop": true,
 "name": &"idle",
+"speed": 24.0
+}, {
+"frames": [{"duration": 1.0, "texture": SubResource("dark_0")},
+{"duration": 1.0, "texture": SubResource("dark_attack_1")},
+{"duration": 1.0, "texture": SubResource("dark_attack_2")},
+{"duration": 1.0, "texture": SubResource("dark_attack_3")},
+{"duration": 1.0, "texture": SubResource("dark_attack_4")},
+{"duration": 1.0, "texture": SubResource("dark_attack_5")},
+{"duration": 1.0, "texture": SubResource("dark_attack_6")},
+{"duration": 1.0, "texture": SubResource("dark_attack_7")},
+{"duration": 1.0, "texture": SubResource("dark_attack_8")},
+{"duration": 1.0, "texture": SubResource("dark_attack_9")},
+{"duration": 1.0, "texture": SubResource("dark_attack_10")},
+{"duration": 1.0, "texture": SubResource("dark_attack_11")},
+{"duration": 1.0, "texture": SubResource("dark_attack_12")},
+{"duration": 1.0, "texture": SubResource("dark_attack_13")},
+{"duration": 1.0, "texture": SubResource("dark_attack_14")},
+{"duration": 1.0, "texture": SubResource("dark_attack_15")},
+{"duration": 1.0, "texture": SubResource("dark_attack_16")},
+{"duration": 1.0, "texture": SubResource("dark_attack_17")},
+{"duration": 1.0, "texture": SubResource("dark_attack_18")},
+{"duration": 1.0, "texture": SubResource("dark_attack_19")},
+{"duration": 1.0, "texture": SubResource("dark_attack_20")},
+{"duration": 1.0, "texture": SubResource("dark_attack_21")},
+{"duration": 1.0, "texture": SubResource("dark_attack_22")},
+{"duration": 1.0, "texture": SubResource("dark_attack_23")},
+{"duration": 1.0, "texture": SubResource("dark_attack_24")},
+{"duration": 1.0, "texture": SubResource("dark_attack_25")},
+{"duration": 1.0, "texture": SubResource("dark_attack_26")},
+{"duration": 1.0, "texture": SubResource("dark_attack_27")},
+{"duration": 1.0, "texture": SubResource("dark_attack_28")},
+{"duration": 1.0, "texture": SubResource("dark_attack_29")},
+{"duration": 1.0, "texture": SubResource("dark_attack_30")},
+{"duration": 1.0, "texture": SubResource("dark_attack_31")},
+{"duration": 1.0, "texture": SubResource("dark_attack_32")},
+{"duration": 1.0, "texture": SubResource("dark_attack_33")},
+{"duration": 1.0, "texture": SubResource("dark_attack_34")},
+{"duration": 1.0, "texture": SubResource("dark_attack_35")},
+{"duration": 1.0, "texture": SubResource("dark_attack_36")},
+{"duration": 1.0, "texture": SubResource("dark_attack_37")},
+{"duration": 1.0, "texture": SubResource("dark_attack_38")},
+{"duration": 1.0, "texture": SubResource("dark_attack_39")},
+{"duration": 1.0, "texture": SubResource("dark_attack_40")},
+{"duration": 1.0, "texture": SubResource("dark_attack_41")},
+{"duration": 1.0, "texture": SubResource("dark_attack_42")},
+{"duration": 1.0, "texture": SubResource("dark_attack_43")},
+{"duration": 1.0, "texture": SubResource("dark_attack_44")},
+{"duration": 1.0, "texture": SubResource("dark_attack_45")},
+{"duration": 1.0, "texture": SubResource("dark_attack_46")},
+{"duration": 1.0, "texture": SubResource("dark_attack_47")},
+{"duration": 1.0, "texture": SubResource("dark_attack_48")},
+{"duration": 1.0, "texture": SubResource("dark_attack_49")},
+{"duration": 1.0, "texture": SubResource("dark_attack_50")},
+{"duration": 1.0, "texture": SubResource("dark_attack_51")},
+{"duration": 1.0, "texture": SubResource("dark_attack_52")},
+{"duration": 1.0, "texture": SubResource("dark_attack_53")},
+{"duration": 1.0, "texture": SubResource("dark_attack_54")},
+{"duration": 1.0, "texture": SubResource("dark_attack_55")},
+{"duration": 1.0, "texture": SubResource("dark_attack_56")},
+{"duration": 1.0, "texture": SubResource("dark_attack_57")},
+{"duration": 1.0, "texture": SubResource("dark_attack_58")},
+{"duration": 1.0, "texture": SubResource("dark_attack_59")},
+{"duration": 1.0, "texture": SubResource("dark_attack_60")},
+{"duration": 1.0, "texture": SubResource("dark_attack_61")},
+{"duration": 1.0, "texture": SubResource("dark_attack_62")},
+{"duration": 1.0, "texture": SubResource("dark_attack_63")},
+{"duration": 1.0, "texture": SubResource("dark_attack_64")},
+{"duration": 1.0, "texture": SubResource("dark_attack_65")},
+{"duration": 1.0, "texture": SubResource("dark_attack_66")},
+{"duration": 1.0, "texture": SubResource("dark_attack_67")},
+{"duration": 1.0, "texture": SubResource("dark_attack_68")},
+{"duration": 1.0, "texture": SubResource("dark_attack_69")},
+{"duration": 1.0, "texture": SubResource("dark_attack_70")},
+{"duration": 1.0, "texture": SubResource("dark_0")}],
+"loop": false,
+"name": &"attack",
 "speed": 24.0
 }]
 
