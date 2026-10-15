@@ -303,6 +303,8 @@ public static class DeniaFormPatch
             visuals.AddChild(black);
             _pinkOverlay[nc] = pink;
             _blackOverlay[nc] = black;
+            AttachIdleAnimation(visuals, pink, "PinkVisuals");
+            AttachIdleAnimation(visuals, black, "DarkVisuals");
 
             EnsureMidOverlays(nc);
             EnsureCorpseOverlay(nc);
@@ -315,6 +317,20 @@ public static class DeniaFormPatch
         {
             GD.PrintErr($"[Denia] Form overlay load error: {ex.Message}");
         }
+    }
+
+    private static void AttachIdleAnimation(NCreatureVisuals visuals, TextureRect overlay, string nodeName)
+    {
+        var sprite = visuals.GetNodeOrNull<AnimatedSprite2D>(nodeName);
+        if (sprite == null || !GodotObject.IsInstanceValid(sprite) || sprite.SpriteFrames == null)
+            return;
+
+        // 帧动画继承现有覆盖层的显隐、变形与死亡状态，避免两套驱动互相覆盖。
+        sprite.Reparent(overlay, false);
+        sprite.Name = "Idle";
+        sprite.Visible = true;
+        sprite.Play("idle");
+        overlay.Texture = null;
     }
 
     private static void RebindSync(NCreature nc)
@@ -528,6 +544,13 @@ public static class DeniaFormPatch
         rect.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
         rect.MouseFilter = Control.MouseFilterEnum.Ignore;
         if (GetSyncNode(nc) == null) rect.Position = localPos;
+        var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        if (idle != null && GodotObject.IsInstanceValid(idle))
+        {
+            var frameSize = idle.SpriteFrames.GetFrameTexture("idle", 0).GetSize();
+            idle.Position = size * 0.5f;
+            idle.Scale = Vector2.One * (size.Y / frameSize.Y);
+        }
     }
 
     internal static void SyncFacing(NCreature nc)
@@ -558,6 +581,8 @@ public static class DeniaFormPatch
     {
         if (!map.TryGetValue(nc, out var rect) || rect == null || !GodotObject.IsInstanceValid(rect)) return;
         rect.FlipH = flip;
+        var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        if (idle != null && GodotObject.IsInstanceValid(idle)) idle.FlipH = flip;
     }
 
     private static TextureRect MakeOverlay(string name, Texture2D tex)

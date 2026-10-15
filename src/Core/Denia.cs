@@ -14,6 +14,12 @@ namespace Denia;
 public sealed class Denia : PlaceholderCharacterModel
 {
     public override string PlaceholderID => "necrobinder";
+
+    /// <summary>
+    /// 自定义角色视觉场景路径。默认使用粉色形态，黑色形态通过运行时Patch动态切换。
+    /// </summary>
+    public override string CustomVisualPath => "res://scenes/creature_visuals/denia_pink.tscn";
+
     public override string CustomIconTexturePath =>
         "res://images/ui/top_panel/character_icon_denia.png";
     public override string CustomIconPath =>
