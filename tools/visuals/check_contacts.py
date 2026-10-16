@@ -171,10 +171,19 @@ def main():
         check_occlusion(scene, baked)
         frames, hair, first, feet = [], [], None, None
         head_local, max_head_error = None, 0.
+        max_elbow_axis_error = 0.
         for frame in range(1, count + 1):
             scene.frame_set(frame)
             bpy.context.view_layer.update()
             coords = coordinates(baked)
+            if clip == 'idle' and scene.get('denia_elbow_hinge_corrected', False):
+                for side, sign in (('L', -1), ('R', 1)):
+                    upper, elbow, wrist = [arm.pose.bones[n + '.' + side] for n in ('腕', 'ひじ', '手首')]
+                    axis = (elbow.head - upper.head).cross(wrist.head - elbow.head).normalized() * sign
+                    error = abs(1 - elbow.matrix.to_3x3().normalized().col[2].dot(axis))
+                    max_elbow_axis_error = max(max_elbow_axis_error, error)
+                    assert error < 2e-5, ('Elbow hinge twisted', form, frame, side, error)
+                    assert all(b.bone.inherit_scale == 'NONE' for b in (upper, elbow, wrist))
             if first is None:
                 first, feet = coords.copy(), coords[contacts.feet].copy()
             result = contacts.check(coords)
@@ -204,7 +213,7 @@ def main():
         summary[form + '-' + clip] = dict(frames=count, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
             max_hair_travel=float(np.linalg.norm(hair - hair[0], axis=2).max()),
             max_hair_step=float(np.linalg.norm(np.diff(hair, axis=0), axis=2).max()),
-            max_head_error=max_head_error,
+            max_head_error=max_head_error, max_elbow_axis_error=max_elbow_axis_error,
             hair_render=('Complete mesh with direct natural depth verified' if scene.get('denia_arm_hair_contact_baked', False)
                          else 'Complete mesh with visible-glove mask verified'), contacts=frames)
         (output / f'{form}-{clip}-contacts.json').write_text(json.dumps(summary[form + '-' + clip], indent=2), encoding='utf8')
