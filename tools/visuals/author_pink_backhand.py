@@ -71,13 +71,8 @@ def main():
     forward = (hand.bone.matrix_local.inverted() @ bones['中指１.R'].bone.head_local).normalized()
     across = (hand.bone.matrix_local.to_3x3().inverted() @
               (bones['人指１.R'].bone.head_local - bones['小指１.R'].bone.head_local)).normalized()
-    normal = -forward.cross(across).normalized()
-    desired = Vector((.05, .18, .98)).normalized()
-    q = base[hand.name].to_quaternion(); q = (q @ forward).rotation_difference(desired) @ q
-    palm_target = -strike_direction
-    palm_target = (palm_target - desired * palm_target.dot(desired)).normalized()
-    current = q @ normal
-    q = Quaternion(desired, math.atan2(desired.dot(current.cross(palm_target)), current.dot(palm_target))) @ q
+    # Right-hand palm points along middle-finger direction cross pinky-to-index.
+    normal = forward.cross(across).normalized()
     scene.frame_start = 1; scene.frame_end = 72; scene.render.fps = 24
     frames = []; influences = []; required = []; reports = []
     samples = (1, 10, 18, 21, 22, 23, 25, 27, 31, 42, 56, 66, 72) if args.preview else range(1, 73)
@@ -115,6 +110,16 @@ def main():
             two_bone(bones, [upper.name, elbow.name, wrist.name], goal,
                      rest_pole.lerp(pole, opening) if side == 'R' else rest_pole)
             error = elbow_hinge(bones, side)
+            if side == 'R':
+                # Keep the hand on the forearm's line instead of cocking it upright.
+                desired = (wrist.head - elbow.head).normalized()
+                q = base[wrist.name].to_quaternion()
+                q = (q @ forward).rotation_difference(desired) @ q
+                palm_target = -strike_direction
+                palm_target = (palm_target - desired * palm_target.dot(desired)).normalized()
+                current = q @ normal
+                q = Quaternion(desired, math.atan2(desired.dot(current.cross(palm_target)),
+                                                  current.dot(palm_target))) @ q
             wrist.matrix = Matrix.LocRotScale(wrist.head,
                 base[wrist.name].to_quaternion().slerp(q, opening) if side == 'R' else base[wrist.name].to_quaternion(),
                 base[wrist.name].to_scale()); update()
@@ -141,7 +146,9 @@ def main():
             amount = solver.minimum(coords, influence)
         frames.append(coords); influences.append(influence); required.append(amount)
         reports.append(dict(frame=frame, right_hand=list(hand.head),
-                            backhand_alignment=float(-(hand.matrix.to_quaternion() @ normal).dot(strike_direction))))
+                            backhand_alignment=float(-(hand.matrix.to_quaternion() @ normal).dot(strike_direction)),
+                            straight_wrist_alignment=float((hand.matrix.to_quaternion() @ forward).dot(
+                                (hand.head - bones['ひじ.R'].head).normalized()))))
         for b in bones:
             for channel in ('location', 'rotation_quaternion', 'scale'): b.keyframe_insert(channel, frame=frame)
         print('BACKHAND_POSE', frame, amount.tolist(), flush=True)
@@ -159,7 +166,8 @@ def main():
     assert np.array_equal(solved[0], start) and np.array_equal(solved[-1], start)
     hold = [r for r in reports if r['frame'] in (21, 22)]
     assert np.max(abs(np.array(hold[0]['right_hand']) - hold[1]['right_hand'])) < 1e-6
-    assert all(r['backhand_alignment'] > .97 for r in reports if 21 <= r['frame'] <= 27)
+    assert all(r['backhand_alignment'] > .60 and r['straight_wrist_alignment'] > .99999
+               for r in reports if 21 <= r['frame'] <= 27)
     assert strike.x < chest.x and strike.y < chest.y
     baked.shape_key_clear(); baked.data.vertices.foreach_set('co', solved[0].ravel()); baked.shape_key_add(name='Basis')
     for frame, coords in zip(list(samples)[1:], solved[1:]):
