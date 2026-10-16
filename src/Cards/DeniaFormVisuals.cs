@@ -145,6 +145,14 @@ public static class DeniaFormPatch
         catch { }
     }
 
+    internal static bool TryPlayDodge(NCreature node)
+    {
+        if (node?.Entity?.Player?.Character is not Denia) return false;
+        if (IsDying(node)) return true;
+        EnsureOverlays(node);
+        return GetSyncNode(node)?.PlayDodge(DeniaFormHelper.IsBlack(node.Entity)) == true;
+    }
+
     public static void PlayBlackAttackFxSlash(Creature creature)
     {
         try
@@ -270,7 +278,7 @@ public static class DeniaFormPatch
         sprite.Play("idle");
         sprite.AnimationFinished += () =>
         {
-            if (GodotObject.IsInstanceValid(sprite) && sprite.Animation == "attack")
+            if (GodotObject.IsInstanceValid(sprite) && (sprite.Animation == "attack" || sprite.Animation == "dodge"))
             {
                 sprite.SpeedScale = 1f;
                 sprite.Play("idle");
@@ -649,14 +657,22 @@ public partial class DeniaFormOverlaySync : Node
 
     public void PlayAttack(bool isBlack)
     {
-        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
+        PlayBodyAnimation(isBlack, "attack");
+    }
+
+    public bool PlayDodge(bool isBlack) => PlayBodyAnimation(isBlack, "dodge");
+
+    private bool PlayBodyAnimation(bool isBlack, StringName animation)
+    {
+        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return true;
         var sprite = (isBlack ? _black : _pink)?.GetNodeOrNull<AnimatedSprite2D>("Idle");
         if (sprite == null || !GodotObject.IsInstanceValid(sprite)
-            || !sprite.SpriteFrames.HasAnimation("attack")) return;
+            || !sprite.SpriteFrames.HasAnimation(animation)) return false;
         ResetBodyAnimation();
         sprite.SpeedScale = DeniaFormPatch.IsFastMode() ? 3f : 1f;
-        sprite.Play("attack");
+        sprite.Play(animation);
         sprite.SetFrameAndProgress(0, 0);
+        return true;
     }
 
     private void ResetBodyAnimation()
@@ -665,7 +681,8 @@ public partial class DeniaFormOverlaySync : Node
         {
             if (overlay == null || !GodotObject.IsInstanceValid(overlay)) continue;
             var sprite = overlay.GetNodeOrNull<AnimatedSprite2D>("Idle");
-            if (sprite != null && GodotObject.IsInstanceValid(sprite) && (sprite.Animation == "attack" || sprite.Animation == "death"))
+            if (sprite != null && GodotObject.IsInstanceValid(sprite)
+                && (sprite.Animation == "attack" || sprite.Animation == "dodge" || sprite.Animation == "death"))
             {
                 sprite.SpeedScale = 1f;
                 sprite.Play("idle");

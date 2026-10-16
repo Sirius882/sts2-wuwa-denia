@@ -3,7 +3,7 @@
 Run with --python-exit-code 1. Reports go exclusively under workspace .cache.
 Scalp attachments, coincident hair layers and transparent fur cards are intentional
 overlaps; the checks cover forehead hair/body, forehead hair/gloves, gloves/other
-body, and skirt/leg skin. Idle/attack also check all hair against solid arms,
+body, and skirt/leg skin. Idle/attack/dodge also check all hair against solid arms,
 sleeves and gloves, rendering the complete mesh with normal depth ordering.
 Death retains the visible-glove overlay. Other hair/body intersections remain
 diagnostic and are not certified as collision-free.
@@ -156,7 +156,8 @@ def main():
     sys.path.insert(0, str(Path(bpy.utils.user_resource('SCRIPTS')) / 'addons/mmd_tools'))
     bpy.ops.preferences.addon_enable(module='mmd_tools')
     idle, summary = {}, {}
-    clips = [('pink', 'idle', 96), ('dark', 'idle', 96), ('pink', 'attack', 72), ('dark', 'attack', 72), ('pink', 'death', 48)]
+    clips = [('pink', 'idle', 96), ('dark', 'idle', 96), ('pink', 'attack', 72), ('dark', 'attack', 72),
+             ('pink', 'death', 48), ('pink', 'dodge', 72), ('dark', 'dodge', 72)]
     for form, clip, count in clips:
         path = root / f'artResources/Denia/人物形象与动画/Denia{form.title()}_right60_{clip}.blend'
         bpy.ops.wm.open_mainfile(filepath=str(path))
@@ -176,7 +177,7 @@ def main():
             scene.frame_set(frame)
             bpy.context.view_layer.update()
             coords = coordinates(baked)
-            if clip == 'idle' and scene.get('denia_elbow_hinge_corrected', False):
+            if clip in ('idle', 'dodge') and scene.get('denia_elbow_hinge_corrected', False):
                 for side, sign in (('L', -1), ('R', 1)):
                     upper, elbow, wrist = [arm.pose.bones[n + '.' + side] for n in ('腕', 'ひじ', '手首')]
                     axis = (elbow.head - upper.head).cross(wrist.head - elbow.head).normalized() * sign
@@ -187,7 +188,7 @@ def main():
             if first is None:
                 first, feet = coords.copy(), coords[contacts.feet].copy()
             result = contacts.check(coords)
-            if clip in ('idle', 'attack'):
+            if clip in ('idle', 'attack', 'dodge'):
                 result['hair_arms'] = contacts.count(coords, contacts.hair, contacts.arms)
             assert sum(result.values()) == 0, (form, clip, frame, result)
             result['occluded_hair_body_3d_diagnostic'] = contacts.count(coords, contacts.back_hair, contacts.solid)
@@ -199,16 +200,16 @@ def main():
                 head_local = local.copy()
             max_head_error = max(max_head_error, float(np.max(abs(local - head_local))))
             assert max_head_error < 2e-6, ('Head deformed', form, clip, frame, max_head_error)
-            if clip == 'idle':
-                assert np.max(abs(coords[contacts.feet] - feet)) < 1e-6, 'Idle feet moved'
+            if clip in ('idle', 'dodge'):
+                assert np.max(abs(coords[contacts.feet] - feet)) < 1e-6, 'Planted feet moved'
             frames.append(dict(frame=frame, pairs=result, min_z=float(coords[:, 2].min())))
             hair.append(coords[contacts.hair_ids])
         if clip == 'idle':
             idle[form] = first
         else:
             assert np.max(abs(first - idle[form])) < 1e-6, 'Start pose differs from idle'
-        if clip == 'attack':
-            assert np.max(abs(coords - first)) < 1e-6, 'Attack end differs from idle'
+        if clip in ('attack', 'dodge'):
+            assert np.max(abs(coords - first)) < 1e-6, 'Action end differs from idle'
         hair = np.array(hair)
         summary[form + '-' + clip] = dict(frames=count, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
             max_hair_travel=float(np.linalg.norm(hair - hair[0], axis=2).max()),
@@ -219,7 +220,7 @@ def main():
         (output / f'{form}-{clip}-contacts.json').write_text(json.dumps(summary[form + '-' + clip], indent=2), encoding='utf8')
         print('CONTACTS_PASS', form, clip, count, flush=True)
     (output / 'contacts-summary.json').write_text(json.dumps(summary, indent=2), encoding='utf8')
-    print('ALL_384_FRAMES_PASS', flush=True)
+    print('ALL_528_FRAMES_PASS', flush=True)
 
 
 if __name__ == '__main__':
