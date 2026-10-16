@@ -3,9 +3,10 @@
 Run with --python-exit-code 1. Reports go exclusively under workspace .cache.
 Scalp attachments, coincident hair layers and transparent fur cards are intentional
 overlaps; the checks cover forehead hair/body, forehead hair/gloves, gloves/other
-body, and skirt/leg skin. The complete mesh renders with normal depth ordering;
-only visible gloves receive a hair-free overlay. Hair intersections are reported
-separately, not certified as collision-free.
+body, and skirt/leg skin. Idle/attack also check all hair against solid arms,
+sleeves and gloves, rendering the complete mesh with normal depth ordering.
+Death retains the visible-glove overlay. Other hair/body intersections remain
+diagnostic and are not certified as collision-free.
 This is not a general mesh self-intersection checker.
 """
 import argparse
@@ -55,6 +56,9 @@ class Contacts:
             moving | np.array(['后发' in names[i] for i in material])))[0]
         self.front_hair = np.setdiff1d(self.hair, self.back_hair)
         self.gloves = np.where(np.array([names[i] == '手套' for i in material]))[0]
+        arms = np.array([sides.get(n) is not None for n in dominant])
+        self.arms = np.where(arms[self.tri].all(axis=1) & ~np.isin(np.arange(len(self.tri)), self.hair)
+                             & np.array([names[i] not in ('fur', 'fur di') for i in material]))[0]
         self.hands = {}
         for side in ('L', 'R'):
             own = np.array([sides.get(n) == side for n in dominant])
@@ -115,6 +119,11 @@ def check_occlusion(scene, baked):
             assert len(mesh.polygons) == len(baked.data.polygons), 'Natural layer lost faces'
         evaluated.to_mesh_clear()
     bpy.context.window.view_layer = previous_view
+    output = next(n for n in scene.compositing_node_group.nodes if n.bl_idname == 'NodeGroupOutput')
+    if scene.get('denia_arm_hair_contact_baked', False):
+        assert output.inputs['Image'].links[0].from_node.layer == 'Natural'
+        assert output.inputs['Image'].links[0].from_socket.name == 'Image'
+        return
     assert any(a.name == 'DeniaVisibleHands' and a.type == 'VALUE' for a in body_view.aovs)
     for material in baked.data.materials:
         nodes = [n for n in material.node_tree.nodes if n.bl_idname == 'ShaderNodeOutputAOV'
@@ -169,6 +178,8 @@ def main():
             if first is None:
                 first, feet = coords.copy(), coords[contacts.feet].copy()
             result = contacts.check(coords)
+            if clip in ('idle', 'attack'):
+                result['hair_arms'] = contacts.count(coords, contacts.hair, contacts.arms)
             assert sum(result.values()) == 0, (form, clip, frame, result)
             result['occluded_hair_body_3d_diagnostic'] = contacts.count(coords, contacts.back_hair, contacts.solid)
             result['hair_gloves_3d_diagnostic'] = contacts.count(coords, contacts.hair, contacts.gloves)
@@ -193,7 +204,9 @@ def main():
         summary[form + '-' + clip] = dict(frames=count, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
             max_hair_travel=float(np.linalg.norm(hair - hair[0], axis=2).max()),
             max_hair_step=float(np.linalg.norm(np.diff(hair, axis=0), axis=2).max()),
-            max_head_error=max_head_error, hair_render='Complete mesh with visible-glove mask verified', contacts=frames)
+            max_head_error=max_head_error,
+            hair_render=('Complete mesh with direct natural depth verified' if scene.get('denia_arm_hair_contact_baked', False)
+                         else 'Complete mesh with visible-glove mask verified'), contacts=frames)
         (output / f'{form}-{clip}-contacts.json').write_text(json.dumps(summary[form + '-' + clip], indent=2), encoding='utf8')
         print('CONTACTS_PASS', form, clip, count, flush=True)
     (output / 'contacts-summary.json').write_text(json.dumps(summary, indent=2), encoding='utf8')
