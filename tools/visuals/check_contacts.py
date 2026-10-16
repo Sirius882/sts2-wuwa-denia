@@ -3,9 +3,9 @@
 Run with --python-exit-code 1. Reports go exclusively under workspace .cache.
 Scalp attachments, coincident hair layers and transparent fur cards are intentional
 overlaps; the checks cover forehead hair/body, forehead hair/gloves, gloves/other
-body, and skirt/leg skin. Long and side hair are composited behind the body to
-preserve their shape; their 3D intersections are reported separately, not
-certified as collision-free.
+body, and skirt/leg skin. The complete mesh renders with normal depth ordering;
+only visible gloves receive a hair-free overlay. Hair intersections are reported
+separately, not certified as collision-free.
 This is not a general mesh self-intersection checker.
 """
 import argparse
@@ -88,43 +88,50 @@ class Contacts:
 
 
 def check_occlusion(scene, baked):
-    body, hair = bpy.data.objects['DeniaBodyRender'], bpy.data.objects['DeniaBackHairRender']
-    assert body.data == baked.data == hair.data, 'Render layers must share the baked animation'
-    assert baked.hide_render and not body.hide_render and not hair.hide_render
+    body, natural = bpy.data.objects['DeniaBodyRender'], bpy.data.objects['DeniaNaturalRender']
+    assert body.data == baked.data == natural.data, 'Render layers must share the baked animation'
+    assert baked.hide_render and not body.hide_render and not natural.hide_render
+    assert not natural.modifiers, 'Natural layer must render the complete mesh'
     assert scene.render.film_transparent and scene.render.use_compositing
-    # shortcut: depth layering is authored for the fixed right-front camera;
+    # shortcut: visible-hand compositing is authored for the fixed camera;
     # recompute spatial contacts before using these meshes from another camera.
-    attribute = baked.data.attributes['denia_hair_behind_body']
-    original = next(o for o in scene.objects if o.type == 'MESH' and any(m.type == 'ARMATURE' for m in o.modifiers))
-    arm = next(o for o in scene.objects if o.type == 'ARMATURE')
-    dominant = []
-    for vertex in original.data.vertices:
-        groups = [g for g in vertex.groups if original.vertex_groups[g.group].name in arm.pose.bones]
-        dominant.append(original.vertex_groups[max(groups, key=lambda g: g.weight).group].name if groups else '')
+    attribute = baked.data.attributes['denia_hair_surface']
     for polygon, flag in zip(baked.data.polygons, attribute.data):
         name = baked.data.materials[polygon.material_index].name
-        expected = '后发' in name or (('发' in name or '髪' in name) and not all(dominant[v] == '頭' for v in polygon.vertices))
-        assert flag.value == expected, 'Hair mask does not match the authored face groups'
-    body_view, hair_view = scene.view_layers['Body'], scene.view_layers['BackHair']
-    assert body_view.layer_collection.children['Denia_BackHair_Layer'].exclude
-    assert hair_view.layer_collection.children['Denia_Body_Layer'].exclude
+        assert flag.value == ('发' in name or '髪' in name), 'Hair mask must retain whole material surfaces'
+    body_view, natural_view = scene.view_layers['Body'], scene.view_layers['Natural']
+    assert body_view.layer_collection.children['Denia_Natural_Layer'].exclude
+    assert natural_view.layer_collection.children['Denia_Body_Layer'].exclude
     previous_view = bpy.context.window.view_layer
-    for obj, is_back in ((body, False), (hair, True)):
-        bpy.context.window.view_layer = hair_view if is_back else body_view
+    for obj, view in ((body, body_view), (natural, natural_view)):
+        bpy.context.window.view_layer = view
         bpy.context.view_layer.update()
         evaluated = obj.evaluated_get(bpy.context.evaluated_depsgraph_get())
         mesh = evaluated.to_mesh()
         assert mesh.polygons
-        assert all(flag.value == is_back for flag in mesh.attributes['denia_hair_behind_body'].data)
+        if obj == body:
+            assert not any(flag.value for flag in mesh.attributes['denia_hair_surface'].data)
+        else:
+            assert len(mesh.polygons) == len(baked.data.polygons), 'Natural layer lost faces'
         evaluated.to_mesh_clear()
     bpy.context.window.view_layer = previous_view
+    assert any(a.name == 'DeniaVisibleHands' and a.type == 'VALUE' for a in body_view.aovs)
+    for material in baked.data.materials:
+        nodes = [n for n in material.node_tree.nodes if n.bl_idname == 'ShaderNodeOutputAOV'
+                 and n.aov_name == 'DeniaVisibleHands']
+        assert len(nodes) == (1 if material.name == '手套' else 0), 'Overlay mask includes non-glove material'
+        if nodes:
+            assert not nodes[0].inputs['Value'].is_linked and nodes[0].inputs['Value'].default_value == 1
     tree = scene.compositing_node_group
-    over = next(n for n in tree.nodes if n.bl_idname == 'CompositorNodeAlphaOver')
-    assert over.inputs['Factor'].default_value == 1
-    assert over.inputs['Foreground'].links[0].from_node.layer == 'Body'
-    assert over.inputs['Background'].links[0].from_node.layer == 'BackHair'
+    mix = next(n for n in tree.nodes if n.bl_idname == 'ShaderNodeMix')
+    assert mix.data_type == 'RGBA' and mix.blend_type == 'MIX'
+    mask = mix.inputs[0].links[0].from_socket
+    assert mask.name == 'DeniaVisibleHands' and mask.node.layer == 'Body'
+    assert mix.inputs[6].links[0].from_node.layer == 'Natural'
+    assert mix.inputs[7].links[0].from_node.layer == 'Body'
     output = next(n for n in tree.nodes if n.bl_idname == 'NodeGroupOutput')
-    assert output.inputs['Image'].links[0].from_node == over
+    assert output.inputs['Image'].links[0].from_node == mix
+    assert output.inputs['Image'].links[0].from_socket.type == 'RGBA'
 
 
 def main():
@@ -164,6 +171,7 @@ def main():
             result = contacts.check(coords)
             assert sum(result.values()) == 0, (form, clip, frame, result)
             result['occluded_hair_body_3d_diagnostic'] = contacts.count(coords, contacts.back_hair, contacts.solid)
+            result['hair_gloves_3d_diagnostic'] = contacts.count(coords, contacts.hair, contacts.gloves)
             assert coords[:, 2].min() >= -.001, (form, clip, frame, 'ground')
             head_matrix = arm.pose.bones['頭'].matrix
             local = (coords[contacts.head] - np.array(head_matrix.translation)) @ np.array(head_matrix.to_3x3())
@@ -185,7 +193,7 @@ def main():
         summary[form + '-' + clip] = dict(frames=count, sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
             max_hair_travel=float(np.linalg.norm(hair - hair[0], axis=2).max()),
             max_hair_step=float(np.linalg.norm(np.diff(hair, axis=0), axis=2).max()),
-            max_head_error=max_head_error, back_hair='Body-over-BackHair compositor verified', contacts=frames)
+            max_head_error=max_head_error, hair_render='Complete mesh with visible-glove mask verified', contacts=frames)
         (output / f'{form}-{clip}-contacts.json').write_text(json.dumps(summary[form + '-' + clip], indent=2), encoding='utf8')
         print('CONTACTS_PASS', form, clip, count, flush=True)
     (output / 'contacts-summary.json').write_text(json.dumps(summary, indent=2), encoding='utf8')
