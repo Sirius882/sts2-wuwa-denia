@@ -1838,283 +1838,283 @@ region = Rect2(1320, 4752, 264, 528)
 
 [sub_resource type="AtlasTexture" id="dark_attack_1"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 0, 516, 576)
+region = Rect2(516, 0, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_2"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 0, 516, 576)
+region = Rect2(1032, 0, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_3"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 0, 516, 576)
+region = Rect2(1548, 0, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_4"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 0, 516, 576)
+region = Rect2(2064, 0, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_5"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 0, 516, 576)
+region = Rect2(2580, 0, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_6"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 0, 516, 576)
+region = Rect2(3096, 0, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_7"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 0, 516, 576)
+region = Rect2(3612, 0, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_8"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 576, 516, 576)
+region = Rect2(0, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_9"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 576, 516, 576)
+region = Rect2(516, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_10"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 576, 516, 576)
+region = Rect2(1032, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_11"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 576, 516, 576)
+region = Rect2(1548, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_12"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 576, 516, 576)
+region = Rect2(2064, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_13"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 576, 516, 576)
+region = Rect2(2580, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_14"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 576, 516, 576)
+region = Rect2(3096, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_15"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 576, 516, 576)
+region = Rect2(3612, 704, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_16"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 1152, 516, 576)
+region = Rect2(0, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_17"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 1152, 516, 576)
+region = Rect2(516, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_18"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 1152, 516, 576)
+region = Rect2(1032, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_19"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 1152, 516, 576)
+region = Rect2(1548, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_20"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 1152, 516, 576)
+region = Rect2(2064, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_21"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 1152, 516, 576)
+region = Rect2(2580, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_22"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 1152, 516, 576)
+region = Rect2(3096, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_23"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 1152, 516, 576)
+region = Rect2(3612, 1408, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_24"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 1728, 516, 576)
+region = Rect2(0, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_25"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 1728, 516, 576)
+region = Rect2(516, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_26"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 1728, 516, 576)
+region = Rect2(1032, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_27"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 1728, 516, 576)
+region = Rect2(1548, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_28"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 1728, 516, 576)
+region = Rect2(2064, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_29"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 1728, 516, 576)
+region = Rect2(2580, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_30"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 1728, 516, 576)
+region = Rect2(3096, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_31"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 1728, 516, 576)
+region = Rect2(3612, 2112, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_32"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 2304, 516, 576)
+region = Rect2(0, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_33"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 2304, 516, 576)
+region = Rect2(516, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_34"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 2304, 516, 576)
+region = Rect2(1032, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_35"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 2304, 516, 576)
+region = Rect2(1548, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_36"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 2304, 516, 576)
+region = Rect2(2064, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_37"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 2304, 516, 576)
+region = Rect2(2580, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_38"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 2304, 516, 576)
+region = Rect2(3096, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_39"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 2304, 516, 576)
+region = Rect2(3612, 2816, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_40"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 2880, 516, 576)
+region = Rect2(0, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_41"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 2880, 516, 576)
+region = Rect2(516, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_42"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 2880, 516, 576)
+region = Rect2(1032, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_43"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 2880, 516, 576)
+region = Rect2(1548, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_44"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 2880, 516, 576)
+region = Rect2(2064, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_45"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 2880, 516, 576)
+region = Rect2(2580, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_46"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 2880, 516, 576)
+region = Rect2(3096, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_47"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 2880, 516, 576)
+region = Rect2(3612, 3520, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_48"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 3456, 516, 576)
+region = Rect2(0, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_49"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 3456, 516, 576)
+region = Rect2(516, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_50"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 3456, 516, 576)
+region = Rect2(1032, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_51"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 3456, 516, 576)
+region = Rect2(1548, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_52"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 3456, 516, 576)
+region = Rect2(2064, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_53"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 3456, 516, 576)
+region = Rect2(2580, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_54"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 3456, 516, 576)
+region = Rect2(3096, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_55"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 3456, 516, 576)
+region = Rect2(3612, 4224, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_56"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 4032, 516, 576)
+region = Rect2(0, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_57"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 4032, 516, 576)
+region = Rect2(516, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_58"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 4032, 516, 576)
+region = Rect2(1032, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_59"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 4032, 516, 576)
+region = Rect2(1548, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_60"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 4032, 516, 576)
+region = Rect2(2064, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_61"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 4032, 516, 576)
+region = Rect2(2580, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_62"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 4032, 516, 576)
+region = Rect2(3096, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_63"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3612, 4032, 516, 576)
+region = Rect2(3612, 4928, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_64"]
 atlas = ExtResource("dark_attack")
-region = Rect2(0, 4608, 516, 576)
+region = Rect2(0, 5632, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_65"]
 atlas = ExtResource("dark_attack")
-region = Rect2(516, 4608, 516, 576)
+region = Rect2(516, 5632, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_66"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1032, 4608, 516, 576)
+region = Rect2(1032, 5632, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_67"]
 atlas = ExtResource("dark_attack")
-region = Rect2(1548, 4608, 516, 576)
+region = Rect2(1548, 5632, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_68"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2064, 4608, 516, 576)
+region = Rect2(2064, 5632, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_69"]
 atlas = ExtResource("dark_attack")
-region = Rect2(2580, 4608, 516, 576)
+region = Rect2(2580, 5632, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_attack_70"]
 atlas = ExtResource("dark_attack")
-region = Rect2(3096, 4608, 516, 576)
+region = Rect2(3096, 5632, 516, 704)
 
 [sub_resource type="AtlasTexture" id="dark_dodge_1"]
 atlas = ExtResource("dark_dodge")
