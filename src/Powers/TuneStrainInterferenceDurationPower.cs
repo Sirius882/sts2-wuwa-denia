@@ -14,8 +14,10 @@ namespace TuneStrain.Powers;
 /// <summary>
 /// 隐藏 power：计量集谐·干涉的剩余持续回合数。
 /// 初始 3 回合，每回合扣 1 层，扣到 0 时清除集谐·干涉 power 和自己。
+/// 以下两行是旧规则记录（2026-10-23 已废止）：
 /// 设计：集谐·干涉存续期间不能被附加集谐·偏移，故不可能再次触发集谐处决，
 /// 因此干涉的持续回合数没有刷新的情况。
+/// 当前规则：重复处决取新旧干涉层数的较大值，并将此计时重置为 3 回合。
 /// 一个 power 只保存一个整型变量（Amount），通过游戏原生同步机制实现多端同步。
 /// </summary>
 public sealed class TuneStrainInterferenceDurationPower : CustomPowerModel

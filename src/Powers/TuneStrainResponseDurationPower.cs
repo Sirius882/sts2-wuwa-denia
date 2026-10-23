@@ -15,6 +15,7 @@ namespace TuneStrain.Powers;
 /// 隐藏 power：计量集谐响应 power 的剩余持续回合数。
 /// 初始 3 回合，每回合扣 1 层，扣到 0 时清除集谐响应 power 和自己。
 /// 复数个怪物的场景下，集谐响应 power 的持续回合数有可能被刷新（通过重新 Apply 覆盖）。
+/// 任意目标重复集谐处决均可刷新；先移除旧计时再 Apply，重置为 3 而非累加。
 /// 一个 power 只保存一个整型变量。
 /// </summary>
 public sealed class TuneStrainResponseDurationPower : CustomPowerModel

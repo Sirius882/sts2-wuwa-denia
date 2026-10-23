@@ -10,7 +10,9 @@ namespace TuneStrain.Powers;
 /// 集谐·偏移：附加在怪物身上的可见 debuff。
 /// 单纯的偏移没有任何效果；被集谐处决时清空并转化为等量的集谐·干涉。
 /// 层数即 tsBias（处决前的偏移层数），用于决定后续集谐易伤的底数 tsBias2Base。
+/// 旧规则记录（2026-10-23 已废止）：
 /// 拥有集谐·干涉的目标不能被附加集谐·偏移（在 <see cref="TuneStrainState.TryAddBias"/> 中检查）。
+/// 当前规则：无论目标是否拥有集谐·干涉，都允许附加集谐·偏移。
 /// </summary>
 public sealed class TuneStrainBiasPower : CustomPowerModel
 {

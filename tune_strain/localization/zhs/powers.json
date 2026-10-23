@@ -3,9 +3,9 @@
   "TUNESTRAIN-TUNE_STRAIN_BIAS_POWER.description": "触发谐度破坏后转化为[gold]集谐·干涉[/gold]。",
   "TUNESTRAIN-TUNE_STRAIN_BIAS_POWER.smartDescription": "触发谐度破坏后转化为集谐·干涉。",
   "TUNESTRAIN-TUNE_STRAIN_INTERFERENCE_POWER.title": "集谐·干涉",
-  "TUNESTRAIN-TUNE_STRAIN_INTERFERENCE_POWER.description": "增加玩家对怪物的伤害。集谐·偏移和集谐响应的层数越高，增伤幅度越大。不能对该目标附加集谐·偏移。持续3回合。",
-  "TUNESTRAIN-TUNE_STRAIN_INTERFERENCE_POWER.smartDescription": "增加玩家对怪物的伤害。集谐·偏移和集谐响应的层数越高，增伤幅度越大。不能对该目标附加集谐·偏移。持续3回合。",
+  "TUNESTRAIN-TUNE_STRAIN_INTERFERENCE_POWER.description": "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。可以继续附加集谐·偏移。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。",
+  "TUNESTRAIN-TUNE_STRAIN_INTERFERENCE_POWER.smartDescription": "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。可以继续附加集谐·偏移。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。",
   "TUNESTRAIN-TUNE_STRAIN_RESPONSE_POWER.title": "集谐响应",
-  "TUNESTRAIN-TUNE_STRAIN_RESPONSE_POWER.description": "触发集谐谐度破坏时，卡组中带有[gold]集谐响应[/gold]标记的牌的总数。层数越高，从[gold]集谐·干涉[/gold]获得的增伤幅度越大。持续3回合。",
-  "TUNESTRAIN-TUNE_STRAIN_RESPONSE_POWER.smartDescription": "触发集谐谐度破坏时，卡组中带有集谐响应标记的牌的总数。层数越高，从集谐·干涉获得的增伤幅度越大。持续3回合。"
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE_POWER.description": "触发集谐处决时，统计你的抽牌堆、弃牌堆和手牌中带有[gold]集谐响应[/gold]标记的牌的总数，层数取该总数与原层数的较高值。层数越高，从[gold]集谐·干涉[/gold]获得的增伤幅度越大。持续3回合；再次触发集谐处决时，持续时间重置为3回合。",
+  "TUNESTRAIN-TUNE_STRAIN_RESPONSE_POWER.smartDescription": "触发集谐处决时，统计你的抽牌堆、弃牌堆和手牌中带有集谐响应标记的牌的总数，层数取该总数与原层数的较高值。层数越高，从集谐·干涉获得的增伤幅度越大。持续3回合；再次触发集谐处决时，持续时间重置为3回合。"
 }

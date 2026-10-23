@@ -20,6 +20,7 @@ namespace TuneStrain.Powers;
 /// 倍率 = 2 * tsBias2Base(tsBias) ^ tsResponse / 100，由 <see cref="TuneStrainMath"/> 计算。
 /// 持续回合数由隐藏的 <see cref="TuneStrainInterferenceDurationPower"/> 单独计量，
 /// 干涉本身不随回合衰减（层数恒定，便于 tsBias 稳定参与倍率计算）。
+/// 重复处决时层数取原干涉与本次偏移的较大值，持续时间重置为 3 回合。
 /// 集谐易伤在力量/虚弱/易伤等原版效果结算完成后最后结算（与原版易伤在同一 Multiplicative 链中相乘）。
 /// 集谐易伤只作用于直接伤害；聚爆引爆、熔解、谐度破坏、中毒和失去生命值都不受影响。
 /// </summary>
@@ -35,8 +36,8 @@ public sealed class TuneStrainInterferencePower : CustomPowerModel
     public override List<(string, string)>? Localization =>
         new PowerLoc(
             Title: "集谐·干涉",
-            Description: "增加玩家对怪物的伤害。集谐·偏移和集谐响应的层数越高，增伤幅度越大。不能对该目标附加集谐·偏移。持续3回合。",
-            SmartDescription: "增加玩家对怪物的伤害。集谐·偏移和集谐响应的层数越高，增伤幅度越大。不能对该目标附加集谐·偏移。持续3回合。");
+            Description: "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。可以继续附加集谐·偏移。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。",
+            SmartDescription: "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。可以继续附加集谐·偏移。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。");
 
     /// <summary>
     /// 集谐易伤：仅对打到本目标上的 powered attack 生效，倍率由 tsBias（本 power 层数）

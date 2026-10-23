@@ -63,7 +63,6 @@ public static class TuneStrainState
     public static async Task<bool> TryAddBias(Creature target, int amount, Creature applier, CardModel? source)
     {
         if (amount <= 0 || target.IsDead) return false;
-        if (HasInterference(target)) return false;
 
         await PowerCmd.Apply<TuneStrainBiasPower>(Throwing, target, amount, applier, source);
         return true;
@@ -189,7 +188,13 @@ public static class TuneStrainState
 
         await PowerCmd.Remove<TuneStrainBiasPower>(target);
 
-        await PowerCmd.Apply<TuneStrainInterferencePower>(Throwing, target, bias, applier, source);
+        // 重复处决时保留新旧干涉层数的较大值，持续时间重置为 3 回合而非累加。
+        int currentInterference = target.GetPower<TuneStrainInterferencePower>()?.Amount ?? 0;
+        int interferenceDelta = Math.Max(currentInterference, bias) - currentInterference;
+        if (interferenceDelta > 0)
+            await PowerCmd.Apply<TuneStrainInterferencePower>(Throwing, target, interferenceDelta, applier, source);
+
+        await PowerCmd.Remove<TuneStrainInterferenceDurationPower>(target);
         await PowerCmd.Apply<TuneStrainInterferenceDurationPower>(Throwing, target, InitialInterferenceDuration, applier, source);
 
         await GrantBreakStrengthReward(applier, bias, source);
