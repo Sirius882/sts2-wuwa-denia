@@ -1345,7 +1345,7 @@
   "DENIA-DENIA_RUPTURE.title": "破裂",
   "DENIA-DENIA_RUPTURE.description": "对全体敌人造成{IfUpgraded:show:10|8}点伤害2次。\n再造成等于全体敌人聚爆上限之和的伤害{IfUpgraded:show:2|1}次。\n黯核强化：每段伤害+5。",
   "DENIA-DENIA_SALINE.title": "生理盐水",
-  "DENIA-DENIA_SALINE.description": "切换形态。给自己附加1层[color=#9A6A18]易伤[/color]。获得{IfUpgraded:show:3|1}点[color=#9A6A18]力量[/color]、{IfUpgraded:show:3|1}点[color=#9A6A18]敏捷[/color]和{IfUpgraded:show:3|1}[color=#9A6A18]蔽星[/color]。",
+  "DENIA-DENIA_SALINE.description": "切换形态。给自己附加1层[color=#9A6A18]易伤[/color]。获得{IfUpgraded:show:3|1}点[color=#9A6A18]力量[/color]{IfUpgraded:show:、1点[color=#9A6A18]敏捷[/color]|}和{IfUpgraded:show:3|1}[color=#9A6A18]蔽星[/color]。",
   "DENIA-DENIA_SEAMLESS.title": "天衣无缝",
   "DENIA-DENIA_SEAMLESS.description": "造成{Damage:diff()}点伤害。\n获得{Block:diff()}点[color=#9A6A18]格挡[/color]。\n虚质强化：伤害和格挡+3。",
   "DENIA-DENIA_SEND_YOU_IN.title": "送你进去",

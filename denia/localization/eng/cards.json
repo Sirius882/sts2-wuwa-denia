@@ -1364,7 +1364,7 @@
   "DENIA-DENIA_RUPTURE.title": "Rupture",
   "DENIA-DENIA_RUPTURE.description": "Deal {IfUpgraded:show:10|8} damage to ALL enemies twice.\nThen deal damage equal to the sum of all Caps {IfUpgraded:show:2|1} times.\nDark Core Enhancement: each hit +5.",
   "DENIA-DENIA_SALINE.title": "Saline",
-  "DENIA-DENIA_SALINE.description": "Switch forms. Gain 1 [color=#9A6A18]Vulnerable[/color]. Gain {IfUpgraded:show:3|1} [color=#9A6A18]Strength[/color], {IfUpgraded:show:3|1} [color=#9A6A18]Dexterity[/color], and {IfUpgraded:show:3|1} [color=#9A6A18]Shrouded Star[/color].",
+  "DENIA-DENIA_SALINE.description": "Switch forms. Gain 1 [color=#9A6A18]Vulnerable[/color]. Gain {IfUpgraded:show:3|1} [color=#9A6A18]Strength[/color]{IfUpgraded:show:, 1 [color=#9A6A18]Dexterity[/color]|}, and {IfUpgraded:show:3|1} [color=#9A6A18]Shrouded Star[/color].",
   "DENIA-DENIA_SEAMLESS.title": "Seamless",
   "DENIA-DENIA_SEAMLESS.description": "Deal {Damage:diff()} damage.\nGain {Block:diff()} [color=#9A6A18]Block[/color].\nVirtual Matter Enhancement: damage and Block +3.",
   "DENIA-DENIA_SEND_YOU_IN.title": "Send You In",

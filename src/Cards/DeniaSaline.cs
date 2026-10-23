@@ -21,7 +21,7 @@ public sealed class DeniaSaline : CustomCardModel
         : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "生理盐水",
-            Description: "切换形态。给自己附加1层[color=#9A6A18]易伤[/color]。获得{IfUpgraded:show:3|1}点[color=#9A6A18]力量[/color]、{IfUpgraded:show:3|1}点[color=#9A6A18]敏捷[/color]和{IfUpgraded:show:3|1}[color=#9A6A18]蔽星[/color]。");
+            Description: "切换形态。给自己附加1层[color=#9A6A18]易伤[/color]。获得{IfUpgraded:show:3|1}点[color=#9A6A18]力量[/color]{IfUpgraded:show:、1点[color=#9A6A18]敏捷[/color]|}和{IfUpgraded:show:3|1}[color=#9A6A18]蔽星[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -34,7 +34,8 @@ public sealed class DeniaSaline : CustomCardModel
 
         int amount = IsUpgraded ? 3 : 1;
         await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
-        await PowerCmd.Apply<DexterityPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
+        if (IsUpgraded)
+            await PowerCmd.Apply<DexterityPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
         await PowerCmd.Apply<DeniaShroudedStarPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
     }
 

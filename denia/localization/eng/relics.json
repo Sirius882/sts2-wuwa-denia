@@ -994,7 +994,7 @@
   "DENIA-DENIA_MASTER_SWORD.description": "Starts with a counter of 40. Whenever you play an Attack, consume 1 counter. At the start of combat, if the counter is above 0, gain 2 Strength and 2 Shrouded Star; when the counter reaches 0, lose that Strength and Shrouded Star. In boss combats, the counter neither limits the effect nor is consumed. After winning a boss combat, restore the counter to 40.",
   "DENIA-DENIA_MASTER_SWORD.flavor": "The Master Sword is a sacred blade that the wicked can never touch... Only one worthy of the title \"Hero of Time\" can draw it from the pedestal in the Temple of Time.",
   "DENIA-DENIA_PAINKILLER.title": "Painkiller",
-  "DENIA-DENIA_PAINKILLER.description": "At the start of each combat, gain 5 [gold]Strength[/gold], 5 [gold]Dexterity[/gold], and 5 [gold]Shrouded Star[/gold]. At the start of each turn, gain 1 [gold]Vulnerable[/gold].",
+  "DENIA-DENIA_PAINKILLER.description": "At the start of each combat, gain 5 [gold]Strength[/gold], 3 [gold]Dexterity[/gold], and 5 [gold]Shrouded Star[/gold]. At the start of each turn, gain 1 [gold]Vulnerable[/gold].",
   "DENIA-DENIA_PAINKILLER.flavor": "The president of Canxing Society replaced it with saline. It has no analgesic effect.",
   "DENIA-DENIA_RATION.title": "Compressed Ration",
   "DENIA-DENIA_RATION.description": "At the start of each turn, gain 6 [gold]Vigor[/gold].",
