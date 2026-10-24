@@ -35,7 +35,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Remove="src\Cards\DeniaCrush.cs" />
-    <Compile Remove="src\Cards\DeniaEtchedIridescent.cs" />
+    <!-- 暂时下线（设计稿标记"暂时下线"）：源码与资源保留，仅编译打包时跳过 -->
+    <Compile Remove="src\Cards\DeniaInspectionReportRa2499G.cs" />
   </ItemGroup>
 </Project>

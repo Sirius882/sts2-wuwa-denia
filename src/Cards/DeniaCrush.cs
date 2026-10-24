@@ -1,52 +1,36 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using AemeathWw.Scripts;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Localization.DynamicVars;
-using MegaCrit.Sts2.Core.ValueProps;
-using TuneStrain;
 
 namespace Denia;
 
 /// <summary>
-/// 轧碎 — Common Attack。造成伤害后，按实际造成伤害的 1/3（虚质强化 1/2）附加聚爆。
-/// 聚爆计算参考原版 BlightStrike：读取 AttackCommand.Results 的 TotalDamage。
+/// 轧碎 — Rare Power。本场战斗中，你附加的聚爆引爆伤害集中到被引爆的单个目标
+/// （逐目标按易伤/增伤预结算后求和；敌方仅1个目标时按2份计算）。
+/// 实际分配由 DeniaCrushDistributionPatch 接管。
 /// </summary>
+[Pool(typeof(DeniaCardPool))]
 public sealed class DeniaCrush : DeniaCard
 {
-    public override int CurrentVirtualMatterCost => 3;
-    public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { TuneStrainKeywords.TuneStrainResponse };
-    protected override IEnumerable<DynamicVar> CanonicalVars => new[] { new DamageVar(9m, ValueProp.Move) };
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_crush.png";
 
-    public DeniaCrush() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
+    public DeniaCrush() : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "轧碎",
-            Description: "造成{Damage:diff()}点伤害，附加所造成伤害三分之一的[color=#9A6A18]聚爆[/color]。\n虚质强化：附加聚爆比例变为二分之一。");
+        Description: "本场战斗中，你的[color=#9A6A18]聚爆引爆[/color]伤害不再AOE结算，而是把本应造成的伤害总量全部集中在被引爆的单个目标上。触发时，如果敌方阵营只有1个目标，就按有2个目标计算。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        ArgumentNullException.ThrowIfNull(play.Target);
-
-        var attack = await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this, play)
-            .Targeting(play.Target)
-            .WithHitFx("vfx/vfx_heavy_blunt")
-            .Execute(ctx);
-
-        int totalDamage = attack.Results.SelectMany(r => r).Sum(r => r.TotalDamage);
-        bool halfRatio = await TrySpendVirtualMatter(play);
-        int burst = halfRatio ? totalDamage / 2 : totalDamage / 3;
-        if (burst > 0 && !play.Target.IsDead)
-            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
+        await PowerCmd.Apply<DeniaCrushPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
     }
 
-    protected override void OnUpgrade() => DynamicVars.Damage.UpgradeValueBy(6m);
+    protected override void OnUpgrade()
+    {
+        AddKeyword(CardKeyword.Innate);
+        EnergyCost.UpgradeBy(-1);
+    }
 }
