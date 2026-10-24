@@ -21,14 +21,11 @@ public sealed class DeniaAnger : DeniaCard
         var prefs = new CardSelectorPrefs(new LocString("card_selection", "TO_EXHAUST"), 0, maxSelect);
         var selected = await CardSelectCmd.FromHand(ctx, Owner, prefs, c => c != this, this);
         if (selected == null || !selected.Any()) return;
-        int count = 0;
         foreach (var card in selected.ToList())
         {
             await CardCmd.Exhaust(ctx, card);
-            count++;
+            await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(blockPer, ValueProp.Move), play);
         }
-        if (count > 0)
-            await CreatureCmd.GainBlock(Owner.Creature, new BlockVar(count * blockPer, ValueProp.Unpowered), play);
     }
     protected override void OnUpgrade() { }
 }
