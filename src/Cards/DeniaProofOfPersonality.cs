@@ -1,9 +1,9 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AemeathWw.Scripts.Api;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
-using HarmonyLib;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
@@ -27,7 +27,7 @@ public sealed class DeniaProofOfPersonality : DeniaCard
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "人格的证明",
-            Description: "每次附加[color=#9A6A18]集谐·偏移[/color]时，额外附加1点。");
+            Description: "每次附加[color=#9A6A18]集谐·偏移[/color]时，如果附加后集谐·偏移少于2点，则追加1点；如果附加后集谐·偏移不少于2点，自动触发无条件[color=#9A6A18]谐度破坏[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -40,10 +40,15 @@ public sealed class DeniaProofOfPersonality : DeniaCard
     }
 }
 
+/// <summary>
+/// 每次附加集谐·偏移后：目标偏移少于2点则追加1点（追加本身在守卫内、不再触发本效果）；
+/// 不少于2点自动触发无条件谐度破坏。通过 TuneStrainState.RegisterBiasAppliedHandler
+/// 注册回调实现，回调在 TryAddBias 的 await 链内执行，无需 Harmony patch。
+/// </summary>
 public sealed class DeniaProofOfPersonalityPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_proof_of_personality_power.webp";
@@ -51,17 +56,28 @@ public sealed class DeniaProofOfPersonalityPower : CustomPowerModel
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "人格的证明",
-        Description: "每次附加集谐·偏移时，额外附加{Amount}点。",
-        SmartDescription: "每次附加集谐·偏移时，额外附加{Amount}点。");
-}
+        Description: "每次附加集谐·偏移时，如果附加后集谐·偏移少于2点，则追加1点；如果附加后集谐·偏移不少于2点，自动触发无条件谐度破坏。",
+        SmartDescription: "每次附加集谐·偏移时，如果附加后集谐·偏移少于2点，则追加1点；如果附加后集谐·偏移不少于2点，自动触发无条件谐度破坏。");
 
-[HarmonyPatch(typeof(TuneStrainState), nameof(TuneStrainState.TryAddBias))]
-public static class DeniaProofOfPersonalityBiasPatch
-{
-    public static void Prefix(ref int amount, Creature applier)
+    static DeniaProofOfPersonalityPower()
     {
-        if (amount <= 0 || applier?.IsPlayer != true) return;
-        var pwr = applier.GetPower<DeniaProofOfPersonalityPower>();
-        if (pwr != null) amount += (int)pwr.Amount;
+        TuneStrainState.RegisterBiasAppliedHandler(async (target, applier, source) =>
+        {
+            if (applier?.IsPlayer != true) return;
+            var power = applier.GetPower<DeniaProofOfPersonalityPower>();
+            if (power == null) return;
+
+            int bias = TuneStrainState.GetBias(target);
+            if (bias <= 0 || target.IsDead) return;
+
+            if (bias < 2)
+            {
+                await TuneStrainState.TryAddBias(target, 1, applier, source);
+            }
+            else
+            {
+                await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(target, applier, source);
+            }
+        });
     }
 }

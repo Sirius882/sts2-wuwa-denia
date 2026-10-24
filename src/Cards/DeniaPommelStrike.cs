@@ -23,7 +23,7 @@ public sealed class DeniaPommelStrike : DeniaCard
         new[] { TuneStrainKeywords.TuneStrainResponse };
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new DynamicVar[] { new DamageVar(8m, ValueProp.Move) };
+        new DynamicVar[] { new DamageVar(12m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_pommel_strike.jpg";
@@ -32,7 +32,7 @@ public sealed class DeniaPommelStrike : DeniaCard
         : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "剑柄打击",
-            Description: "造成{Damage:diff()}点伤害。若目标已有[color=#9A6A18]集谐·偏移[/color]，再附加1[color=#9A6A18]集谐·偏移[/color]{IfUpgraded:show:，然后触发无条件[color=#9A6A18]谐度破坏[/color]|}。\n虚质强化：造成10点伤害。");
+            Description: "造成{Damage:diff()}点伤害。若此牌打出前目标已有[color=#9A6A18]集谐·偏移[/color]，再附加1[color=#9A6A18]集谐·偏移[/color]{IfUpgraded:show:，然后无条件[color=#9A6A18]谐度破坏[/color]|}。\n虚质强化：最后再造成10点伤害一次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -66,6 +66,6 @@ public sealed class DeniaPommelStrike : DeniaCard
 
     protected override void OnUpgrade()
     {
-        DynamicVars.Damage.UpgradeValueBy(-2m);
+        DynamicVars.Damage.UpgradeValueBy(-6m);
     }
 }

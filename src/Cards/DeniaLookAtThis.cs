@@ -31,7 +31,7 @@ public sealed class DeniaLookAtThis : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_look_at_this.png";
 
     public DeniaLookAtThis()
-        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AllEnemies) { }
+        : base(0, CardType.Attack, CardRarity.Uncommon, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "你看见了什么？",
             Description: "对所有敌人附加1[color=#9A6A18]集谐·偏移[/color]。造成{Damage:diff()}点伤害。从牌组中选择{IfUpgraded:show:4|2}张牌，附加[color=#9A6A18]集谐响应[/color]。\n虚质强化：多附加1[color=#9A6A18]集谐·偏移[/color]。");

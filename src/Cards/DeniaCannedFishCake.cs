@@ -16,7 +16,7 @@ namespace Denia;
 
 /// <summary>
 /// 鱼罐头松糕 — Uncommon Skill, 1e, Exhaust.
-/// 本回合集谐响应层数按 2 倍计算；与共鸣模态·集谐(1.5)同时存在时相乘为 3 倍。
+/// 本回合集谐响应层数按 2 倍计算；与共鸣模态·集谐(2倍)同时存在时相乘为 4 倍。
 /// </summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaCannedFishCake : DeniaCard

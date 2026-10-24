@@ -994,7 +994,7 @@
   "DENIA-DENIA_MASTER_SWORD.description": "初始拥有40点计数。每打出一张攻击牌，消耗1计数。战斗开始时若计数>0，获得2力量和2蔽星；计数归零时失去力量和蔽星。Boss战中不受计数限制且不消耗计数。Boss战胜利后计数恢复40。",
   "DENIA-DENIA_MASTER_SWORD.flavor": "大师之剑是一把神圣的剑，邪恶之人永远无法触碰……只有配得上「时之勇者」称号的人，才能将它从时之神殿的台座上拔起。",
   "DENIA-DENIA_PAINKILLER.title": "止痛药",
-  "DENIA-DENIA_PAINKILLER.description": "每场战斗开始时，获得5点[gold]力量[/gold]、3点[gold]敏捷[/gold]和5层[gold]蔽星[/gold]。每个回合开始时，获得1层[gold]易伤[/gold]。",
+  "DENIA-DENIA_PAINKILLER.description": "省流：虚血\n每个敌怪的回合，记录该回合你失去的生命值；在下个你的回合，当你对怪物造成伤害时，回复伤害量2/3的生命值。每回合通过这种方式回复的生命值总量不超过记录的上回合掉血量。在你的每个回合结束时重置记录。",
   "DENIA-DENIA_PAINKILLER.flavor": "被残星会会长换成了生理盐水，并没有止痛的效果。",
   "DENIA-DENIA_RATION.title": "压缩食品",
   "DENIA-DENIA_RATION.description": "每个回合开始时，获得6点[gold]活力[/gold]。",

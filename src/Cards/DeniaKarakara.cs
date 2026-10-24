@@ -12,7 +12,7 @@ using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
-/// <summary>喀拉喀拉 — Rare Skill, 2e(upg:1). Gain str = enemy vuln. VM强化: gain str = enemy burst.</summary>
+/// <summary>喀拉喀拉 — Rare Skill, 2e(upg:1). Gain str = enemy vuln. VM强化: gain str = half enemy burst cap (floor).</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaKarakara : DeniaCard
 {
@@ -26,20 +26,21 @@ public sealed class DeniaKarakara : DeniaCard
         : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "喀拉喀拉",
-            Description: "获得等同于目标[color=#9A6A18]易伤[/color]层数三分之一的[color=#9A6A18]力量[/color]。\n虚质强化：获得等同于目标[color=#9A6A18]聚爆上限[/color]三分之二的[color=#9A6A18]力量[/color]。");
+            Description: "获得等同于目标[color=#9A6A18]易伤[/color]层数的[color=#9A6A18]力量[/color]。\n虚质强化：获得等同于目标[color=#9A6A18]聚爆上限[/color]一半的[color=#9A6A18]力量[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        int vulnAmount = (int)(play.Target.GetPower<VulnerablePower>()?.Amount ?? 0) / 3;
+        // 设计：分数均向下取整
+        int vulnAmount = (int)(play.Target.GetPower<VulnerablePower>()?.Amount ?? 0);
         if (vulnAmount > 0)
             await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, vulnAmount, Owner.Creature, this);
 
         if (await TrySpendVirtualMatter(play))
         {
-            // 聚爆上限三分之二的力量：按 5+额外上限 向上取整
-            int strFromCap = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 2, 3);
+            // 聚爆上限一半的力量：按 5+额外上限 向下取整
+            int strFromCap = DeniaFusionBurstMath.FloorRatioOfCap(play.Target, 1, 2);
             if (strFromCap > 0)
                 await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, strFromCap, Owner.Creature, this);
         }

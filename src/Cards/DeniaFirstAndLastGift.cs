@@ -21,7 +21,7 @@ public sealed class DeniaFirstAndLastGift : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_first_and_last_gift.png";
 
     public DeniaFirstAndLastGift()
-        : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "最初和最后的礼物",
             Description: "附加2[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。");
@@ -38,5 +38,6 @@ public sealed class DeniaFirstAndLastGift : DeniaCard
     protected override void OnUpgrade()
     {
         AddKeyword(CardKeyword.Retain);
+        RemoveKeyword(CardKeyword.Exhaust);
     }
 }

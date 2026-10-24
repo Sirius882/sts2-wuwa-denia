@@ -81,8 +81,6 @@ public static class DeniaRelicTurnStartPatch
             if (player.GetRelic<DeniaAlbum>() != null && DeniaFormHelper.IsBlack(player.Creature))
                 await PlayerCmd.GainEnergy(1m, player);
 
-            // 止痛药效果改由 DeniaPainkiller.AfterSideTurnStart 仅对持有者结算
-
             if (player.GetRelic<DeniaRation>() != null)
                 await PowerCmd.Apply<VigorPower>(new ThrowingPlayerChoiceContext(), player.Creature, 6m, player.Creature, null!);
 

@@ -35,6 +35,10 @@ public static class TuneStrainState
     // 角色 mod 注册的响应度倍率（进程级、纯计算，不进 checksum）
     private static readonly List<Func<Creature, double>> ResponseDegreeMultipliers = new();
 
+    // 附加偏移后的异步回调（人格的证明等）；回调内部再附加的偏移不会再次触发（防递归续杯）
+    private static readonly List<Func<Creature, Creature, CardModel?, Task>> BiasAppliedHandlers = new();
+    private static int biasAppliedGuard;
+
     static TuneStrainState()
     {
         CombatManager.Instance.CombatEnded += OnCombatEnded;
@@ -65,7 +69,28 @@ public static class TuneStrainState
         if (amount <= 0 || target.IsDead) return false;
 
         await PowerCmd.Apply<TuneStrainBiasPower>(Throwing, target, amount, applier, source);
+        await RaiseBiasApplied(target, applier, source);
         return true;
+    }
+
+    public static IDisposable RegisterBiasAppliedHandler(Func<Creature, Creature, CardModel?, Task> handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        BiasAppliedHandlers.Add(handler);
+        return new MultiplierHandle(() => BiasAppliedHandlers.Remove(handler));
+    }
+
+    private static async Task RaiseBiasApplied(Creature target, Creature applier, CardModel? source)
+    {
+        if (biasAppliedGuard > 0 || BiasAppliedHandlers.Count == 0) return;
+
+        foreach (var handler in BiasAppliedHandlers.ToList())
+        {
+            biasAppliedGuard++;
+            try { await handler(target, applier, source); }
+            catch (Exception ex) { TuneStrainLog.Info($"BiasApplied handler failed: {ex.Message}"); }
+            finally { biasAppliedGuard--; }
+        }
     }
 
     // ---------------- 集谐响应 power 读取 ----------------

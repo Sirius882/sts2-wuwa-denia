@@ -14,14 +14,14 @@ using TuneStrain;
 
 namespace Denia;
 
-/// <summary>族群进化的错误 — Rare Attack: if bias then rupture (upg always after applying 1 bias); always deal 10 dmg; VM +10 dmg.</summary>
+/// <summary>族群进化的错误 — Rare Attack: if bias then rupture (upg always after applying 2 bias); always deal 20 dmg; VM +10 dmg.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaTribeEvolutionError : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 5;
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new DynamicVar[] { new DamageVar(10m, ValueProp.Move) };
+        new DynamicVar[] { new DamageVar(20m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_tribe_evolution_error.png";
@@ -30,7 +30,7 @@ public sealed class DeniaTribeEvolutionError : DeniaCard
         : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "族群进化的错误",
-            Description: "{IfUpgraded:show:附加1[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。|若目标带有[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。}造成{Damage:diff()}点伤害。\n虚质强化：伤害+10。");
+            Description: "{IfUpgraded:show:附加2[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。|若目标带有[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。}造成{Damage:diff()}点伤害。\n虚质强化：伤害+10。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -38,7 +38,7 @@ public sealed class DeniaTribeEvolutionError : DeniaCard
 
         if (IsUpgraded)
         {
-            await TuneStrainState.TryAddBias(play.Target, 1, Owner.Creature, this);
+            await TuneStrainState.TryAddBias(play.Target, 2, Owner.Creature, this);
             if (!play.Target.IsDead)
                 await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
         }

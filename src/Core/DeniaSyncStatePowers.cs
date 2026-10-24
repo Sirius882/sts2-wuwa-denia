@@ -97,11 +97,6 @@ public sealed class DeniaTowardVoidTriggeredThisTurnPower : DeniaHiddenCounterPo
 {
 }
 
-/// <summary>止痛药：本场战斗已发放过开场 5 力/敏/蔽星（每玩家独立）。</summary>
-public sealed class DeniaPainkillerOpeningBuffUsedPower : DeniaHiddenCounterPower
-{
-}
-
 /// <summary>献斗系列：本场战斗已掉过血（每玩家独立）。</summary>
 public sealed class DeniaSacrificialHitThisCombatPower : DeniaHiddenCounterPower
 {
