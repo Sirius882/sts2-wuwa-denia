@@ -10,6 +10,7 @@ using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.ValueProps;
 using MegaCrit.Sts2.Core.Entities.Cards;
+using MegaCrit.Sts2.Core.Localization;
 using TuneStrain.Patches;
 
 namespace TuneStrain.Powers;
@@ -33,11 +34,20 @@ public sealed class TuneStrainInterferencePower : CustomPowerModel
     public override string? CustomPackedIconPath => "res://tune_strain/images/powers/tune_strain_interference.png";
     public override string? CustomBigIconPath => "res://tune_strain/images/powers/tune_strain_interference.png";
 
+    // 本地化只能内联提供：BaseLib 只把内联 Localization 写入当前语言表，
+    // 且 TUNESTRAIN- 键不在 DeniaLocalizationOverridePatch 的 DENIA- 合并范围内。
     public override List<(string, string)>? Localization =>
-        new PowerLoc(
-            Title: "集谐·干涉",
-            Description: "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。可以继续附加集谐·偏移。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。",
-            SmartDescription: "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。可以继续附加集谐·偏移。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。");
+        LocManager.Instance.Language switch
+        {
+            "zhs" => new PowerLoc(
+                Title: "集谐·干涉",
+                Description: "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。",
+                SmartDescription: "增加玩家对怪物的伤害。集谐·干涉和集谐响应的层数越高，增伤幅度越大。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。"),
+            _ => new PowerLoc(
+                Title: "Tune Strain · Interference",
+                Description: "Increases the damage players deal to this monster. The higher the Tune Strain · Interference and Tune Strain Response stacks are, the larger the damage bonus. Lasts 3 turns; when Tune Strain Resonance Break triggers again, the stacks become the higher of the old and new values and the duration resets to 3 turns.",
+                SmartDescription: "Increases the damage players deal to this monster. The higher the Tune Strain · Interference and Tune Strain Response stacks are, the larger the damage bonus. Lasts 3 turns; when Tune Strain Resonance Break triggers again, the stacks become the higher of the old and new values and the duration resets to 3 turns.")
+        };
 
     /// <summary>
     /// 集谐易伤：仅对打到本目标上的 powered attack 生效，倍率由 tsBias（本 power 层数）
