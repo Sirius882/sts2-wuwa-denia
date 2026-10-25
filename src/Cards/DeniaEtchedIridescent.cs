@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
+using Godot;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -9,6 +12,8 @@ using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Powers;
+using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Nodes.Rooms;
 
 namespace Denia;
 
@@ -26,7 +31,7 @@ public sealed class DeniaEtchedIridescent : DeniaCard
     public DeniaEtchedIridescent() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "蚀刻繁彩",
-        Description: "在敌方创建一个{IfUpgraded:show:150|200}生命的木桩。木桩对[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害有2倍易伤。本场战斗结束时，若木桩被玩家击杀而非死于爪牙效果，所有玩家恢复{IfUpgraded:show:15|10}点生命。\n黯核强化：生命恢复量翻倍。");
+        Description: "在敌方创建一个{IfUpgraded:show:150|200}生命的木桩。木桩对[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害有2倍易伤。木桩被玩家击杀时，所有玩家立即恢复{IfUpgraded:show:15|10}点生命。\n黯核强化：生命恢复量翻倍。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -42,11 +47,26 @@ public sealed class DeniaEtchedIridescent : DeniaCard
             return;
         }
 
+        // 没有槽位 scene 的遭遇（EncounterModel.HasScene 默认 false，含第三方 mod 的战斗）
+        // 或槽位已被占满时，GetNextSlot 返回空串；CreatureCmd.Add 拿到空串槽名会让
+        // NCombatRoom.AddCreature 抛 "slot name '' but EncounterSlots is null" 并卡死出牌流程。
+        // 引擎认可的空槽路径是 null（CreatureCmd.Add 的默认参数）：先入場，再手动摆放位置。
+        string? slot = combat.Encounter?.GetNextSlot(combat);
+        if (string.IsNullOrEmpty(slot))
+        {
+            slot = null;
+        }
+
         Creature stake = await CreatureCmd.Add(
             ModelDb.Monster<DeniaEtchingStake>().ToMutable(),
             combat,
             CombatSide.Enemy,
-            combat.Encounter?.GetNextSlot(combat));
+            slot);
+
+        if (slot == null)
+        {
+            PositionStakeWithoutSlot(combat, stake);
+        }
 
         if (IsUpgraded)
         {
@@ -56,6 +76,48 @@ public sealed class DeniaEtchedIridescent : DeniaCard
 
         await PowerCmd.Apply<MinionPower>(ctx, stake, 1m, Owner.Creature, this);
         await PowerCmd.Apply<DeniaEtchingStakePower>(ctx, stake, heal, Owner.Creature, this);
+        // 回血载体挂玩家侧（木桩死亡即被移出战斗名单，其 power 收不到结算钩子）：
+        // 击杀当场结算，见 DeniaEtchingStakeHealPower。重复打出时 Single 叠层只合并
+        // Amount，回血单价存 HealPerStake（每次以最新一发为准）。
+        await PowerCmd.Apply<DeniaEtchingStakeHealPower>(ctx, Owner.Creature, heal, Owner.Creature, this);
+        Owner.Creature.GetPower<DeniaEtchingStakeHealPower>()!.HealPerStake = heal;
+    }
+
+    /// <summary>
+    /// 无槽位战斗中手动摆放木桩：放到最右侧存活敌人的右边，超出屏宽则改放最左侧敌人的左边。
+    /// 读写的是各敌人节点在同一父容器（_enemyContainer）下的局部 <see cref="NCreature.Position"/>，
+    /// 与 NCombatRoom.PositionEnemies（无 scene 战斗的常规布局）坐标系一致；
+    /// 有槽位 scene 但槽位占满时也走此路径，槽位标记同样挂在该容器下，口径不变。
+    /// </summary>
+    private static void PositionStakeWithoutSlot(ICombatState combat, Creature stake)
+    {
+        NCombatRoom? room = NCombatRoom.Instance;
+        NCreature? stakeNode = room?.GetCreatureNode(stake);
+        if (room == null || stakeNode == null) return;
+
+        List<NCreature> enemyNodes = combat.Enemies
+            .Where(e => e != stake && e.IsAlive)
+            .Select(e => room.GetCreatureNode(e))
+            .Where(n => n != null)
+            .Select(n => n!)
+            .ToList();
+
+        if (enemyNodes.Count == 0)
+        {
+            stakeNode.Position = new Vector2(480f, 200f);
+            return;
+        }
+
+        NCreature rightmost = enemyNodes.OrderByDescending(n => n.Position.X).First();
+        float halfSum = (rightmost.Visuals.Bounds.Size.X + stakeNode.Visuals.Bounds.Size.X) * 0.5f + 60f;
+        float x = rightmost.Position.X + halfSum;
+        if (x > 940f)
+        {
+            NCreature leftmost = enemyNodes.OrderBy(n => n.Position.X).First();
+            x = leftmost.Position.X - (leftmost.Visuals.Bounds.Size.X + stakeNode.Visuals.Bounds.Size.X) * 0.5f - 60f;
+            x = Math.Max(x, 60f);
+        }
+        stakeNode.Position = new Vector2(x, rightmost.Position.Y);
     }
 
     protected override void OnUpgrade() { }

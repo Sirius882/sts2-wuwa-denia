@@ -921,6 +921,6 @@
   "DENIA-DENIA_CRUSH_POWER.description": "你的[color=#9A6A18]聚爆引爆[/color]伤害不再AOE结算，而是把本应造成的伤害总量全部集中在被引爆的单个目标上。敌方阵营只有1个目标时，按有2个目标计算。",
   "DENIA-DENIA_CRUSH_POWER.smartDescription": "聚爆引爆伤害总量全部集中在被引爆的单个目标上；敌方只有1个目标时按2个计算。",
   "DENIA-DENIA_ETCHING_STAKE_POWER.title": "蚀刻木桩",
-  "DENIA-DENIA_ETCHING_STAKE_POWER.description": "受到的[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害翻倍。本场战斗胜利时，若其被玩家击杀而非死于爪牙效果，所有玩家恢复{Amount}点生命。",
-  "DENIA-DENIA_ETCHING_STAKE_POWER.smartDescription": "受到聚爆引爆伤害和谐度破坏伤害翻倍。被玩家击杀则战斗胜利时所有玩家恢复{Amount}点生命。"
+  "DENIA-DENIA_ETCHING_STAKE_POWER.description": "受到的[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害翻倍。其被玩家击杀时，所有玩家立即恢复{Amount}点生命。",
+  "DENIA-DENIA_ETCHING_STAKE_POWER.smartDescription": "受到聚爆引爆伤害和谐度破坏伤害翻倍。被玩家击杀时所有玩家立即恢复{Amount}点生命。"
 }

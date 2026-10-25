@@ -147,8 +147,13 @@ public sealed class DeniaPainkiller : CustomRelicModel
         int dealt = result.UnblockedDamage - result.OverkillDamage;
         if (dealt <= 0) return;
 
-        decimal heal = System.Math.Min(dealt * 2m / 3m, budget);
-        if (heal <= 0m) return;
+        // 回血量按 2/3 向上取整（用户口径）；引擎的回血浮字（NHealNumVfx 直接 (int) 强转）
+        // 与血条显示都按整数截断，小数回血会显示"+0"，因此必须取整后再回血。
+        // 预算上限保持严格：剩余额度向下取整，总量永远不超过记录的掉血量；不足 1 点则不回血、不消耗额度。
+        decimal heal = System.Math.Min(
+            System.Math.Ceiling(dealt * 2m / 3m),
+            System.Math.Floor(budget));
+        if (heal < 1m) return;
 
         HealedThisTurn += heal;
         Flash();

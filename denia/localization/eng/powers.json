@@ -937,6 +937,6 @@
   "DENIA-DENIA_CRUSH_POWER.description": "Your [color=#9A6A18]Fusion Burst[/color] detonation damage is no longer dealt as AOE; the total damage that would have been dealt is concentrated on the single detonated target. If the enemy side has only 1 target, it is counted as 2.",
   "DENIA-DENIA_CRUSH_POWER.smartDescription": "Fusion Burst detonation totals are concentrated on the detonated target; 1 target counts as 2.",
   "DENIA-DENIA_ETCHING_STAKE_POWER.title": "Etched Stake",
-  "DENIA-DENIA_ETCHING_STAKE_POWER.description": "Takes double damage from [color=#9A6A18]Fusion Burst[/color] detonations and [color=#9A6A18]Resonance Break[/color]. At the end of this combat, if killed by players rather than dying to the Minion effect, all players heal {Amount} HP.",
-  "DENIA-DENIA_ETCHING_STAKE_POWER.smartDescription": "Takes double Fusion Burst detonation and Resonance Break damage. If killed by players, all players heal {Amount} HP at the end of this combat."
+  "DENIA-DENIA_ETCHING_STAKE_POWER.description": "Takes double damage from [color=#9A6A18]Fusion Burst[/color] detonations and [color=#9A6A18]Resonance Break[/color]. When killed by players, all players immediately heal {Amount} HP.",
+  "DENIA-DENIA_ETCHING_STAKE_POWER.smartDescription": "Takes double Fusion Burst detonation and Resonance Break damage. If killed by players, all players immediately heal {Amount} HP."
 }

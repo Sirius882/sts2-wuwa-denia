@@ -1276,7 +1276,7 @@
   "DENIA-DENIA_ENTROPY_BOOST.title": "Entropy Boost",
   "DENIA-DENIA_ENTROPY_BOOST.description": "Whenever you gain a buff or apply a debuff to an enemy, gain 2 [color=#9A6A18]Block[/color], up to 6 times per turn.\nDark Core Enhancement: [color=#9A6A18]Block[/color] gained each time +1.",
   "DENIA-DENIA_ETCHED_IRIDESCENT.title": "Etched Iridescence",
-  "DENIA-DENIA_ETCHED_IRIDESCENT.description": "Create a {IfUpgraded:show:150|200} HP stake on the enemy side. The stake takes double damage from [color=#9A6A18]Fusion Burst[/color] detonations and [color=#9A6A18]Resonance Break[/color]. At the end of this combat, if the stake was killed by players rather than dying to the Minion effect, all players heal {IfUpgraded:show:15|10} HP.\nDark Core Enhancement: double the heal.",
+  "DENIA-DENIA_ETCHED_IRIDESCENT.description": "Create a {IfUpgraded:show:150|200} HP stake on the enemy side. The stake takes double damage from [color=#9A6A18]Fusion Burst[/color] detonations and [color=#9A6A18]Resonance Break[/color]. When the stake is killed by players, all players immediately heal {IfUpgraded:show:15|10} HP.\nDark Core Enhancement: double the heal.",
   "DENIA-DENIA_EXILE.title": "Exile",
   "DENIA-DENIA_EXILE.description": "Deal {Damage:diff()} damage. Draw {IfUpgraded:show:2|1} cards.\nDark Core Enhancement: draw 2 cards.",
   "DENIA-DENIA_ENDED.title": "Settle This",
