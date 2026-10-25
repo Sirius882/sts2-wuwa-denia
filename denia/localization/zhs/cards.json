@@ -1257,7 +1257,7 @@
   "DENIA-DENIA_ENTROPY_BOOST.title": "熵变强化",
   "DENIA-DENIA_ENTROPY_BOOST.description": "每当自己获得增益或给敌人附加减益时，获得2[color=#9A6A18]格挡[/color]，每回合最多触发6次。\n黯核强化：每次获得的[color=#9A6A18]格挡[/color]+1。",
   "DENIA-DENIA_ETCHED_IRIDESCENT.title": "蚀刻繁彩",
-  "DENIA-DENIA_ETCHED_IRIDESCENT.description": "在敌方创建一个{IfUpgraded:show:150|200}生命的木桩。木桩对[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害有2倍易伤。木桩被玩家击杀时，所有玩家立即恢复{IfUpgraded:show:15|10}点生命。\n黯核强化：生命恢复量翻倍。",
+  "DENIA-DENIA_ETCHED_IRIDESCENT.description": "在敌方创建一个{IfUpgraded:show:{StakeHpUpgraded}|{StakeHp}}生命的木桩。木桩对[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害有2倍易伤。木桩被玩家击杀时，所有玩家立即恢复{IfUpgraded:show:15|10}点生命。\n黯核强化：生命恢复量翻倍。",
   "DENIA-DENIA_EXILE.title": "放逐",
   "DENIA-DENIA_EXILE.description": "造成{Damage:diff()}点伤害。抽{IfUpgraded:show:2|1}张牌。\n黯核强化：抽2张牌。",
   "DENIA-DENIA_ENDED.title": "做个了断",

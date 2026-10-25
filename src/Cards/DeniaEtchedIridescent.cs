@@ -10,10 +10,12 @@ using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
+using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
+using MegaCrit.Sts2.Core.Rooms;
 
 namespace Denia;
 
@@ -30,8 +32,16 @@ public sealed class DeniaEtchedIridescent : DeniaCard
 
     public DeniaEtchedIridescent() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
+    // 木桩生命显示变量：数值随人数与幕缩放（与实际结算一致），升级预览走独立变量，
+    // 否则未升级卡在预览分支里读不到升级后的数值。
+    protected override IEnumerable<DynamicVar> CanonicalVars => new DynamicVar[]
+    {
+        new StakeHpVar("StakeHp", assumeUpgraded: false),
+        new StakeHpVar("StakeHpUpgraded", assumeUpgraded: true),
+    };
+
     public override List<(string, string)>? Localization => new CardLoc(Title: "蚀刻繁彩",
-        Description: "在敌方创建一个{IfUpgraded:show:150|200}生命的木桩。木桩对[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害有2倍易伤。木桩被玩家击杀时，所有玩家立即恢复{IfUpgraded:show:15|10}点生命。\n黯核强化：生命恢复量翻倍。");
+        Description: "在敌方创建一个{IfUpgraded:show:{StakeHpUpgraded}|{StakeHp}}生命的木桩。木桩对[color=#9A6A18]聚爆引爆[/color]伤害和[color=#9A6A18]谐度破坏[/color]伤害有2倍易伤。木桩被玩家击杀时，所有玩家立即恢复{IfUpgraded:show:15|10}点生命。\n黯核强化：生命恢复量翻倍。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -118,6 +128,46 @@ public sealed class DeniaEtchedIridescent : DeniaCard
             x = Math.Max(x, 60f);
         }
         stakeNode.Position = new Vector2(x, rightmost.Position.Y);
+    }
+
+    /// <summary>
+    /// 木桩生命的显示变量，按引擎实际结算路径等价计算：
+    /// ① 基础 200（DeniaEtchingStake Min==Max==200，SetUniqueMonsterHpValue 恒取 200，
+    ///    同数值怪在场时回退 NextInt(200,201) 仍为 200，无随机浮动）；
+    /// ② 多人时 CombatState.CreateCreature → ScaleMonsterHpForMultiplayer：再乘 玩家数×幕系数
+    ///    （MultiplayerScalingModel.GetMultiplayerScaling：第1幕 1.1、第2幕 1.2、第3幕 1.2、
+    ///    第3幕 Boss 房 1.3；单人=1）；
+    /// ③ 升级版由卡牌在生成后按 3/4 比例收缩（SetMaxHpInternal(MaxHp*3/4)，发生在缩放之后）。
+    /// 进阶（ToughEnemies）不影响：本体的进阶血量由各怪物类写进 Min/MaxInitialHp，木桩未启用。
+    /// 战斗外预览（牌组查看等）无 Encounter，第3幕按非 Boss 的 1.2 计。
+    /// </summary>
+    private sealed class StakeHpVar(string name, bool assumeUpgraded) : DynamicVar(name, 0m)
+    {
+        protected override decimal GetBaseValueForIConvertible()
+        {
+            var card = _owner as DeniaEtchedIridescent;
+            decimal hp = 200m;
+
+            var run = card?.Owner?.RunState;
+            if (run != null && run.Players.Count > 1)
+            {
+                bool boss = card!.Owner.Creature.CombatState?.Encounter?.RoomType == RoomType.Boss;
+                decimal actScale = run.CurrentActIndex switch
+                {
+                    0 => 1.1m,
+                    1 => 1.2m,
+                    _ => boss ? 1.3m : 1.2m,
+                };
+                hp *= run.Players.Count * actScale;
+            }
+
+            if (assumeUpgraded || (card?.IsUpgraded ?? false))
+            {
+                hp = hp * 3m / 4m;
+            }
+
+            return hp;
+        }
     }
 
     protected override void OnUpgrade() { }
