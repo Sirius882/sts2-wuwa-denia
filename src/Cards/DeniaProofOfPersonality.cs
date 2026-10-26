@@ -27,10 +27,12 @@ public sealed class DeniaProofOfPersonality : DeniaCard
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "人格的证明",
-            Description: "每次附加[color=#9A6A18]集谐·偏移[/color]时，如果附加后集谐·偏移少于2点，则追加1点；如果附加后集谐·偏移不少于2点，自动触发无条件[color=#9A6A18]谐度破坏[/color]。");
+            Description: "每次附加[color=#9A6A18]集谐·偏移[/color]时，如果附加后集谐·偏移少于2点，则追加1点；如果附加后集谐·偏移不少于2点，自动触发无条件[color=#9A6A18]谐度破坏[/color]。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        if (Owner.Creature.GetPower<DeniaProofOfPersonalityPower>() != null) return;
+
         await PowerCmd.Apply<DeniaProofOfPersonalityPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
     }
 

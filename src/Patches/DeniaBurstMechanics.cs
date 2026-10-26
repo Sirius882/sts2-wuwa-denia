@@ -297,8 +297,8 @@ public static class DeniaExtraBurstPatch
         if (applier?.IsPlayer != true) return;
         var pwr = applier.GetPower<DeniaExtraBurstPower>();
         if (pwr == null || pwr.Amount <= 0) return;
-        // Amount = 分母：额外附加 ceil(cap / denom)
-        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, (int)pwr.Amount);
+        // 具体状态提供分母：额外附加 ceil(cap / denom)
+        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, pwr.RatioDenominator);
         if (extra > 0) amount += extra;
     }
 }
@@ -319,7 +319,7 @@ public static class DeniaExtraBurstWithoutAutoBurstPatch
         if (applier?.IsPlayer != true) return;
         var pwr = applier.GetPower<DeniaExtraBurstPower>();
         if (pwr == null || pwr.Amount <= 0) return;
-        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, (int)pwr.Amount);
+        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, pwr.RatioDenominator);
         if (extra > 0) amount += extra;
     }
 }
@@ -342,7 +342,7 @@ public static class DeniaExtraBurstCapPatch
         var pwr = applier.GetPower<DeniaExtraBurstCapPower>();
         if (pwr == null || pwr.Amount <= 0) return;
 
-        int extra = (int)pwr.Amount;
+        int extra = pwr.ExtraAmount;
         if (AemeathFusionBurstState.GetFusionBurstCap(target) >= 40)
         {
             __state = extra;

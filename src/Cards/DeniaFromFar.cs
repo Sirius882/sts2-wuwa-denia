@@ -14,11 +14,23 @@ public sealed class DeniaFromFar : DeniaCard
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_from_far.png";
     public DeniaFromFar() : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "从远方",
-            Description: "附加[color=#9A6A18]聚爆上限[/color]时，额外附加1层。触发时，如果目标聚爆上限已满40，改为[color=#9A6A18]熔解[/color]1。\n黯核强化：额外层数和[color=#9A6A18]熔解[/color]次数都变为2。");
+            Description: "所有附加聚爆上限的效果额外附加1层。触发时，如果目标聚爆上限已满40，改为熔解1。不可叠加，可以覆盖方式升级。\n黯核强化：额外层数和熔解次数都变为2。");
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        int amount = await TrySpendDarkCore(play) ? 2 : 1;
-        await PowerCmd.Apply<DeniaExtraBurstCapPower>(ctx, Owner.Creature, amount, Owner.Creature, this);
+        var existing = Owner.Creature.GetPower<DeniaExtraBurstCapPower>();
+        if (existing is DeniaExtraBurstCapEnhancedPower) return;
+        if (existing != null)
+        {
+            if (!await TrySpendDarkCore(play)) return;
+            await PowerCmd.Remove(existing);
+            await PowerCmd.Apply<DeniaExtraBurstCapEnhancedPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+            return;
+        }
+
+        if (await TrySpendDarkCore(play))
+            await PowerCmd.Apply<DeniaExtraBurstCapEnhancedPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+        else
+            await PowerCmd.Apply<DeniaExtraBurstCapPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
     }
     protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
 }

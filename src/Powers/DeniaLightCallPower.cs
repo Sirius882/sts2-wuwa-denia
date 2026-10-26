@@ -15,7 +15,7 @@ namespace Denia;
 public sealed class DeniaLightCallPower : CustomPowerModel, IOnFusionBurstAppliedPower
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_light_call_power.png";

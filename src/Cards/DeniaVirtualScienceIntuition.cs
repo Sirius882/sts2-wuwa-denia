@@ -26,6 +26,8 @@ public sealed class DeniaVirtualScienceIntuition : DeniaCard
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        if (Owner.Creature.GetPower<DeniaVirtualScienceIntuitionPower>() != null) return;
+
         await PowerCmd.Apply<DeniaVirtualScienceIntuitionPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
     }
 

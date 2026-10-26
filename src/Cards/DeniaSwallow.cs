@@ -30,24 +30,14 @@ public sealed class DeniaSwallow : DeniaCard
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        if (Owner.Creature.GetPower<DeniaSwallowPowerBase>() != null) return;
+
+        // 首次生效的是吞没+时，使用强化状态；入口守卫已排除普通状态。
         if (IsUpgraded)
-        {
-            // 吞没+优先于吞没：升级牌会将普通状态替换为强化状态。
-            if (Owner.Creature.GetPower<DeniaSwallowPower>() != null)
-                await PowerCmd.Remove<DeniaSwallowPower>(Owner.Creature);
-
-            if (Owner.Creature.GetPower<DeniaSwallowPlusPower>() == null)
-                await PowerCmd.Apply<DeniaSwallowPlusPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
-
-            return;
-        }
-
-        // 普通吞没不能覆盖吞没+，且两种状态均不可叠加。
-        if (Owner.Creature.GetPower<DeniaSwallowPower>() != null
-            || Owner.Creature.GetPower<DeniaSwallowPlusPower>() != null)
-            return;
-
-        await PowerCmd.Apply<DeniaSwallowPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
+            await PowerCmd.Apply<DeniaSwallowPlusPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
+        // 普通吞没和吞没+均保留本场战斗首次生效的状态。
+        else
+            await PowerCmd.Apply<DeniaSwallowPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }

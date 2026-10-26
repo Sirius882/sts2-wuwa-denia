@@ -106,3 +106,8 @@ public sealed class DeniaSacrificialHitThisCombatPower : DeniaHiddenCounterPower
 public sealed class DeniaMasterSwordSetupDonePower : DeniaHiddenCounterPower
 {
 }
+
+/// <summary>得到太阳：尚未触发响应的聚爆层数+1（1–3），始终保留以免修改回调枚举集合。</summary>
+public sealed class DeniaGetSunProgressPower : DeniaHiddenCounterPower
+{
+}

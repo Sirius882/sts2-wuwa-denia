@@ -48,10 +48,10 @@ public sealed class DeniaMoonlightSword : DeniaCard
         // 2. 对所有敌人附加冻伤
         foreach (var enemy in enemies)
         {
-            if (enemy.GetPower<DeniaFrostbitePower>() == null)
+            if (!enemy.IsDead && enemy.GetPower<DeniaFrostbitePower>() == null)
                 await PowerCmd.Apply<DeniaFrostbitePower>(ctx, enemy, 1m, Owner.Creature, this);
         }
     }
 
-    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-2);
+    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
 }

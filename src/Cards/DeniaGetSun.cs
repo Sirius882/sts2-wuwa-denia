@@ -31,15 +31,15 @@ public sealed class DeniaGetSun : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "得到太阳",
-            Description: "每附加3[color=#9A6A18]聚爆[/color]，给牌组中随机一张牌附加[color=#9A6A18]集谐响应[/color]。\n虚质强化：恢复1能量。");
+            Description: "每附加3[color=#9A6A18]聚爆[/color]，给牌组中随机一张牌附加[color=#9A6A18]集谐响应[/color]。不可叠加。\n虚质强化：恢复1能量。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        // Amount 展示进度余数；初始 0 不能 Apply，先 Apply 1 再改回 0
+        if (Owner.Creature.GetPower<DeniaGetSunPower>() != null) return;
+
+        // 进度余数使用独立隐藏 power，Amount = 余数+1，避免归零移除或在回调枚举中增删 power。
+        await PowerCmd.Apply<DeniaGetSunProgressPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
         await PowerCmd.Apply<DeniaGetSunPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
-        var pwr = Owner.Creature.GetPower<DeniaGetSunPower>();
-        if (pwr != null && pwr.Amount != 0)
-            await PowerCmd.ModifyAmount(ctx, pwr, -pwr.Amount, Owner.Creature, this);
 
         if (await TrySpendVirtualMatter(play))
             await PlayerCmd.GainEnergy(1m, Owner);
@@ -52,13 +52,13 @@ public sealed class DeniaGetSun : DeniaCard
 }
 
 /// <summary>
-/// Amount = 已累计但未触发的聚爆层数 (0–2)。
+/// 隐藏计数器 Amount = 已累计但未触发的聚爆层数+1 (1–3)。
 /// 通过 IOnFusionBurstAppliedPower 监听“自己成功附加聚爆”。
 /// </summary>
 public sealed class DeniaGetSunPower : CustomPowerModel, IOnFusionBurstAppliedPower
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     // 无独立美术：借用共鸣模态·集谐图标
@@ -69,19 +69,22 @@ public sealed class DeniaGetSunPower : CustomPowerModel, IOnFusionBurstAppliedPo
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "得到太阳",
-        Description: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。进度：{Amount}/3。",
-        SmartDescription: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。进度：{Amount}/3。");
+        Description: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。不可叠加。",
+        SmartDescription: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。不可叠加。");
 
     public async Task OnFusionBurstApplied(Creature target, int amount)
     {
         if (Owner == null || Owner.IsDead || amount <= 0) return;
 
-        int progress = Amount + amount;
+        if (DeniaBurstFillGuard.IsActive) return;
+        var counter = Owner.GetPower<DeniaGetSunProgressPower>();
+        if (counter == null) return;
+        int progress = counter.Amount - 1 + amount;
         int triggers = progress / 3;
         int remainder = progress % 3;
-        int delta = remainder - Amount;
+        int delta = remainder + 1 - counter.Amount;
         if (delta != 0)
-            await PowerCmd.ModifyAmount(new BlockingPlayerChoiceContext(), this, delta, Owner, null);
+            await PowerCmd.ModifyAmount(new BlockingPlayerChoiceContext(), counter, delta, Owner, null);
 
         if (triggers <= 0) return;
 

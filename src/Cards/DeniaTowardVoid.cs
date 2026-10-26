@@ -25,28 +25,27 @@ public sealed class DeniaTowardVoid : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "向虚而行",
-            Description: "触发[color=#9A6A18]黯核强化[/color]时，获得{IfUpgraded:show:3|2}点[color=#9A6A18]格挡[/color]。每回合最多触发4次。");
+            Description: "触发[color=#9A6A18]黯核强化[/color]时，获得{IfUpgraded:show:3|2}点[color=#9A6A18]格挡[/color]。每回合最多触发4次。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        _ = play;
-        int block = IsUpgraded ? 3 : 2;
-        var existing = Owner.Creature.GetPower<DeniaTowardVoidPower>();
-        if (existing == null)
-            await PowerCmd.Apply<DeniaTowardVoidPower>(ctx, Owner.Creature, block, Owner.Creature, this);
-        else if (existing.Amount < block)
-            await PowerCmd.ModifyAmount(ctx, existing, block - existing.Amount, Owner.Creature, this);
+        if (Owner.Creature.GetPower<DeniaTowardVoidPower>() != null) return;
+        if (IsUpgraded)
+            await PowerCmd.Apply<DeniaTowardVoidPlusPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+        else
+            await PowerCmd.Apply<DeniaTowardVoidPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }
 }
 
-public sealed class DeniaTowardVoidPower : CustomPowerModel
+public class DeniaTowardVoidPower : CustomPowerModel
 {
     private const int MaxTriggersPerTurn = 4;
+    public virtual int BlockPerTrigger => 2;
 
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     // 借用 entropy boost 风格的格挡相关图标（本 mod 现有资源）
@@ -55,8 +54,8 @@ public sealed class DeniaTowardVoidPower : CustomPowerModel
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "向虚而行",
-        Description: "触发黯核强化时，获得格挡。每回合最多触发4次。",
-        SmartDescription: "触发黯核强化时，获得{Amount}点格挡。每回合最多触发4次。");
+        Description: $"触发黯核强化时，获得{BlockPerTrigger}点格挡。每回合最多触发4次。不可叠加。",
+        SmartDescription: $"触发黯核强化时，获得{BlockPerTrigger}点格挡。每回合最多触发4次。不可叠加。");
 
     public static async Task OnDarkCoreEnhanced(Creature creature)
     {
@@ -71,6 +70,11 @@ public sealed class DeniaTowardVoidPower : CustomPowerModel
             new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
         // Move：受敏捷等格挡加成（与幻沫一致，不要用 Unpowered）
         await CreatureCmd.GainBlock(
-            creature, new BlockVar(power.Amount, ValueProp.Move), null);
+            creature, new BlockVar(power.BlockPerTrigger, ValueProp.Move), null);
     }
+}
+
+public sealed class DeniaTowardVoidPlusPower : DeniaTowardVoidPower
+{
+    public override int BlockPerTrigger => 3;
 }

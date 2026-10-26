@@ -31,10 +31,12 @@ public sealed class DeniaTorchPineNut : DeniaCard
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "匍炬松松子",
-            Description: "获得[color=#9A6A18]蔽星[/color]时，同步获得相同层数的[color=#9A6A18]力量[/color]。");
+            Description: "获得[color=#9A6A18]蔽星[/color]时，同步获得相同层数的[color=#9A6A18]力量[/color]。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        if (Owner.Creature.GetPower<DeniaTorchPineNutPower>() != null) return;
+
         await PowerCmd.Apply<DeniaTorchPineNutPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
     }
 
@@ -48,7 +50,7 @@ public sealed class DeniaTorchPineNut : DeniaCard
 public sealed class DeniaTorchPineNutPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_torch_pine_nut_power.png";

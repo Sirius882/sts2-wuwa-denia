@@ -24,10 +24,12 @@ public sealed class DeniaKaNiu : DeniaCard
         : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "卡纽",
-            Description: "每次切换形态时，获得1能量。{IfUpgraded:show:\n获得2点[color=#9A6A18]力量[/color]和2层[color=#9A6A18]蔽星[/color]。|}");
+            Description: "每次切换形态时，获得1能量。{IfUpgraded:show:不可叠加。\n获得2点[color=#9A6A18]力量[/color]和2层[color=#9A6A18]蔽星[/color]。|}");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        if (Owner.Creature.GetPower<DeniaKaNiuPower>() != null) return;
+
         await PowerCmd.Apply<DeniaKaNiuPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
 
         if (IsUpgraded)
@@ -43,7 +45,7 @@ public sealed class DeniaKaNiu : DeniaCard
 public sealed class DeniaKaNiuPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_ka_niu_power.png";

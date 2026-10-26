@@ -25,35 +25,26 @@ public sealed class DeniaPhantomFoam : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "幻沫",
-            Description: "触发[color=#9A6A18]虚质强化[/color]时，获得3点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:5|3}次。");
+            Description: "触发[color=#9A6A18]虚质强化[/color]时，获得3点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:5|3}次。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        _ = play;
-        int max = IsUpgraded ? 5 : 3;
-        var existing = Owner.Creature.GetPower<DeniaPhantomFoamPower>();
-        if (existing == null)
-        {
-            var applied = await PowerCmd.Apply<DeniaPhantomFoamPower>(ctx, Owner.Creature, 3m, Owner.Creature, this);
-            if (applied is DeniaPhantomFoamPower p) p.MaxTriggers = max;
-        }
+        if (Owner.Creature.GetPower<DeniaPhantomFoamPower>() != null) return;
+        if (IsUpgraded)
+            await PowerCmd.Apply<DeniaPhantomFoamPlusPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
         else
-        {
-            existing.MaxTriggers = System.Math.Max(existing.MaxTriggers, max);
-            if (existing.Amount < 3)
-                await PowerCmd.ModifyAmount(ctx, existing, 3m - existing.Amount, Owner.Creature, this);
-        }
+            await PowerCmd.Apply<DeniaPhantomFoamPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }
 }
 
-public sealed class DeniaPhantomFoamPower : CustomPowerModel
+public class DeniaPhantomFoamPower : CustomPowerModel
 {
-    public int MaxTriggers = 3;
+    public virtual int MaxTriggers => 3;
 
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     // 借用原版 next-turn block 图标
@@ -62,8 +53,8 @@ public sealed class DeniaPhantomFoamPower : CustomPowerModel
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "幻沫",
-        Description: "触发虚质强化时，获得格挡。每回合有触发上限。",
-        SmartDescription: "触发虚质强化时，获得{Amount}点格挡。每回合有触发上限。");
+        Description: $"触发虚质强化时，获得3点格挡。每回合最多触发{MaxTriggers}次。不可叠加。",
+        SmartDescription: $"触发虚质强化时，获得3点格挡。每回合最多触发{MaxTriggers}次。不可叠加。");
 
     public static async Task OnVirtualMatterEnhanced(Creature creature)
     {
@@ -78,6 +69,11 @@ public sealed class DeniaPhantomFoamPower : CustomPowerModel
             new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
         // Move：受敏捷等格挡加成（不要用 Unpowered）
         await CreatureCmd.GainBlock(
-            creature, new BlockVar(power.Amount, ValueProp.Move), null);
+            creature, new BlockVar(3, ValueProp.Move), null);
     }
+}
+
+public sealed class DeniaPhantomFoamPlusPower : DeniaPhantomFoamPower
+{
+    public override int MaxTriggers => 5;
 }
