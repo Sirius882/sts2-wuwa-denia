@@ -827,5 +827,13 @@
   "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.pages.INITIAL.options.TAKE_WANDERER_HOME.description": "Remove up to [blue]3[/blue] cards.",
   "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.pages.INITIAL.options.TAKE_WANDERER_HOME.title": "Take the Wanderer Home",
   "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.pages.TAKE_WANDERER_HOME.description": "You take the Wanderer back “home.” This brief journey together eventually comes to an end.",
-  "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.title": "Under the Melting Night Sky"
+  "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.title": "Under the Melting Night Sky",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.title": "Summer Beach",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.description": "Bright energy ripples through the gentle summer air, weaving sunlit moments into cherished memories.",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_PEACH_ICE.title": "Get Peach Ice",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_PEACH_ICE.description": "Obtain [gold]Peach Ice[/gold].",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_MINT_CANDY.title": "Get Mint Candy",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_MINT_CANDY.description": "Obtain [gold]Mint Candy[/gold].",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.GET_PEACH_ICE.description": "You accept the cool sweetness.",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.GET_MINT_CANDY.description": "You accept the refreshing sweetness."
 }

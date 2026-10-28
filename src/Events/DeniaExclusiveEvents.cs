@@ -28,6 +28,33 @@ public abstract class DeniaExclusiveEvent : CustomEventModel
         runState.Players.Count > 0 && runState.Players.All(player => player.Character is Denia);
 }
 
+
+/// <summary>第二层专属事件：夏日海滩。</summary>
+public sealed class DeniaSummerBeachEvent : DeniaExclusiveEvent
+{
+    public override string? CustomInitialPortraitPath => "res://images/events/denia_event_summer_beach.jpg";
+
+    public override ActModel[] Acts => new[] { ModelDb.Act<Hive>() };
+
+    public override bool IsAllowed(IRunState runState) => HasOnlyDeniaPlayers(runState);
+
+    protected override IReadOnlyList<EventOption> GenerateInitialOptions() => new EventOption[]
+    {
+        Option(GetPeachIce, HoverTipFactory.FromCardWithCardHoverTips<DeniaPeachIce>()),
+        Option(GetMintCandy, HoverTipFactory.FromCardWithCardHoverTips<DeniaMintCandy>()),
+    };
+
+    private Task GetPeachIce() => ObtainCard<DeniaPeachIce>("GET_PEACH_ICE");
+    private Task GetMintCandy() => ObtainCard<DeniaMintCandy>("GET_MINT_CANDY");
+
+    private async Task ObtainCard<T>(string pageKey) where T : CardModel
+    {
+        CardModel card = Owner!.RunState.CreateCard<T>(Owner);
+        CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(card, PileType.Deck), 1.2f, CardPreviewStyle.EventLayout);
+        SetEventFinished(PageDescription(pageKey));
+    }
+}
+
 /// <summary>第一层专属事件：学院的食堂。</summary>
 public sealed class DeniaAcademyCafeteriaEvent : DeniaExclusiveEvent
 {

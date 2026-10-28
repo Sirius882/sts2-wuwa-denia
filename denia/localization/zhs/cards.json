@@ -1355,11 +1355,11 @@
   "DENIA-DENIA_SO_TIRED.title": "好累，让我歇会……",
   "DENIA-DENIA_SO_TIRED.description": "获得9点[color=#9A6A18]格挡[/color]。若本回合施加过增益或减益，额外获得9点[color=#9A6A18]格挡[/color]。\n黯核强化：两段格挡均+4。",
   "DENIA-DENIA_SORROW.title": "哀",
-  "DENIA-DENIA_SORROW.description": "附加{IfUpgraded:show:2|1}点[color=#9A6A18]集谐·偏移[/color]、{IfUpgraded:show:2|1}点[color=#9A6A18]聚爆上限[/color]和{IfUpgraded:show:4|2}点[color=#9A6A18]聚爆[/color]，触发无条件[color=#9A6A18]谐度破坏[/color]。此次[color=#9A6A18]谐度破坏[/color]只造成五分之一的伤害。\n虚质强化：[color=#9A6A18]谐度破坏[/color]造成完整伤害。",
+  "DENIA-DENIA_SORROW.description": "附加{IfUpgraded:show:2|1}点[color=#9A6A18]集谐·偏移[/color]、{IfUpgraded:show:5|3}点[color=#9A6A18]聚爆上限[/color]和{IfUpgraded:show:5|3}点[color=#9A6A18]聚爆[/color]，触发无条件[color=#9A6A18]谐度破坏[/color]。此次[color=#9A6A18]谐度破坏[/color]只造成五分之一的伤害。\n虚质强化：[color=#9A6A18]谐度破坏[/color]造成完整伤害。",
   "DENIA-DENIA_STAGE_SETUP.title": "布景之形",
   "DENIA-DENIA_STAGE_SETUP.description": "对所有敌人造成{IfUpgraded:show:10|7}点伤害，提高聚爆上限{IfUpgraded:show:4|3}，然后附加{IfUpgraded:show:5|4}聚爆。\n黯核强化：基础伤害+7。",
   "DENIA-DENIA_STRIKE.title": "打击",
-  "DENIA-DENIA_STRIKE.description": "造成{Damage:diff()}点伤害。\n[color=#9A6A18]粉色形态[/color]：熔解1。\n虚质强化：基础伤害+4。",
+  "DENIA-DENIA_STRIKE.description": "造成{Damage:diff()}点伤害。\n[color=#9A6A18]粉色形态[/color]：附加{IfUpgraded:show:2|1}[color=#9A6A18]聚爆上限[/color]。\n虚质强化：基础伤害+4。",
   "DENIA-DENIA_PROOF_OF_PERSONALITY.title": "人格的证明",
   "DENIA-DENIA_PROOF_OF_PERSONALITY.description": "每次附加[color=#9A6A18]集谐·偏移[/color]时，如果附加后集谐·偏移少于2点，则追加1点；如果附加后集谐·偏移不少于2点，自动触发无条件[color=#9A6A18]谐度破坏[/color]。不可叠加。",
   "DENIA-DENIA_SUNSHINE_SEASON.title": "阳光季节",
@@ -1407,5 +1407,9 @@
   "DENIA-DENIA_TOWARD_VOID.title": "向虚而行",
   "DENIA-DENIA_TOWARD_VOID.description": "触发[color=#9A6A18]黯核强化[/color]时，获得{IfUpgraded:show:3|2}点[color=#9A6A18]格挡[/color]。每回合最多触发4次。不可叠加。",
   "DENIA-DENIA_VIRTUAL_MATTER_MAGNETIC_BURST.title": "虚质磁爆",
-  "DENIA-DENIA_VIRTUAL_MATTER_MAGNETIC_BURST.description": "本回合内，虚质余额固定为20{IfUpgraded:show:，黯核余额固定为5|}。回合结束时，清空所有虚质和黯核。"
+  "DENIA-DENIA_VIRTUAL_MATTER_MAGNETIC_BURST.description": "本回合内，虚质余额固定为20{IfUpgraded:show:，黯核余额固定为5|}。回合结束时，清空所有虚质和黯核。",
+  "DENIA-DENIA_PEACH_ICE.title": "蜜桃冰",
+  "DENIA-DENIA_PEACH_ICE.description": "给目标附加{IfUpgraded:show:40|20}点[color=#9A6A18]聚爆上限[/color]。",
+  "DENIA-DENIA_MINT_CANDY.title": "薄荷糖",
+  "DENIA-DENIA_MINT_CANDY.description": "造成{Damage:diff()}点伤害，然后自己获得20[color=#9A6A18]集谐响应[/color]，给目标附加2[color=#9A6A18]集谐·干涉[/color]。"
 }

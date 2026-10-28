@@ -820,5 +820,13 @@
   "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.pages.INITIAL.options.TAKE_WANDERER_HOME.description": "选择至多[blue]3[/blue]张牌移除。",
   "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.pages.INITIAL.options.TAKE_WANDERER_HOME.title": "带漂泊者回“家”",
   "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.pages.TAKE_WANDERER_HOME.description": "你带着漂泊者回到了“家”。这段短暂的同行，最终还是迎来了分别。",
-  "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.title": "在熔毁的夜空下"
+  "DENIA-DENIA_UNDER_MELTING_NIGHT_SKY_EVENT.title": "在熔毁的夜空下",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.title": "夏日海滩",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.description": "明亮的能量在温和的夏日空气中荡漾，将洒满阳光的瞬间编织成珍贵的回忆。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_PEACH_ICE.title": "获得蜜桃冰",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_PEACH_ICE.description": "获得一张[gold]蜜桃冰[/gold]。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_MINT_CANDY.title": "获得薄荷糖",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_MINT_CANDY.description": "获得一张[gold]薄荷糖[/gold]。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.GET_PEACH_ICE.description": "你收下了这份沁凉的甜意。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.GET_MINT_CANDY.description": "你收下了这份清新的甜意。"
 }

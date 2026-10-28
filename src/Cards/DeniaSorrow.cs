@@ -27,15 +27,15 @@ public sealed class DeniaSorrow : DeniaCard
         : base(2, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "哀",
-            Description: "附加{IfUpgraded:show:2|1}点[color=#9A6A18]集谐·偏移[/color]、{IfUpgraded:show:2|1}点[color=#9A6A18]聚爆上限[/color]和{IfUpgraded:show:4|2}点[color=#9A6A18]聚爆[/color]，触发无条件[color=#9A6A18]谐度破坏[/color]。此次[color=#9A6A18]谐度破坏[/color]只造成五分之一的伤害。\n虚质强化：[color=#9A6A18]谐度破坏[/color]造成完整伤害。");
+            Description: "附加{IfUpgraded:show:2|1}点[color=#9A6A18]集谐·偏移[/color]、{IfUpgraded:show:5|3}点[color=#9A6A18]聚爆上限[/color]和{IfUpgraded:show:5|3}点[color=#9A6A18]聚爆[/color]，触发无条件[color=#9A6A18]谐度破坏[/color]。此次[color=#9A6A18]谐度破坏[/color]只造成五分之一的伤害。\n虚质强化：[color=#9A6A18]谐度破坏[/color]造成完整伤害。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
         int bias = IsUpgraded ? 2 : 1;
-        int cap = IsUpgraded ? 2 : 1;
-        int burst = IsUpgraded ? 4 : 2;
+        int cap = IsUpgraded ? 5 : 3;
+        int burst = IsUpgraded ? 5 : 3;
         bool fullRupture = await TrySpendVirtualMatter(play);
 
         await TuneStrainState.TryAddBias(play.Target, bias, Owner.Creature, this);

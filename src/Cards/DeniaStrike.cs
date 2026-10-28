@@ -24,7 +24,7 @@ public sealed class DeniaStrike : DeniaCard
     protected override HashSet<CardTag> CanonicalTags => new() { CardTag.Strike };
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new[] { new DamageVar(5m, ValueProp.Move) };
+        new[] { new DamageVar(6m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_strike.png";
@@ -33,7 +33,7 @@ public sealed class DeniaStrike : DeniaCard
         : base(1, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "打击", Description: "造成{Damage:diff()}点伤害。\n[color=#9A6A18]粉色形态[/color]：熔解1。\n虚质强化：基础伤害+4。");
+        new CardLoc(Title: "打击", Description: "造成{Damage:diff()}点伤害。\n[color=#9A6A18]粉色形态[/color]：附加{IfUpgraded:show:2|1}[color=#9A6A18]聚爆上限[/color]。\n虚质强化：基础伤害+4。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -49,7 +49,7 @@ public sealed class DeniaStrike : DeniaCard
             .Execute(ctx);
 
         if (DeniaFormHelper.IsPink(Owner.Creature))
-            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
+            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, IsUpgraded ? 2 : 1, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()
