@@ -824,9 +824,12 @@
   "DENIA-DENIA_SUMMER_BEACH_EVENT.title": "夏日海滩",
   "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.description": "明亮的能量在温和的夏日空气中荡漾，将洒满阳光的瞬间编织成珍贵的回忆。",
   "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_PEACH_ICE.title": "获得蜜桃冰",
-  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_PEACH_ICE.description": "获得一张[gold]蜜桃冰[/gold]。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_PEACH_ICE.description": "失去[red]12[/red]点生命上限。获得一张[gold]蜜桃冰[/gold]。",
   "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_MINT_CANDY.title": "获得薄荷糖",
-  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_MINT_CANDY.description": "获得一张[gold]薄荷糖[/gold]。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.GET_MINT_CANDY.description": "失去[red]12[/red]点生命上限。获得一张[gold]薄荷糖[/gold]。",
   "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.GET_PEACH_ICE.description": "你收下了这份沁凉的甜意。",
-  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.GET_MINT_CANDY.description": "你收下了这份清新的甜意。"
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.GET_MINT_CANDY.description": "你收下了这份清新的甜意。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.LEAVE.title": "离开",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.INITIAL.options.LEAVE.description": "什么也不做。",
+  "DENIA-DENIA_SUMMER_BEACH_EVENT.pages.LEAVE.description": "你继续踏上了旅途。"
 }
