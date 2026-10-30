@@ -31,7 +31,8 @@ public static class DeniaEntry
             _harmony = new Harmony("sts2.denia");
             _harmony.PatchAll(typeof(DeniaEntry).Assembly);
 
-            DeniaRelicBurstHandler.Init();
+            DeniaMeltEffects.Init();
+            DeniaNegativeTrajectoryPower.Init();
             DeniaMeltProtectPatch.Init();
             DeniaShroudedStarDamagePatch.Init();
             DeniaBuffTracker.Init();

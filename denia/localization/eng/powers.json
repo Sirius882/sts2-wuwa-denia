@@ -965,5 +965,11 @@
   "DENIA-DENIA_PHANTOM_FOAM_PLUS_POWER.smartDescription": "Whenever you trigger a Virtual Matter Enhancement, gain 3 Block. Max 5 times per turn. Does not stack.",
   "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.title": "Toward the Void",
   "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.description": "Whenever you trigger a Dark Core Enhancement, gain 3 Block. Max 4 times per turn. Does not stack.",
-  "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.smartDescription": "Whenever you trigger a Dark Core Enhancement, gain 3 Block. Max 4 times per turn. Does not stack."
+  "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.smartDescription": "Whenever you trigger a Dark Core Enhancement, gain 3 Block. Max 4 times per turn. Does not stack.",
+  "DENIA-DENIA_INSPECTION_REPORT_POWER.title": "Inspection Report RA2499-G",
+  "DENIA-DENIA_INSPECTION_REPORT_POWER.description": "Concentrate the total Fusion Burst area damage on the detonated target.",
+  "DENIA-DENIA_INSPECTION_REPORT_POWER.smartDescription": "Concentrate the total Fusion Burst area damage on the detonated target.",
+  "DENIA-DENIA_NEGATIVE_TRAJECTORY_POWER.title": "Fusion Burst Trajectory",
+  "DENIA-DENIA_NEGATIVE_TRAJECTORY_POWER.description": "Modify Fusion Burst detonation damage by {Amount}%. Gained Trajectory offsets this negative amount first.",
+  "DENIA-DENIA_NEGATIVE_TRAJECTORY_POWER.smartDescription": "Modify Fusion Burst detonation damage by {Amount}%. Gained Trajectory offsets this negative amount first."
 }

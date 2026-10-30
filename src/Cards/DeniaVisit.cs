@@ -28,7 +28,7 @@ public sealed class DeniaVisit : DeniaCard
     public DeniaVisit() : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "谨此致访",
-            Description: "本场战斗中，你每回合最多受到{IfUpgraded:show:15|20}点伤害，但是每回合你对每个怪物最多造成{IfUpgraded:show:80|60}点伤害。");
+            Description: "本场战斗中，你每回合最多受到{IfUpgraded:show:15|20}点伤害，但是每回合你对每个怪物最多造成{IfUpgraded:show:80|60}点伤害。持续{IfUpgraded:show:8|6}回合。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -38,6 +38,8 @@ public sealed class DeniaVisit : DeniaCard
         await PowerCmd.Apply<DeniaVisitPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
         var pwr = Owner.Creature.GetPower<DeniaVisitPower>();
         pwr?.Configure(maxTaken, maxDealt);
+        await PowerCmd.Remove<DeniaVisitDurationPower>(Owner.Creature);
+        await PowerCmd.Apply<DeniaVisitDurationPower>(ctx, Owner.Creature, IsUpgraded ? 8 : 6, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }
@@ -130,5 +132,17 @@ public sealed class DeniaVisitPower : CustomPowerModel
         _takenThisTurn = 0;
         _dealtThisTurn.Clear();
         await Task.CompletedTask;
+    }
+}
+
+public sealed class DeniaVisitDurationPower : DeniaHiddenCounterPower
+{
+    public override async Task AfterSideTurnEnd(PlayerChoiceContext choiceContext, CombatSide side, IEnumerable<Creature> participants)
+    {
+        // 在敌方回合结束后扣时，最后一轮仍能限制受到的伤害。
+        if (side != CombatSide.Enemy) return;
+        if (Amount <= 1)
+            await PowerCmd.Remove<DeniaVisitPower>(Owner);
+        await PowerCmd.ModifyAmount(choiceContext, this, -1, Owner, null!);
     }
 }

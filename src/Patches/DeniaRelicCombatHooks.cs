@@ -106,14 +106,10 @@ public static class DeniaRelicTurnStartPatch
                 }
             }
 
-            if (player.Character is Denia && DeniaFormHelper.IsPink(player.Creature)
-                && DeniaResourceState.GetDarkCore(player.Creature) < DeniaResourceState.DarkCoreMax)
-            {
-                int dcGain = 1;
-                var cake = player.Creature.GetPower<DeniaBirthdayCakePower>();
-                if (cake != null) dcGain += (int)cake.Amount;
-                await DeniaResourceState.GainDarkCore(player.Creature, dcGain, player.Creature, null!);
-            }
+            // 生日蛋糕的额外黯核独立于基础遗物，仍仅在粉色形态触发。
+            if (DeniaFormHelper.IsPink(player.Creature)
+                && player.Creature.GetPower<DeniaBirthdayCakePower>() is { } cake)
+                await DeniaResourceState.GainDarkCore(player.Creature, cake.Amount, player.Creature, null!);
 
             var sword = player.GetRelic<DeniaMasterSword>();
             if (sword != null && player.Creature.GetPower<DeniaMasterSwordSetupDonePower>() == null)

@@ -45,7 +45,8 @@ public static class DeniaCrushDistributionPatch
         public int Priority => 0;
 
         public bool ShouldTakeOver(AemeathAutoBurstDamageDistributionContext context) =>
-            ResolveOwner(context)?.GetPower<DeniaCrushPower>() != null;
+            ResolveOwner(context)?.GetPower<DeniaCrushPower>() != null
+            || ResolveOwner(context)?.GetPower<DeniaInspectionReportPower>() != null;
 
         public async Task ApplyDistribution(AemeathAutoBurstDamageDistributionContext context)
         {
@@ -71,7 +72,7 @@ public static class DeniaCrushDistributionPatch
                     out _);
             }
 
-            if (context.Enemies.Count == 1)
+            if (context.Enemies.Count == 1 && ResolveOwner(context)?.GetPower<DeniaCrushPower>() != null)
             {
                 total *= 2m;
             }

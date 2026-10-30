@@ -949,5 +949,11 @@
   "DENIA-DENIA_PHANTOM_FOAM_PLUS_POWER.smartDescription": "触发虚质强化时，获得3点格挡。每回合最多触发5次。不可叠加。",
   "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.title": "向虚而行",
   "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.description": "触发黯核强化时，获得3点格挡。每回合最多触发4次。不可叠加。",
-  "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.smartDescription": "触发黯核强化时，获得3点格挡。每回合最多触发4次。不可叠加。"
+  "DENIA-DENIA_TOWARD_VOID_PLUS_POWER.smartDescription": "触发黯核强化时，获得3点格挡。每回合最多触发4次。不可叠加。",
+  "DENIA-DENIA_INSPECTION_REPORT_POWER.title": "检验报告RA2499-G",
+  "DENIA-DENIA_INSPECTION_REPORT_POWER.description": "聚爆引爆的群体伤害总量集中在被引爆的单个目标上。",
+  "DENIA-DENIA_INSPECTION_REPORT_POWER.smartDescription": "聚爆引爆的群体伤害总量集中在被引爆的单个目标上。",
+  "DENIA-DENIA_NEGATIVE_TRAJECTORY_POWER.title": "聚爆轨迹",
+  "DENIA-DENIA_NEGATIVE_TRAJECTORY_POWER.description": "聚爆引爆伤害修正{Amount}%。获得的聚爆轨迹先抵消此负值。",
+  "DENIA-DENIA_NEGATIVE_TRAJECTORY_POWER.smartDescription": "聚爆引爆伤害修正{Amount}%。获得的聚爆轨迹先抵消此负值。"
 }

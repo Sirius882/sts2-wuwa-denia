@@ -121,7 +121,8 @@ public static class DeniaFormHelper
         if (wasPink && addBlackFormCards && creature.Player != null)
             await AddBlackFormCards(creature.Player);
         DeniaFormPatch.RefreshForCreature(creature);
-        await DeniaResourceState.GainVirtualMatter(creature, 10, applier, source);
+        if (wasPink && DeniaResourceRelic.Get(creature) is { } relic)
+            await relic.OnFormChanged(true, applier, source);
         await ApplyFormSwitchEffects(creature, applier, source);
     }
 
@@ -206,13 +207,8 @@ public static class DeniaFormHelper
         }
         await PowerCmd.Remove<DeniaWeaknessBonusTrajectoryDebtPower>(creature);
 
-        if (clearVM)
-        {
-            // 切换前拥有7虚质 → 抽1张牌
-            if (DeniaResourceState.GetVirtualMatter(creature) >= 7)
-                await CardPileCmd.Draw(_throwing, 1, creature.Player);
-            await DeniaResourceState.ClearVirtualMatter(creature, applier, source);
-        }
+        if (DeniaResourceRelic.Get(creature) is { } relic)
+            await relic.OnFormChanged(false, applier, source, clearVM);
         DeniaFormPatch.RefreshForCreature(creature);
 
         await ApplyFormSwitchEffects(creature, applier, source);

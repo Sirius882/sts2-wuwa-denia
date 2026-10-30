@@ -1,23 +1,17 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using HarmonyLib;
-using MegaCrit.Sts2.Core.Combat;
-using MegaCrit.Sts2.Core.Combat.History.Entries;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.Rooms;
-using TuneStrain;
 
 namespace Denia;
 
 /// <summary>
 /// AfterCardPlayed 唯一 ref Task 包装入口。
-/// 顺序固定：原钩子 → 粉态虚质 → 大师之剑 → 继续逃啊/你也试试 → 骗术师响应。
+/// 顺序固定：原钩子（含遗物的粉态虚质/响应） → 大师之剑 → 继续逃啊/你也试试。
 /// 熵变/松子已在 AfterPowerAmountChanged 实时结算，不再此处 flush。
 /// 禁止再对 AfterCardPlayed 增加第二个 ref Task __result 包装（见 AGENTS #75）。
 /// </summary>
@@ -39,11 +33,9 @@ public static class DeniaAfterCardPlayedDispatcher
         {
             await (original ?? Task.CompletedTask);
 
-            await TryGainPinkAttackVirtualMatter(player, cardPlay);
             await ProcessMasterSwordCounter(player, cardPlay);
             await DeniaKeepRunningPower.OnAnyCardPlayed(player, cardPlay);
             await DeniaYouTryItPower.OnAnyCardPlayed(player, cardPlay);
-            await TryTriggerRelicRandomResponseIfNeeded(player, cardPlay);
         }
         finally
         {
@@ -58,13 +50,6 @@ public static class DeniaAfterCardPlayedDispatcher
     }
 
     
-    private static async Task TryGainPinkAttackVirtualMatter(Player player, CardPlay cardPlay)
-    {
-        if (player.Character is not Denia) return;
-        if (cardPlay.Card.Type != CardType.Attack) return;
-        await DeniaPinkVirtualMatter.TryGainFromPinkAction(player.Creature, fromAttackCard: true);
-    }
-
     private static async Task ProcessMasterSwordCounter(Player player, CardPlay cardPlay)
     {
         if (cardPlay.Card.Type != CardType.Attack) return;
@@ -95,73 +80,4 @@ public static class DeniaAfterCardPlayedDispatcher
         sword.GrantedShroudedStar = 0;
     }
 
-    private static async Task TryTriggerRelicRandomResponseIfNeeded(Player player, CardPlay cardPlay)
-    {
-        bool hasTeddy = player.GetRelic<DeniaTrickster>() != null;
-        bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
-        if (!hasTeddy && !hasDwarf) return;
-        int cardsPlayed = DidAttackCardDealHpDamage(cardPlay) ? 2 : 1;
-        await TryTriggerRelicRandomResponse(player, hasDwarf, cardsPlayed);
-    }
-
-    private static bool DidAttackCardDealHpDamage(CardPlay cardPlay)
-    {
-        if (cardPlay.Card.Type != CardType.Attack)
-            return false;
-
-        IEnumerable<MegaCrit.Sts2.Core.Combat.History.CombatHistoryEntry> entries =
-            CombatManager.Instance.History.Entries.Reverse();
-        foreach (var entry in entries)
-        {
-            if (entry is CardPlayStartedEntry started && ReferenceEquals(started.CardPlay, cardPlay))
-                break;
-            if (entry is DamageReceivedEntry damage
-                && ReferenceEquals(damage.CardSource, cardPlay.Card)
-                && damage.Dealer == cardPlay.Card.Owner.Creature
-                && damage.Result.UnblockedDamage > 0)
-                return true;
-        }
-        return false;
-    }
-
-    private static async Task TryTriggerRelicRandomResponse(Player player, bool hasDwarf, int cardsPlayed)
-    {
-        var creature = player.Creature;
-        int threshold = hasDwarf ? 2 : 3;
-
-        await PowerCmd.Apply<DeniaRelicCardPlayedCounterPower>(
-            new ThrowingPlayerChoiceContext(), creature, cardsPlayed, creature, null!);
-        var counter = creature.GetPower<DeniaRelicCardPlayedCounterPower>();
-        int now = counter != null ? (int)counter.Amount : 0;
-        if (now < threshold) return;
-
-        int remainder = now - threshold;
-        if (remainder <= 0)
-            await PowerCmd.Remove<DeniaRelicCardPlayedCounterPower>(creature);
-        else if (counter != null)
-            await PowerCmd.ModifyAmount(
-                new ThrowingPlayerChoiceContext(), counter, -threshold, creature, null!);
-
-        var eligible = new List<CardModel>();
-        PileType[] piles = { PileType.Draw, PileType.Hand, PileType.Discard };
-        foreach (var pt in piles)
-        {
-            IReadOnlyList<CardModel> cards;
-            try { cards = pt.GetPile(player).Cards; }
-            catch (System.InvalidOperationException) { continue; }
-            foreach (var c in cards)
-            {
-                if (c.Keywords.Contains(TuneStrainKeywords.TuneStrainResponse)) continue;
-                if (TuneStrainState.HasTemporaryResponse(c)) continue;
-                eligible.Add(c);
-            }
-        }
-
-        if (eligible.Count == 0) return;
-        if (player.RunState is MegaCrit.Sts2.Core.Runs.NullRunState) return;
-
-        var chosen = player.RunState.Rng.CombatCardSelection.NextItem(eligible);
-        if (chosen == null) return;
-        TuneStrainState.AddTemporaryResponse(player, chosen);
-    }
 }

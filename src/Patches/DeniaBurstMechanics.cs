@@ -10,163 +10,22 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace Denia;
 
-/// <summary>引爆事件——骗术师/赝作矮星等订阅</summary>
-public static class DeniaBurstEvents
+/// <summary>熔解结算：冻伤清除 + 遗物粉态虚质，使用 Aemeath 公开响应规则。</summary>
+public static class DeniaMeltEffects
 {
-    public static event Func<Creature, Creature, int, Task>? OnBurstDone;
-    private static bool _isFiring;
+    private static readonly IAemeathMeltResponseRule Rule = new MeltResponse();
+    public static void Init() => AemeathFusionBurstRules.RegisterMeltResponseRule(Rule);
 
-    internal static async Task FireBurst(Creature target, Creature applier, int cap)
+    private sealed class MeltResponse : IAemeathMeltResponseRule
     {
-        if (_isFiring) return;
-        _isFiring = true;
-        try
+        public int Priority => 1100;
+        public bool ShouldApply(AemeathMeltContext context) => true;
+        public async Task Apply(AemeathMeltContext context)
         {
-            if (OnBurstDone != null)
-            {
-                try { await OnBurstDone.Invoke(target, applier, cap); }
-                catch (Exception ex) { GD.PrintErr($"[Denia] FireBurst handler error: {ex.Message}"); }
-            }
+            await DeniaFrostbiteRemovalPatch.RemoveFrostbiteFromAsync(context.Target);
+            if (context.CounterOwner is { } owner && DeniaResourceRelic.Get(owner) is { } relic)
+                await relic.GainFromPinkAction();
         }
-        finally { _isFiring = false; }
-    }
-}
-
-/// <summary>
-/// 粉态行动虚质：攻击 / 熔解 / 聚爆引爆各触发一次 +2。
-/// 彩虹糖仅加成「打出攻击牌」路径（见 DeniaRainbowCandyJump 文案）。
-/// </summary>
-public static class DeniaPinkVirtualMatter
-{
-    public static async Task TryGainFromPinkAction(Creature? creature, bool fromAttackCard = false)
-    {
-        if (creature == null || creature.IsDead) return;
-        if (!creature.IsPlayer) return;
-        if (!DeniaFormHelper.IsPink(creature)) return;
-
-        int vmAmount = 2;
-        if (fromAttackCard)
-        {
-            var candyPower = creature.GetPower<DeniaRainbowCandyJumpPower>();
-            if (candyPower != null && candyPower.Amount > 0)
-                vmAmount += 2 * (int)candyPower.Amount;
-        }
-        await DeniaResourceState.GainVirtualMatter(creature, vmAmount, creature, null!);
-    }
-}
-
-/// <summary>
-/// 引爆检测：await 原 Task 保留返回值；层数较调用前下降视为引爆（比 after&lt;amount 更准）。
-/// </summary>
-[HarmonyPatch]
-public static class DeniaBurstHook
-{
-    private static bool _burstInProgress;
-
-    [HarmonyTargetMethod]
-    public static MethodBase TargetMethod()
-    {
-        return AccessTools.Method(typeof(AemeathFusionBurstState), "TryAddFusionBurst",
-            new[] { typeof(Creature), typeof(int), typeof(Creature), typeof(CardModel) });
-    }
-
-    public static void Postfix(ref Task<bool> __result, Creature target, int amount, Creature applier)
-    {
-        if (amount <= 0) return;
-        if (_burstInProgress) return;
-        __result = WrapBurstDetection(__result, target, amount, applier);
-    }
-
-    private static async Task<bool> WrapBurstDetection(
-        Task<bool> originalTask, Creature target, int amount, Creature applier)
-    {
-        int before;
-        try { before = AemeathFusionBurstState.GetFusionBurst(target); }
-        catch { before = 0; }
-
-        bool originalResult;
-        try { originalResult = await originalTask; }
-        catch { throw; }
-
-        int after;
-        try { after = AemeathFusionBurstState.GetFusionBurst(target); }
-        catch { return originalResult; }
-
-        // 自动引爆会清层/降层；仅叠层时 after >= before
-        if (after >= before) return originalResult;
-
-        _burstInProgress = true;
-        try
-        {
-            var cap = AemeathFusionBurstState.GetFusionBurstCap(target);
-            await DeniaBurstEvents.FireBurst(target, applier, cap);
-        }
-        finally { _burstInProgress = false; }
-
-        return originalResult;
-    }
-}
-
-/// <summary>
-/// ResolveMelt 唯一 ref Task 包装：冻伤清除 + 粉态熔解虚质。
-/// 禁止再对 ResolveMelt 增加第二个 ref Task 包装。
-/// </summary>
-[HarmonyPatch]
-public static class DeniaResolveMeltEffectsPatch
-{
-    [HarmonyTargetMethod]
-    public static MethodBase TargetMethod() =>
-        AccessTools.Method(typeof(AemeathFusionBurstState), nameof(AemeathFusionBurstState.ResolveMelt));
-
-    public static void Postfix(ref Task<int> __result, Creature target, Creature? applier)
-    {
-        __result = Wrap(__result, target, applier);
-    }
-
-    private static async Task<int> Wrap(Task<int> original, Creature target, Creature? applier)
-    {
-        int damage = await (original ?? Task.FromResult(0));
-        if (damage <= 0) return damage;
-
-        await DeniaFrostbiteRemovalPatch.RemoveFrostbiteFromAsync(target);
-        await DeniaPinkVirtualMatter.TryGainFromPinkAction(applier);
-        return damage;
-    }
-}
-
-public static class DeniaRelicBurstHandler
-{
-    private static bool _initialized;
-
-    public static void Init()
-    {
-        if (_initialized) return;
-        _initialized = true;
-        DeniaBurstEvents.OnBurstDone += OnBurst;
-    }
-
-    private static async Task OnBurst(Creature target, Creature applier, int cap)
-    {
-        if (target.IsDead) return;
-        if (applier?.IsPlayer != true) return;
-        var player = applier.Player;
-        if (player == null) return;
-
-        bool hasTeddy = player.GetRelic<DeniaTrickster>() != null;
-        bool hasDwarf = player.GetRelic<DeniaCounterfeitDwarfStar>() != null;
-        if (hasTeddy || hasDwarf)
-        {
-            // 赝作的矮星：上限 1/3 向上取整；骗术师：上限 1/4 向下取整。
-            int divisor = hasDwarf ? 3 : 4;
-            int add = hasDwarf
-                ? (cap + divisor - 1) / divisor
-                : cap / divisor;
-            if (add > 0)
-                await AemeathFusionBurstState.TryAddFusionBurstWithoutAutoBurst(
-                    target, add, applier, null!);
-        }
-
-        await DeniaPinkVirtualMatter.TryGainFromPinkAction(applier);
     }
 }
 
