@@ -20,9 +20,12 @@ public abstract class DeniaResourceRelic : CustomRelicModel, IOnAutoBurstRelic
     protected abstract int ResponseThreshold { get; }
     protected virtual bool GainDarkCoreInBlack => false;
 
-    public static DeniaResourceRelic? Get(Creature creature) =>
-        (DeniaResourceRelic?)creature.Player?.GetRelic<DeniaCounterfeitDwarfStar>()
-        ?? creature.Player?.GetRelic<DeniaTrickster>();
+    public static DeniaResourceRelic? Get(Creature creature)
+    {
+        if (creature.Player?.GetRelic<DeniaCounterfeitDwarfStar>() is { IsMelted: false } dwarf)
+            return dwarf;
+        return creature.Player?.GetRelic<DeniaTrickster>() is { IsMelted: false } trickster ? trickster : null;
+    }
 
     public async Task OnFormChanged(bool toBlack, Creature applier, CardModel source, bool clearVM = true)
     {
