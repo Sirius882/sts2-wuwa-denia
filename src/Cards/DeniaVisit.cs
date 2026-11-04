@@ -28,7 +28,7 @@ public sealed class DeniaVisit : DeniaCard
     public DeniaVisit() : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "谨此致访",
-            Description: "本场战斗中，你每回合最多受到{IfUpgraded:show:15|20}点伤害，但是每回合你对每个怪物最多造成{IfUpgraded:show:80|60}点伤害。持续{IfUpgraded:show:8|6}回合。");
+            Description: "本场战斗中，你每回合最多受到{IfUpgraded:show:15|20}点伤害，但是每回合你对每个怪物最多造成{IfUpgraded:show:80|60}点伤害。持续{IfUpgraded:show:5|4}回合。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -39,7 +39,7 @@ public sealed class DeniaVisit : DeniaCard
         var pwr = Owner.Creature.GetPower<DeniaVisitPower>();
         pwr?.Configure(maxTaken, maxDealt);
         await PowerCmd.Remove<DeniaVisitDurationPower>(Owner.Creature);
-        await PowerCmd.Apply<DeniaVisitDurationPower>(ctx, Owner.Creature, IsUpgraded ? 8 : 6, Owner.Creature, this);
+        await PowerCmd.Apply<DeniaVisitDurationPower>(ctx, Owner.Creature, IsUpgraded ? 5 : 4, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }

@@ -14,54 +14,32 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>？！娅娅？！ — Common Attack, 1 dmg, resonance break, black form returns to pink.</summary>
+/// <summary>？！娅娅？！ — Uncommon Attack, resonance break, black form returns to pink.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaYaya : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 4;
 
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new DynamicVar[] { new DamageVar(1m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_yaya.png";
 
     public DeniaYaya()
-        : base(2, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
+        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "？！娅娅？！",
-            Description: "造成{Damage:diff()}点伤害，无条件[color=#9A6A18]谐度破坏[/color]，切换到[color=#9A6A18]粉色形态[/color]。\n虚质强化：再造成4点伤害2次。");
+            Description: "无条件谐度破坏。若处于黑色形态，切换到粉色。\n虚质强化：再造成4点伤害2次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-
-        bool spentVirtualMatter = await TrySpendVirtualMatter(play);
-
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .FromCard(this, play)
-            .Targeting(play.Target)
-            .WithHitFx("vfx/vfx_attack_slash")
-            .Execute(ctx);
-
-        await DeniaResonanceBreakDamageModifier.RunOnce(
-            0.2m,
-            () => AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this));
-
-        if (spentVirtualMatter)
-        {
-            for (int i = 0; i < 2; i++)
-            {
-                await DamageCmd.Attack(4m)
-                    .FromCard(this, play)
-                    .Targeting(play.Target)
-                    .WithHitFx("vfx/vfx_attack_slash")
-                    .Execute(ctx);
-            }
-        }
-
+        bool enhanced = await TrySpendVirtualMatter(play);
+        await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
         if (DeniaFormHelper.IsBlack(Owner.Creature))
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
+        if (enhanced && !play.Target.IsDead)
+            await DamageCmd.Attack(4m).WithHitCount(2).FromCard(this, play)
+                .Targeting(play.Target).WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
     }
 
     protected override void OnUpgrade()

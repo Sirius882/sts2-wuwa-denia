@@ -15,19 +15,19 @@ using TuneStrain;
 namespace Denia;
 
 /// <summary>
-/// 鱼罐头松糕 — Uncommon Skill, 1e, Exhaust.
-/// 本回合集谐响应层数按 2 倍计算；与共鸣模态·集谐(2倍)同时存在时相乘为 4 倍。
+/// 鱼罐头松糕 — Rare Skill, 1e, Exhaust.
+/// 本回合集谐响应层数按 2 倍计算；与共鸣模态·集谐(1.5倍)同时存在时相乘为 3 倍。
 /// </summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaCannedFishCake : DeniaCard
 {
-    public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust };
+    public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust, CardKeyword.Retain };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_canned_fish_cake.png";
 
     public DeniaCannedFishCake()
-        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "鱼罐头松糕",
             Description: "本回合内，[color=#9A6A18]集谐响应[/color]层数按2倍计算。");

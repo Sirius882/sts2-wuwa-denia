@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using BaseLib.Abstracts;
+using TuneStrain.Powers;
 using BaseLib.Utils;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -18,7 +19,7 @@ using TuneStrain;
 
 namespace Denia;
 
-/// <summary>还给你 — Rare Attack, 0e. 照抄原版 Misery 实现。</summary>
+/// <summary>还给你 — Uncommon Attack, 1e. 照抄原版 Misery 实现。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaGiveItBack : DeniaCard
 {
@@ -31,7 +32,7 @@ public sealed class DeniaGiveItBack : DeniaCard
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_give_it_back.png";
 
     public DeniaGiveItBack()
-        : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "还给你",
             Description: "造成{Damage}点伤害。将此名敌人身上的负面效果给予其他敌人。");
@@ -42,7 +43,8 @@ public sealed class DeniaGiveItBack : DeniaCard
 
         // 照抄 Misery: 伤害前先克隆目标所有减益
         var debuffAmounts = play.Target.Powers
-            .Where(p => p.TypeForCurrentAmount == PowerType.Debuff || p is AemeathFusionBurstCapPower)
+            .Where(p => p is not TuneStrainInterferenceDurationPower
+                && (p.TypeForCurrentAmount == PowerType.Debuff || p is AemeathFusionBurstCapPower))
             .Select(p => ((PowerModel)p.ClonePreservingMutability(), Amount: p.Amount))
             .ToDictionary();
 
@@ -84,6 +86,11 @@ public sealed class DeniaGiveItBack : DeniaCard
                 {
                     var cloned = (PowerModel)debuff.Key.ClonePreservingMutability();
                     await PowerCmd.Apply(ctx, cloned, enemy, debuff.Value, debuff.Key.Applier, this);
+                }
+                if (debuff.Key is TuneStrainInterferencePower)
+                {
+                    await PowerCmd.Remove<TuneStrainInterferenceDurationPower>(enemy);
+                    await PowerCmd.Apply<TuneStrainInterferenceDurationPower>(ctx, enemy, 3, Owner.Creature, this);
                 }
             }
         }

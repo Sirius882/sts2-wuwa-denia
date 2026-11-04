@@ -16,9 +16,9 @@ public sealed class DeniaFrostbitePower : CustomPowerModel
     public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
-    // 复用游戏的 NOPE 兜底图标，确保战斗状态栏与悬浮提示都有图标。
-    public override string? CustomPackedIconPath => "res://images/powers/missing_power.png";
-    public override string? CustomBigIconPath => "res://images/powers/missing_power.png";
+    // 使用雪花图标，确保战斗状态栏与悬浮提示都有图标。
+    public override string? CustomPackedIconPath => "res://images/ui/powers/denia_frostbite_power.svg";
+    public override string? CustomBigIconPath => "res://images/ui/powers/denia_frostbite_power.svg";
 
     public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props,
         Creature? dealer, CardModel? cardSource, CardPlay? cardPlay)

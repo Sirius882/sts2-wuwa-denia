@@ -141,49 +141,6 @@ public static class DeniaShroudedStarDamagePatch
 }
 
 [HarmonyPatch]
-public static class DeniaExtraBurstPatch
-{
-    [HarmonyTargetMethod]
-    public static MethodBase TargetMethod()
-    {
-        return AccessTools.Method(typeof(AemeathFusionBurstState), "TryAddFusionBurst",
-            new[] { typeof(Creature), typeof(int), typeof(Creature), typeof(CardModel) });
-    }
-
-    public static void Prefix(Creature target, ref int amount, Creature applier)
-    {
-        if (DeniaBurstFillGuard.IsActive) return;
-        if (applier?.IsPlayer != true) return;
-        var pwr = applier.GetPower<DeniaExtraBurstPower>();
-        if (pwr == null || pwr.Amount <= 0) return;
-        // 具体状态提供分母：额外附加 ceil(cap / denom)
-        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, pwr.RatioDenominator);
-        if (extra > 0) amount += extra;
-    }
-}
-
-[HarmonyPatch]
-public static class DeniaExtraBurstWithoutAutoBurstPatch
-{
-    [HarmonyTargetMethod]
-    public static MethodBase TargetMethod()
-    {
-        return AccessTools.Method(typeof(AemeathFusionBurstState), "TryAddFusionBurstWithoutAutoBurst",
-            new[] { typeof(Creature), typeof(int), typeof(Creature), typeof(CardModel) });
-    }
-
-    public static void Prefix(Creature target, ref int amount, Creature applier)
-    {
-        if (DeniaBurstFillGuard.IsActive) return;
-        if (applier?.IsPlayer != true) return;
-        var pwr = applier.GetPower<DeniaExtraBurstPower>();
-        if (pwr == null || pwr.Amount <= 0) return;
-        int extra = DeniaFusionBurstMath.CeilRatioOfCap(target, 1, pwr.RatioDenominator);
-        if (extra > 0) amount += extra;
-    }
-}
-
-[HarmonyPatch]
 public static class DeniaExtraBurstCapPatch
 {
     [HarmonyTargetMethod]

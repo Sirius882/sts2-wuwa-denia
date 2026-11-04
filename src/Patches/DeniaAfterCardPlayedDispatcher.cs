@@ -11,7 +11,7 @@ namespace Denia;
 
 /// <summary>
 /// AfterCardPlayed 唯一 ref Task 包装入口。
-/// 顺序固定：原钩子（含遗物的粉态虚质/响应） → 大师之剑 → 继续逃啊/你也试试。
+/// 顺序固定：原钩子（含遗物的粉态虚质/响应） → 大师之剑 → 继续逃啊。
 /// 熵变/松子已在 AfterPowerAmountChanged 实时结算，不再此处 flush。
 /// 禁止再对 AfterCardPlayed 增加第二个 ref Task __result 包装（见 AGENTS #75）。
 /// </summary>
@@ -35,7 +35,6 @@ public static class DeniaAfterCardPlayedDispatcher
 
             await ProcessMasterSwordCounter(player, cardPlay);
             await DeniaKeepRunningPower.OnAnyCardPlayed(player, cardPlay);
-            await DeniaYouTryItPower.OnAnyCardPlayed(player, cardPlay);
         }
         finally
         {

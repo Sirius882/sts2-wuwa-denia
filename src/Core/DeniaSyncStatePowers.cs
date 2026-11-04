@@ -51,6 +51,7 @@ public sealed class DeniaKeepRunningTargetIndexPower : DeniaHiddenCounterPower
 {
 }
 
+// 兼容旧战斗状态的模型ID；新逻辑以独立power的Owner/Applier保存目标。
 public sealed class DeniaYouTryItTargetIndexPower : DeniaHiddenCounterPower
 {
 }

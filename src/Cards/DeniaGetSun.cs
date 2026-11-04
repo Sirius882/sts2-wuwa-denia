@@ -16,7 +16,7 @@ namespace Denia;
 
 /// <summary>
 /// 得到太阳 — Uncommon Power.
-/// 每附加 3 聚爆，给牌组中随机一张牌附加临时集谐响应。
+/// 每附加 2 聚爆，给牌组中随机一张牌附加临时集谐响应。
 /// 升级：固有。虚质强化：恢复 1 能量。
 /// </summary>
 [Pool(typeof(DeniaCardPool))]
@@ -31,7 +31,7 @@ public sealed class DeniaGetSun : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "得到太阳",
-            Description: "每附加3[color=#9A6A18]聚爆[/color]，给牌组中随机一张牌附加[color=#9A6A18]集谐响应[/color]。不可叠加。\n虚质强化：恢复1能量。");
+            Description: "每附加2[color=#9A6A18]聚爆[/color]，给牌组中随机一张牌附加[color=#9A6A18]集谐响应[/color]。不可叠加。\n虚质强化：恢复1能量。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -52,7 +52,7 @@ public sealed class DeniaGetSun : DeniaCard
 }
 
 /// <summary>
-/// 隐藏计数器 Amount = 已累计但未触发的聚爆层数+1 (1–3)。
+/// 隐藏计数器 Amount = 已累计但未触发的聚爆层数+1 (1–2)。
 /// 通过 IOnFusionBurstAppliedPower 监听“自己成功附加聚爆”。
 /// </summary>
 public sealed class DeniaGetSunPower : CustomPowerModel, IOnFusionBurstAppliedPower
@@ -69,8 +69,8 @@ public sealed class DeniaGetSunPower : CustomPowerModel, IOnFusionBurstAppliedPo
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "得到太阳",
-        Description: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。不可叠加。",
-        SmartDescription: "每附加3聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。不可叠加。");
+        Description: "每附加2聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。不可叠加。",
+        SmartDescription: "每附加2聚爆，给牌组中随机一张尚无集谐响应的牌附加临时集谐响应。若所有牌都已拥有，则跳过。不可叠加。");
 
     public async Task OnFusionBurstApplied(Creature target, int amount)
     {
@@ -80,8 +80,8 @@ public sealed class DeniaGetSunPower : CustomPowerModel, IOnFusionBurstAppliedPo
         var counter = Owner.GetPower<DeniaGetSunProgressPower>();
         if (counter == null) return;
         int progress = counter.Amount - 1 + amount;
-        int triggers = progress / 3;
-        int remainder = progress % 3;
+        int triggers = progress / 2;
+        int remainder = progress % 2;
         int delta = remainder + 1 - counter.Amount;
         if (delta != 0)
             await PowerCmd.ModifyAmount(new BlockingPlayerChoiceContext(), counter, delta, Owner, null);

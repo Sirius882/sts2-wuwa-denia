@@ -20,10 +20,10 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_please_do_not_forgive_me.png";
 
     public DeniaPleaseDoNotForgiveMe()
-        : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
+        : base(1, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "请您不要···宽恕我",
-            Description: "在[color=#9A6A18]粉色形态[/color]下，切换到[color=#9A6A18]黑色形态[/color]，不获得\"直视我\"和\"怜悯我\"，获得2层[color=#9A6A18]蔽星[/color]并进入[color=#9A6A18]共鸣模态·集谐[/color]。退出[color=#9A6A18]黑色形态[/color]时，失去由此获得的buff。");
+            Description: "在粉色形态下，切换到黑色形态，不获得卡牌直视我和怜悯我，获得4层蔽星、2力量并切换到共鸣模态·集谐，退出黑色形态时，失去由此获得的蔽星并退出共鸣模态·集谐。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -33,10 +33,11 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
         await DeniaFormHelper.MarkForgiveMePathThisBlackForm(Owner.Creature, Owner.Creature, this);
 
         await PowerCmd.Apply<DeniaShroudedStarPower>(
-            ctx, Owner.Creature, 2, Owner.Creature, this);
+            ctx, Owner.Creature, 4, Owner.Creature, this);
+        await PowerCmd.Apply<MegaCrit.Sts2.Core.Models.Powers.StrengthPower>(ctx, Owner.Creature, 2m, Owner.Creature, this);
         await PowerCmd.Apply<DeniaResonanceModePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
 
-        await DeniaFormHelper.AddBlackFormShroudedStarDebt(Owner.Creature, 2, Owner.Creature, this);
+        await DeniaFormHelper.AddBlackFormShroudedStarDebt(Owner.Creature, 4, Owner.Creature, this);
         await DeniaFormHelper.MarkTemporaryResonanceMode(Owner.Creature, Owner.Creature, this);
     }
 

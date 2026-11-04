@@ -14,12 +14,12 @@ public sealed class DeniaTimedRuin : CustomCardModel
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_timed_ruin.png";
     public DeniaTimedRuin() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AllEnemies) { }
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "计时的溃灭",
-            Description: "所有敌人提高聚爆上限{IfUpgraded:show:3|1}并附加上限{IfUpgraded:show:2/5|1/3}的聚爆。");
+            Description: "所有敌人提高聚爆上限{IfUpgraded:show:4|2}并附加上限{IfUpgraded:show:2/5|1/3}的聚爆。");
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         foreach (var e in Owner.Creature.CombatState.Enemies.Where(e2 => !e2.IsDead).ToArray())
         {
-            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(e, IsUpgraded ? 3 : 1, Owner.Creature, this);
+            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(e, IsUpgraded ? 4 : 2, Owner.Creature, this);
             int burst = DeniaFusionBurstMath.CeilRatioOfCap(e, IsUpgraded ? 2 : 1, IsUpgraded ? 5 : 3);
             if (burst > 0)
                 await AemeathFusionBurstState.TryAddFusionBurst(e, burst, Owner.Creature, this);

@@ -32,5 +32,5 @@ public sealed class DeniaFromFar : DeniaCard
         else
             await PowerCmd.Apply<DeniaExtraBurstCapPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
     }
-    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
+    protected override void OnUpgrade() { }
 }

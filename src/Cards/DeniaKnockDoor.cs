@@ -20,23 +20,18 @@ public sealed class DeniaKnockDoor : DeniaCard
     public DeniaKnockDoor() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "轻叩门扉",
-            Description: "[color=#9A6A18]黑色形态[/color]：所有敌人失去{IfUpgraded:show:6|4}[color=#9A6A18]力量[/color]。\n[color=#9A6A18]粉色形态[/color]：目标失去{IfUpgraded:show:8|6}点[color=#9A6A18]力量[/color]。\n持续1回合。");
+            Description: "选择：令所有敌人失去{IfUpgraded:show:6|4}点力量，或令单个敌人失去{IfUpgraded:show:8|6}点力量。持续1回合。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-
-        if (DeniaFormHelper.IsBlack(Owner.Creature))
-        {
-            decimal amount = IsUpgraded ? 6m : 4m;
-            foreach (var e in Owner.Creature.CombatState.Enemies.Where(e2 => !e2.IsDead).ToArray())
-                await PowerCmd.Apply<DeniaKnockDoorStrengthLossPower>(ctx, e, amount, Owner.Creature, this);
-        }
-        else
-        {
-            decimal amount = IsUpgraded ? 8m : 6m;
-            await PowerCmd.Apply<DeniaKnockDoorStrengthLossPower>(ctx, play.Target, amount, Owner.Creature, this);
-        }
+        bool all = await DeniaTargetChoice.ChooseAll<DeniaStrengthSingleChoice, DeniaStrengthAllChoice>(ctx, this);
+        int amount = all ? (IsUpgraded ? 6 : 4) : (IsUpgraded ? 8 : 6);
+        var enemies = all
+            ? Owner.Creature.CombatState.Enemies.Where(enemy => !enemy.IsDead).ToArray()
+            : new[] { play.Target };
+        foreach (var enemy in enemies)
+            await PowerCmd.Apply<DeniaKnockDoorStrengthLossPower>(ctx, enemy, amount, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }

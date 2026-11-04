@@ -23,13 +23,13 @@ public sealed class DeniaImBack : DeniaCard
         : base(1, CardType.Skill, CardRarity.Ancient, TargetType.Self, autoAdd: true, showInCardLibrary: true) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "我回来了！",
-            Description: "获得12虚质和3黯核，切换到黑色形态。");
+            Description: "无论形态，获得20虚质和5黯核。如果处于粉色形态，则切换到黑色形态。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        // 无论形态：获得12虚质和3黯核
-        await DeniaResourceState.GainVirtualMatter(Owner.Creature, 12, Owner.Creature, this);
-        await DeniaResourceState.GainDarkCore(Owner.Creature, 3, Owner.Creature, this);
+        // 无论形态：获得20虚质和5黯核
+        await DeniaResourceState.GainVirtualMatter(Owner.Creature, 20, Owner.Creature, this);
+        await DeniaResourceState.GainDarkCore(Owner.Creature, 5, Owner.Creature, this);
 
         // [gold]粉色形态[/gold]下切换到黑色并获得直视我+怜悯我
         if (DeniaFormHelper.IsPink(Owner.Creature))

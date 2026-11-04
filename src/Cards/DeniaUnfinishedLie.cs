@@ -12,19 +12,19 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaUnfinishedLie : DeniaCard
 {
-    public override int CurrentVirtualMatterCost => 4;
+    public override int CurrentVirtualMatterCost => 3;
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_unfinished_lie.png";
 
     public DeniaUnfinishedLie() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "未竟的谎言",
-            Description: "附加{IfUpgraded:show:3|2}聚爆上限和上限{IfUpgraded:show:1/2|1/3}的[color=#9A6A18]聚爆[/color]。若这张牌触发引爆，获得1点能量。\n虚质强化：附加的[color=#9A6A18]聚爆[/color]层数和聚爆上限都+2。");
+            Description: "附加{IfUpgraded:show:5|3}聚爆上限和上限{IfUpgraded:show:1/2|1/3}的[color=#9A6A18]聚爆[/color]。若这张牌触发引爆，获得1点能量。\n虚质强化：附加的[color=#9A6A18]聚爆[/color]层数和聚爆上限都+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
-        int cu = IsUpgraded ? 3 : 2;
+        int cu = IsUpgraded ? 5 : 3;
         int flatBurstBonus = 0;
         if (await TrySpendVirtualMatter(play))
         {

@@ -32,7 +32,7 @@ public sealed class DeniaPommelStrike : DeniaCard
         : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "剑柄打击",
-            Description: "造成{Damage:diff()}点伤害。若此牌打出前目标已有[color=#9A6A18]集谐·偏移[/color]，再附加1[color=#9A6A18]集谐·偏移[/color]{IfUpgraded:show:，然后无条件[color=#9A6A18]谐度破坏[/color]|}。\n虚质强化：最后再造成10点伤害一次。");
+            Description: "造成{Damage:diff()}点伤害。{IfUpgraded:show:附加1集谐·偏移，无条件谐度破坏。|若此牌打出前目标已有集谐·偏移，再附加1集谐·偏移。}\n虚质强化：最后再造成10点伤害一次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -47,7 +47,7 @@ public sealed class DeniaPommelStrike : DeniaCard
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
 
-        if (hadBias)
+        if (IsUpgraded || hadBias)
         {
             await TuneStrainState.TryAddBias(play.Target, 1, Owner.Creature, this);
             if (IsUpgraded)

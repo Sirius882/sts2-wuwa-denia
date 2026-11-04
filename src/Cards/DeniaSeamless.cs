@@ -11,13 +11,13 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>天衣无缝 — Common Attack: 5 dmg / 5 block (upg 7/7); VM +3 both.</summary>
+/// <summary>天衣无缝 — Common Attack: 6 dmg / 5 block (upg 9/7); VM +3 both.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaSeamless : DeniaCard
 {
     public override int CurrentVirtualMatterCost => 3;
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new DynamicVar[] { new DamageVar(5m, ValueProp.Move), new BlockVar(5m, ValueProp.Move) };
+        new DynamicVar[] { new DamageVar(6m, ValueProp.Move), new BlockVar(5m, ValueProp.Move) };
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_seamless.png";
     public override bool GainsBlock => true;
     public DeniaSeamless() : base(1, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy) { }
@@ -42,7 +42,7 @@ public sealed class DeniaSeamless : DeniaCard
 
     protected override void OnUpgrade()
     {
-        DynamicVars.Damage.UpgradeValueBy(2m);
+        DynamicVars.Damage.UpgradeValueBy(3m);
         DynamicVars.Block.UpgradeValueBy(2m);
     }
 }

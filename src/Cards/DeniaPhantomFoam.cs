@@ -25,7 +25,7 @@ public sealed class DeniaPhantomFoam : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "幻沫",
-            Description: "触发[color=#9A6A18]虚质强化[/color]时，获得3点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:5|3}次。不可叠加。");
+            Description: "触发[color=#9A6A18]虚质强化[/color]时，获得2点[color=#9A6A18]格挡[/color]。每回合最多触发{IfUpgraded:show:6|4}次。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -41,7 +41,7 @@ public sealed class DeniaPhantomFoam : DeniaCard
 
 public class DeniaPhantomFoamPower : CustomPowerModel
 {
-    public virtual int MaxTriggers => 3;
+    public virtual int MaxTriggers => 4;
 
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Single;
@@ -53,8 +53,8 @@ public class DeniaPhantomFoamPower : CustomPowerModel
 
     public override List<(string, string)>? Localization => new PowerLoc(
         Title: "幻沫",
-        Description: $"触发虚质强化时，获得3点格挡。每回合最多触发{MaxTriggers}次。不可叠加。",
-        SmartDescription: $"触发虚质强化时，获得3点格挡。每回合最多触发{MaxTriggers}次。不可叠加。");
+        Description: $"触发虚质强化时，获得2点格挡。每回合最多触发{MaxTriggers}次。不可叠加。",
+        SmartDescription: $"触发虚质强化时，获得2点格挡。每回合最多触发{MaxTriggers}次。不可叠加。");
 
     public static async Task OnVirtualMatterEnhanced(Creature creature)
     {
@@ -69,11 +69,11 @@ public class DeniaPhantomFoamPower : CustomPowerModel
             new ThrowingPlayerChoiceContext(), creature, 1m, creature, null!);
         // Move：受敏捷等格挡加成（不要用 Unpowered）
         await CreatureCmd.GainBlock(
-            creature, new BlockVar(3, ValueProp.Move), null);
+            creature, new BlockVar(2, ValueProp.Move), null);
     }
 }
 
 public sealed class DeniaPhantomFoamPlusPower : DeniaPhantomFoamPower
 {
-    public override int MaxTriggers => 5;
+    public override int MaxTriggers => 6;
 }

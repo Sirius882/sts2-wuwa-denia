@@ -26,7 +26,7 @@ public sealed class DeniaResonanceMode : DeniaCard
         : base(0, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "共鸣模态·集谐",
-            Description: "本场战斗中，[color=#9A6A18]集谐响应[/color]层数按2倍采用，可与其他同类效果叠加。给牌组中任意两张牌附加[color=#9A6A18]集谐响应[/color]。");
+            Description: "本场战斗中，[color=#9A6A18]集谐响应[/color]层数按1.5倍采用，可与其他同类效果叠加。给牌组中任意两张牌附加[color=#9A6A18]集谐响应[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -57,7 +57,7 @@ public sealed class DeniaResonanceMode : DeniaCard
 
 /// <summary>
 /// 共鸣模态·集谐（达妮娅专属）：可见 buff 标记。
-/// 激活时让集谐系统在计算集谐响应度时按 2 倍采用响应 power 层数（向下取整）。
+/// 激活时让集谐系统在计算集谐响应度时按 1.5 倍采用响应 power 层数（向下取整）。
 /// 通过在静态构造里向 TuneStrainState.RegisterResponseDegreeMultiplier 注册一个回调实现解耦；
 /// 多个倍率回调相乘，可与鱼罐头松糕等同类效果叠加。
 /// </summary>
@@ -75,14 +75,14 @@ public sealed class DeniaResonanceModePower : CustomPowerModel
     public override List<(string, string)>? Localization =>
         new PowerLoc(
         Title: "共鸣模态·集谐",
-        Description: "本场战斗中，集谐响应层数按2倍采用，可与其他同类效果叠加。",
-        SmartDescription: "本场战斗中，集谐响应层数按2倍采用，可与其他同类效果叠加。");
+        Description: "本场战斗中，集谐响应层数按1.5倍采用，可与其他同类效果叠加。",
+        SmartDescription: "本场战斗中，集谐响应层数按1.5倍采用，可与其他同类效果叠加。");
 
     static DeniaResonanceModePower()
     {
-        // 注册一次：回调在每次计算响应度时被询问；返回 2 表示本玩家处于共鸣模态则按 2 倍采用层数（GetResponseDegree 内再向下取整）。
+        // 注册一次：回调在每次计算响应度时被询问；返回 1.5 表示本玩家处于共鸣模态则按 1.5 倍采用层数（GetResponseDegree 内再向下取整）。
         TuneStrainState.RegisterResponseDegreeMultiplier(creature =>
-            creature.GetPower<DeniaResonanceModePower>() != null ? 2.0 : 1.0);
+            creature.GetPower<DeniaResonanceModePower>() != null ? 1.5 : 1.0);
     }
 }
 

@@ -15,6 +15,7 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaOrangeCake : DeniaCard
 {
+    public override int CurrentDarkCoreCost => 1;
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new[] { new BlockVar(9m, ValueProp.Move) };
 
@@ -28,12 +29,14 @@ public sealed class DeniaOrangeCake : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "橘子蛋糕",
-            Description: "获得{Block:diff()}点[color=#9A6A18]格挡[/color]。抽2张牌。");
+            Description: "获得{Block:diff()}点格挡，抽{IfUpgraded:show:3|2}张牌。\n黯核强化：再抽2张牌。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
-        await CardPileCmd.Draw(ctx, 2, Owner);
+        await CardPileCmd.Draw(ctx, IsUpgraded ? 3 : 2, Owner);
+        if (await TrySpendDarkCore(play))
+            await CardPileCmd.Draw(ctx, 2, Owner);
     }
 
     protected override void OnUpgrade()

@@ -1,3 +1,5 @@
+using AemeathWw.Scripts.Api;
+using TuneStrain;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,14 +13,12 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>寒地星苔团 — Rare Attack, X cost, single enemy. VM强化: +hits based on VM amount, ceil((y-2)/4).</summary>
+/// <summary>寒地星苔团 — Rare Attack, X cost, single enemy. VM强化: 3*(y-2)/2 damage, consuming all VM at y>=3.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaFrozenStarMossCake : DeniaCard
 {
     protected override bool HasEnergyCostX => true;
 
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new[] { new DamageVar(6m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_frozen_star_moss_cake.png";
@@ -37,33 +37,26 @@ public sealed class DeniaFrozenStarMossCake : DeniaCard
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "寒地星苔团",
-            Description: "造成{Damage:diff()}点伤害x次。\n虚质强化：若虚质≥3，额外造成{Damage:diff()}点伤害(y-2)/4次。");
+            Description: "附加x点集谐·偏移，无条件谐度破坏x次{IfUpgraded:show:。|，然后失去x点能量。}\n虚质强化：再造成3×(y-2)/2点伤害。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-
         int x = ResolveEnergyXValue();
-
         int vmBefore = DeniaResourceState.GetVirtualMatter(Owner.Creature);
-        bool vmEnhanced = await TrySpendVirtualMatter(play);
-
-        int vmExtraHits = 0;
-        if (vmEnhanced && vmBefore >= 3)
-            vmExtraHits = (int)Math.Ceiling((vmBefore - 2) / 4.0);
-
-        int totalHits = x + vmExtraHits;
-        if (totalHits <= 0) return;
-
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-            .WithHitCount(totalHits)
-            .FromCard(this, play)
-            .Targeting(play.Target)
-            .Execute(ctx);
+        bool enhanced = await TrySpendVirtualMatter(play);
+        await TuneStrainState.TryAddBias(play.Target, x, Owner.Creature, this);
+        for (int i = 0; i < x && !play.Target.IsDead; i++)
+            await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
+        if (!IsUpgraded)
+            await PlayerCmd.LoseEnergy(x, Owner);
+        if (enhanced && !play.Target.IsDead)
+            await DamageCmd.Attack(3m * (vmBefore - 2) / 2m)
+                .FromCard(this, play).Targeting(play.Target).Execute(ctx);
     }
 
     protected override void OnUpgrade()
     {
-        AddKeyword(CardKeyword.Retain);
+
     }
 }

@@ -23,10 +23,10 @@ public sealed class DeniaHumanPreference : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_human_preference.png";
 
     public DeniaHumanPreference()
-        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
+        : base(1, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "人类的喜好",
-            Description: "{IfUpgraded:show:给所有敌人|}附加2[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。失去1能量。");
+            Description: "{IfUpgraded:show:给所有敌人|}附加2[color=#9A6A18]集谐·偏移[/color]，无条件[color=#9A6A18]谐度破坏[/color]。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -50,7 +50,7 @@ public sealed class DeniaHumanPreference : DeniaCard
                 await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
         }
 
-        await PlayerCmd.LoseEnergy(1m, Owner);
+
     }
 
     protected override void OnUpgrade() { }
