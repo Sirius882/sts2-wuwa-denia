@@ -20,7 +20,7 @@ public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_please_do_not_forgive_me.png";
 
     public DeniaPleaseDoNotForgiveMe()
-        : base(1, CardType.Skill, CardRarity.Common, TargetType.AnyEnemy) { }
+        : base(1, CardType.Skill, CardRarity.Common, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "请您不要···宽恕我",
             Description: "在粉色形态下，切换到黑色形态，不获得卡牌直视我和怜悯我，获得4层蔽星、2力量并切换到共鸣模态·集谐，退出黑色形态时，失去由此获得的蔽星并退出共鸣模态·集谐。");

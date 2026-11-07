@@ -9,14 +9,14 @@ public static class TuneStrainMath
 {
     /// <summary>
     /// tsBias → 倍率底数 tsBias2Base。
-    /// 1 层 → 1.15，2 层 → 1.2，3 层及以上 → 1.3。
+    /// 1 层 → 1.22，2 层 → 1.26，3 层及以上 → 1.31。
     /// 为以后 tsBias &gt; 3 可能设计更多效果留出空间（此处留 API）。
     /// </summary>
     public static double BiasToBase(double tsBias)
     {
         if (tsBias <= 1.0)
-            return 1.15;
-        return tsBias < 3.0 ? 1.2 : 1.3;
+            return 1.22;
+        return tsBias < 3.0 ? 1.26 : 1.31;
     }
 
     /// <summary>
@@ -47,16 +47,16 @@ public static class TuneStrainMath
     }
 
     /// <summary>
-    /// 集谐易伤增伤比例 tsDmgAdvRatio = 2 * tsBias2Base(tsBias)^tsRes / 100。
+    /// 集谐易伤增伤比例 tsDmgAdvRatio = 0.1 + tsBias2Base(tsBias)^tsRes / 100。
     /// 最终伤害 = 原伤害 × (1 + ratio)。
     /// 调用方负责保证 tsRes 已经过 tsResponse 折算（含共鸣模态的 1.5 倍放大）。
     /// </summary>
     public static double DamageAdvantageRatio(double tsBias, double tsRes)
     {
-        if (tsBias <= 0 || tsRes <= 0)
+        if (tsBias <= 0)
             return 0.0;
         double b = BiasToBase(tsBias);
         double a = System.Math.Pow(b, tsRes);
-        return 2.0 * a / 100.0;
+        return 0.1 + a / 100.0;
     }
 }

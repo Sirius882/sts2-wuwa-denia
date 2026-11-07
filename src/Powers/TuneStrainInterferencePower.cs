@@ -17,7 +17,7 @@ namespace TuneStrain.Powers;
 /// <summary>
 /// 集谐·干涉：处决后附加在怪物身上的可见 debuff，层数等于处决前的集谐·偏移层数（tsBias）。
 /// 存续期间，玩家对该怪物造成的直接攻击伤害按集谐易伤倍率放大。
-/// 倍率 = 2 * tsBias2Base(tsBias) ^ tsResponse / 100，由 <see cref="TuneStrainMath"/> 计算。
+/// 增伤比例 = 0.1 + tsBias2Base(tsBias) ^ tsResponse / 100，由 <see cref="TuneStrainMath"/> 计算。
 /// 持续回合数由隐藏的 <see cref="TuneStrainInterferenceDurationPower"/> 单独计量，
 /// 干涉本身不随回合衰减（层数恒定，便于 tsBias 稳定参与倍率计算）。
 /// 重复处决时层数取原干涉与本次偏移的较大值，持续时间重置为 3 回合。
@@ -62,11 +62,7 @@ public sealed class TuneStrainInterferencePower : CustomPowerModel
         if (!props.HasFlag(ValueProp.Move) || props.HasFlag(ValueProp.Unpowered) || props.HasFlag(ValueProp.Unblockable))
             return 1m;
 
-        // 攻击者必须持有集谐响应 power（否则 tsRes=0，倍率=2*base^0/100=0.02，会出现无响应也增伤）。
-        // 设计：无响应 power 时无集谐易伤（倍率视为 0 增伤）。故无响应 power 直接返回 1。
-        int responsePowerAmount = TuneStrainState.GetResponsePowerAmount(dealer);
-        if (responsePowerAmount <= 0)
-            return 1m;
+        // 无集谐响应 power 时 tsRes=0，按新公式仍有 0.1+base^0/100=11% 增伤。
 
         double tsBias = Amount;
         double tsRes = TuneStrainState.GetResponseDegree(dealer);
