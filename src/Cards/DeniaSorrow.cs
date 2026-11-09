@@ -15,6 +15,7 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaSorrow : DeniaCard
 {
+    public override int CurrentDarkCoreCost => 2;
 
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
@@ -23,10 +24,10 @@ public sealed class DeniaSorrow : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_sorrow.png";
 
     public DeniaSorrow()
-        : base(2, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
+        : base(1, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "哀",
-            Description: "附加1点集谐·偏移、{IfUpgraded:show:5|3}点聚爆上限和{IfUpgraded:show:5|3}聚爆，无条件谐度破坏。");
+            Description: "附加1点集谐·偏移、{IfUpgraded:show:5|3}点聚爆上限和{IfUpgraded:show:5|3}聚爆。\n黯核强化：无条件谐度破坏。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -41,7 +42,8 @@ public sealed class DeniaSorrow : DeniaCard
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, cap, Owner.Creature, this);
         await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burst, Owner.Creature, this);
 
-        await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
+        if (await TrySpendDarkCore(play))
+            await AemeathMechanicsApi.TriggerUnconditionalResonanceBreak(play.Target, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }
