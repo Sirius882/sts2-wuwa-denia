@@ -1251,7 +1251,7 @@
   "DENIA-DENIA_DETERMINATION.title": "飨宴",
   "DENIA-DENIA_DETERMINATION.description": "获得等于当前牌组中集谐响应标记总量×2{IfUpgraded:show:+8|}的格挡。\n虚质强化：重复一次主效果。",
   "DENIA-DENIA_DONT_COME_IN.title": "不要···进来",
-  "DENIA-DENIA_DONT_COME_IN.description": "切换形态。获得20虚质。{IfUpgraded:show:再获得3黯核。|}",
+  "DENIA-DENIA_DONT_COME_IN.description": "切换形态。额外获得6虚质。{IfUpgraded:show:再额外获得1黯核。|}",
   "DENIA-DENIA_DREAM_WEAVE.title": "织梦",
   "DENIA-DENIA_DREAM_WEAVE.description": "获得{Block:diff()}点格挡。对所有敌人触发{IfUpgraded:show:3|2}次熔解，并附加{IfUpgraded:show:4|2}聚爆上限和{IfUpgraded:show:7|3}聚爆。\n虚质强化：熔解结算后，对所有敌人附加3点聚爆。",
   "DENIA-DENIA_ENTROPY_BOOST.title": "熵变强化",

@@ -1270,7 +1270,7 @@
   "DENIA-DENIA_DETERMINATION.title": "Feast",
   "DENIA-DENIA_DETERMINATION.description": "Gain Block equal to twice the number of Tune Strain Response markers in your cards{IfUpgraded:show: plus 8|}.\nVirtual Matter Enhancement: Repeat the main effect.",
   "DENIA-DENIA_DONT_COME_IN.title": "Do Not... Come In",
-  "DENIA-DENIA_DONT_COME_IN.description": "Switch forms. Gain 20 Virtual Matter.{IfUpgraded:show: Gain 3 Dark Core.|}",
+  "DENIA-DENIA_DONT_COME_IN.description": "Switch forms. Gain 6 additional Virtual Matter.{IfUpgraded:show: Gain 1 additional Dark Core.|}",
   "DENIA-DENIA_DREAM_WEAVE.title": "Dreamweave",
   "DENIA-DENIA_DREAM_WEAVE.description": "Gain {Block:diff()} Block. Melt all enemies {IfUpgraded:show:3|2} times, then apply {IfUpgraded:show:4|2} Fusion Burst Cap and {IfUpgraded:show:7|3} Fusion Burst.\nVirtual Matter Enhancement: After Melting, apply 3 Fusion Burst to all enemies.",
   "DENIA-DENIA_ENTROPY_BOOST.title": "Entropy Boost",

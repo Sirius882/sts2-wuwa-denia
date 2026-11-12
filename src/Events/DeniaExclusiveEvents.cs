@@ -7,7 +7,6 @@ using BaseLib.Abstracts;
 using MegaCrit.Sts2.Core.CardSelection;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
-using MegaCrit.Sts2.Core.Entities.Gold;
 using MegaCrit.Sts2.Core.Events;
 using MegaCrit.Sts2.Core.Extensions;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
@@ -58,59 +57,6 @@ public sealed class DeniaSummerBeachEvent : DeniaExclusiveEvent
     {
         await CreatureCmd.LoseMaxHp(new ThrowingPlayerChoiceContext(), Owner!.Creature, 12m, isFromCard: false);
         CardModel card = Owner.RunState.CreateCard<T>(Owner);
-        CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(card, PileType.Deck), 1.2f, CardPreviewStyle.EventLayout);
-        SetEventFinished(PageDescription(pageKey));
-    }
-}
-
-/// <summary>第一层专属事件：学院的食堂。</summary>
-public sealed class DeniaAcademyCafeteriaEvent : DeniaExclusiveEvent
-{
-    public override string? CustomInitialPortraitPath => "res://images/events/denia_event_academy_cafeteria.png";
-
-    public override ActModel[] Acts => new ActModel[] { ModelDb.Act<Overgrowth>(), ModelDb.Act<Underdocks>() };
-
-    public override bool IsAllowed(IRunState runState) =>
-        HasOnlyDeniaPlayers(runState) && runState.Players.All(player => player.Gold >= 100);
-
-    protected override IReadOnlyList<EventOption> GenerateInitialOptions()
-    {
-        var options = new List<EventOption>
-        {
-            FoodOption<DeniaFrozenStarMossCake>(100, BuyFrozenStarMossCake),
-            FoodOption<DeniaFernAlgaeCake>(100, BuyFernAlgaeCake),
-            FoodOption<DeniaKarakara>(100, BuyKarakara),
-            FoodOption<DeniaTorchPineNut>(100, BuyTorchPineNut),
-            FoodOption<DeniaRainbowCandyJump>(100, BuyRainbowCandyJump),
-            FoodOption<DeniaDetermination>(50, BuyDetermination),
-            FoodOption<DeniaPineNeedleRockFloss>(50, BuyPineNeedleRockFloss),
-            FoodOption<DeniaCannedFishCake>(50, BuyCannedFishCake),
-        };
-
-        options.UnstableShuffle(Rng);
-        return options.Take(4).ToList();
-    }
-
-    private EventOption FoodOption<T>(int cost, Func<Task> onChosen) where T : CardModel
-    {
-        if (Owner!.Gold < cost)
-            return LockedOption($"LOCKED_{cost}");
-        return Option(onChosen, HoverTipFactory.FromCardWithCardHoverTips<T>());
-    }
-
-    private Task BuyFrozenStarMossCake() => BuyCard<DeniaFrozenStarMossCake>(100, "BUY_FROZEN_STAR_MOSS_CAKE");
-    private Task BuyFernAlgaeCake() => BuyCard<DeniaFernAlgaeCake>(100, "BUY_FERN_ALGAE_CAKE");
-    private Task BuyKarakara() => BuyCard<DeniaKarakara>(100, "BUY_KARAKARA");
-    private Task BuyTorchPineNut() => BuyCard<DeniaTorchPineNut>(100, "BUY_TORCH_PINE_NUT");
-    private Task BuyRainbowCandyJump() => BuyCard<DeniaRainbowCandyJump>(100, "BUY_RAINBOW_CANDY_JUMP");
-    private Task BuyDetermination() => BuyCard<DeniaDetermination>(50, "BUY_DETERMINATION");
-    private Task BuyPineNeedleRockFloss() => BuyCard<DeniaPineNeedleRockFloss>(50, "BUY_PINE_NEEDLE_ROCK_FLOSS");
-    private Task BuyCannedFishCake() => BuyCard<DeniaCannedFishCake>(50, "BUY_CANNED_FISH_CAKE");
-
-    private async Task BuyCard<T>(int cost, string pageKey) where T : CardModel
-    {
-        await PlayerCmd.LoseGold(cost, Owner!, GoldLossType.Spent);
-        CardModel card = Owner!.RunState.CreateCard<T>(Owner);
         CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(card, PileType.Deck), 1.2f, CardPreviewStyle.EventLayout);
         SetEventFinished(PageDescription(pageKey));
     }
