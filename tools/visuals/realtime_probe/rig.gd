@@ -3,8 +3,6 @@ extends Node2D
 ## Both renderers share joints; one uses vertex colors, the other a fixed texture atlas.
 
 static var atlas: Texture2D
-const Surface = preload("res://surface.gdshader")
-var materials: Array[ShaderMaterial] = []
 var textured := false
 var dark := false
 var state := "idle"
@@ -25,11 +23,6 @@ func _init(use_texture: bool = false) -> void:
 	textured = use_texture
 	if textured and atlas == null:
 		atlas = ImageTexture.create_from_image(Image.load_from_file("res://probe_atlas.png"))
-	for profile in 4:
-		var surface := ShaderMaterial.new()
-		surface.shader = Surface
-		surface.set_shader_parameter("profile", profile)
-		materials.append(surface)
 	# Layer order is explicit, independent of joint hierarchy.
 	mesh_piece("hair_l", Rect2(-52, -440, 42, 265), 4, 16, Color("bca4ca"), 0)
 	mesh_piece("hair_r", Rect2(25, -440, 46, 290), 4, 16, Color("cbb8d8"), 0)
@@ -65,7 +58,11 @@ func mesh_piece(id: String, bounds: Rect2, columns: int, rows: int, color: Color
 				width = 0.67 + 0.25 * absf(2.0 * v - 1.0)
 			points.append(bounds.position + Vector2(bounds.size.x * (0.5 + (u - 0.5) * width), bounds.size.y * v))
 			uv.append(Vector2(tile * 128 + 2 + u * 124, 2 + v * 252))
-			colors.append(color.lightened(0.09 * (1.0 - v)))
+			# Paint the designed light and dark regions directly; no scene-light calculation.
+			var painted := color.darkened(0.24) if u >= 0.67 else color
+			if u <= 0.25:
+				painted = painted.lightened(0.08)
+			colors.append(painted)
 	for row in range(rows):
 		for column in range(columns):
 			var a := row * (columns + 1) + column
@@ -81,11 +78,6 @@ func mesh_piece(id: String, bounds: Rect2, columns: int, rows: int, color: Color
 		node.uv = uv
 	else:
 		node.vertex_colors = colors
-		var normalized_uv := uv.duplicate()
-		for i in normalized_uv.size():
-			normalized_uv[i] /= Vector2(512, 256)
-		node.uv = normalized_uv
-	node.material = materials[tile]
 	add_child(node)
 	pieces.append({"id": id, "node": node, "rest": points, "faces": faces, "bounds": bounds})
 
@@ -133,8 +125,6 @@ static func solve_ik(origin: Vector2, target: Vector2, length_a: float, length_b
 	return PackedVector2Array([origin, origin + direction * along + direction.orthogonal() * height * bend, origin + direction * distance])
 
 func update_pose() -> void:
-	for surface in materials:
-		surface.set_shader_parameter("light_direction", Vector3(-0.6 + sin(clock * 0.7) * 0.5, -0.4, 0.8))
 	var attack := attack_weight() * motion
 	var guard := sin(PI * clampf(elapsed / 1.2, 0.0, 1.0)) * motion if state == "guard" else 0.0
 	var bob := Vector2(attack * 10.0 - guard * 12.0, sin(clock * TAU / 4.0) * 1.8 * motion)
@@ -184,6 +174,11 @@ func update_pose() -> void:
 func _draw() -> void:
 	# Rigid face features follow translation, never chest scaling.
 	var bob := face_offset
+	# A drawn fringe shadow follows the face; it is a colored shape, not a solved projection.
+	var fringe_shadow := PackedVector2Array([Vector2(-23, -402), Vector2(34, -402), Vector2(30, -394), Vector2(-20, -391)])
+	for i in fringe_shadow.size():
+		fringe_shadow[i] += bob
+	draw_colored_polygon(fringe_shadow, Color("d7b3b9"))
 	var blink := 0.12 if fmod(clock, 3.8) > 3.65 else 1.0
 	for x in [-8, 19]:
 		draw_ellipse(Vector2(x, -388) + bob, Vector2(4, 6 * blink), Color("593c65"))

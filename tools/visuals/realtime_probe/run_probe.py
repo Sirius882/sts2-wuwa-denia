@@ -48,7 +48,7 @@ def main() -> None:
         parser.error("--output must stay inside the workspace .cache")
     runtime = output / "runtime"
     runtime.mkdir(parents=True, exist_ok=True)
-    for name in ("project.godot", "rig.gd", "main.gd", "surface.gdshader"):
+    for name in ("project.godot", "rig.gd", "main.gd"):
         shutil.copyfile(SOURCE / name, runtime / name)
     make_atlas(runtime / "probe_atlas.png")
     godot = WORKSPACE / "Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe"

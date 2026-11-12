@@ -18,7 +18,7 @@ class Board extends Node2D:
 		draw_string(font, Vector2(36, 83), "Mechanism specimen only - not a final character design or quality comparison", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("a7a4bc"))
 		draw_string(font, Vector2(60, 151), "A / CODE GEOMETRY", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ebafcf"))
 		draw_string(font, Vector2(638, 151), "B / FIXED ATLAS + LIVE MESH", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("ebafcf"))
-		draw_string(font, Vector2(60, 625), "No character bitmap", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("b6acc3"))
+		draw_string(font, Vector2(60, 625), "Drawn color / shadow regions; no lighting solve", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("b6acc3"))
 		draw_string(font, Vector2(638, 625), "One 512 x 256 atlas; no frame sequence", HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color("b6acc3"))
 		draw_string(font, Vector2(36, 683), phase + "   /   analytic IK + local spring   /   Dummy physics", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("d8c9df"))
 		for x in [310, 890]:
@@ -117,6 +117,12 @@ func run_checks() -> void:
 		var rig := Rig.new(textured)
 		root.add_child(rig)
 		check(rig.pieces.size() == 14, "Stable layer count")
+		for piece in rig.pieces:
+			check(piece.node.material == null, "Drawing has no lighting shader")
+			if not textured:
+				check(piece.node.texture == null, "Code drawing has no character bitmap")
+				var colors: PackedColorArray = piece.node.vertex_colors
+				check(colors[0].get_luminance() > colors[colors.size() - 1].get_luminance(), "Authored bright and dark colors remain distinct")
 		for i in 240:
 			if i % 60 == 0:
 				rig.play("attack")
