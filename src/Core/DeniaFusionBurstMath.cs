@@ -40,4 +40,12 @@ public static class DeniaFusionBurstMath
         int cap = GetCanonicalCap(target);
         return (cap * percent + 99) / 100;
     }
+
+    /// <summary>floor(numerator/denominator * cap)，分母/分子须为正。设计明确要求向下取整时使用。</summary>
+    public static int FloorRatioOfCap(Creature? target, int numerator, int denominator)
+    {
+        if (numerator <= 0 || denominator <= 0)
+            return 0;
+        return GetCanonicalCap(target) * numerator / denominator;
+    }
 }

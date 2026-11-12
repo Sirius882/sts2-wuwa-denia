@@ -17,9 +17,11 @@ namespace Denia;
 public sealed class DeniaFernAlgaeCake : DeniaCard
 {
     protected override bool HasEnergyCostX => true;
+    public override int CurrentDarkCoreCost => TryGetOwner(out var owner)
+        ? DeniaResourceState.GetDarkCore(owner!.Creature) : 0;
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        new[] { new DamageVar(2m, ValueProp.Move) };
+        new[] { new DamageVar(7m, ValueProp.Move) };
 
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_fern_algae_cake.png";
@@ -28,43 +30,26 @@ public sealed class DeniaFernAlgaeCake : DeniaCard
         : base(0, CardType.Attack, CardRarity.Rare, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "蕨团蒲藻饼",
-            Description: "对全体敌人造成{Damage:diff()}点伤害x次。\n黯核强化：再造成9点伤害y次。");
+            Description: "对全体敌人造成7×{IfUpgraded:show:(x+1)|x}点伤害。\n黯核强化：再造成9y点伤害，与主效果合并结算一次。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int x = ResolveEnergyXValue();
         int dc = DeniaResourceState.GetDarkCore(Owner.Creature);
-        int dcExtraHits = dc;
-        bool dcSpent = false;
-        if (dcExtraHits > 0 && !play.IsAutoPlay)
+        bool enhanced = dc > 0 && !play.IsAutoPlay && DeniaFormHelper.IsBlack(Owner.Creature);
+        if (enhanced)
         {
-            dcSpent = true;
             await DeniaResourceState.ClearDarkCore(Owner.Creature, Owner.Creature, this);
+            await DeniaEnhancementEvents.NotifyDarkCoreEnhanced(Owner.Creature);
         }
-
-        int baseHits = x;
-        if (baseHits > 0)
-        {
-            await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
-                .WithHitCount(baseHits)
-                .FromCard(this)
-                .TargetingAllOpponents(Owner.Creature.CombatState)
-                .Execute(ctx);
-        }
-
-        // DC额外伤害: 3dmg 3*(y+1)次
-        if (dcSpent && dcExtraHits > 0)
-        {
-            await DamageCmd.Attack(9m)
-                .WithHitCount(dcExtraHits)
-                .FromCard(this)
-                .TargetingAllOpponents(Owner.Creature.CombatState)
-                .Execute(ctx);
-        }
+        decimal damage = DynamicVars.Damage.BaseValue * (x + (IsUpgraded ? 1 : 0)) + (enhanced ? 9m * dc : 0m);
+        if (damage <= 0) return;
+        await DamageCmd.Attack(damage).FromCard(this, play)
+            .TargetingAllOpponents(Owner.Creature.CombatState).Execute(ctx);
     }
 
     protected override void OnUpgrade()
     {
-        AddKeyword(CardKeyword.Retain);
+
     }
 }

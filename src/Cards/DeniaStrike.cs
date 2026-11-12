@@ -33,7 +33,7 @@ public sealed class DeniaStrike : DeniaCard
         : base(1, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization =>
-        new CardLoc(Title: "打击", Description: "造成{Damage:diff()}点伤害。\n[color=#9A6A18]粉色形态[/color]：熔解1。\n虚质强化：基础伤害+4。");
+        new CardLoc(Title: "打击", Description: "造成{Damage:diff()}点伤害。\n[color=#9A6A18]粉色形态[/color]：附加1[color=#9A6A18]聚爆上限[/color]。\n虚质强化：基础伤害+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -41,15 +41,15 @@ public sealed class DeniaStrike : DeniaCard
 
         var dmg = DynamicVars.Damage.BaseValue;
         if (await TrySpendVirtualMatter(play))
-            dmg += 4m;
+            dmg += 2m;
 
         await DamageCmd.Attack(dmg)
-            .FromCard(this).Targeting(play.Target)
+            .FromCard(this, play).Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
 
         if (DeniaFormHelper.IsPink(Owner.Creature))
-            await AemeathFusionBurstState.ResolveMelt(play.Target, Owner.Creature, this, 1);
+            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, 1, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()

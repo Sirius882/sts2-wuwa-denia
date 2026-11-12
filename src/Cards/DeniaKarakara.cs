@@ -12,7 +12,7 @@ using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
-/// <summary>喀拉喀拉 — Rare Skill, 2e(upg:1). Gain str = enemy vuln. VM强化: gain str = enemy burst.</summary>
+/// <summary>喀拉喀拉 — Rare Skill, 2e(upg:1). Gain STR = Vulnerable and stars = ceil(cap/5); VM swaps both bonuses.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaKarakara : DeniaCard
 {
@@ -26,23 +26,22 @@ public sealed class DeniaKarakara : DeniaCard
         : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "喀拉喀拉",
-            Description: "获得等同于目标[color=#9A6A18]易伤[/color]层数三分之一的[color=#9A6A18]力量[/color]。\n虚质强化：获得等同于目标[color=#9A6A18]聚爆上限[/color]三分之二的[color=#9A6A18]力量[/color]。");
+            Description: "获得等同于目标身上易伤层数的力量、聚爆上限1/5的蔽星。\n虚质强化：再获得聚爆上限1/5的力量、易伤层数的蔽星。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
-
-        int vulnAmount = (int)(play.Target.GetPower<VulnerablePower>()?.Amount ?? 0) / 3;
-        if (vulnAmount > 0)
-            await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, vulnAmount, Owner.Creature, this);
-
-        if (await TrySpendVirtualMatter(play))
-        {
-            // 聚爆上限三分之二的力量：按 5+额外上限 向上取整
-            int strFromCap = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 2, 3);
-            if (strFromCap > 0)
-                await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, strFromCap, Owner.Creature, this);
-        }
+        int vuln = play.Target.GetPower<VulnerablePower>()?.Amount ?? 0;
+        int capShare = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 5);
+        if (vuln > 0)
+            await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, vuln, Owner.Creature, this);
+        if (capShare > 0)
+            await PowerCmd.Apply<DeniaShroudedStarPower>(ctx, Owner.Creature, capShare, Owner.Creature, this);
+        if (!await TrySpendVirtualMatter(play)) return;
+        if (capShare > 0)
+            await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, capShare, Owner.Creature, this);
+        if (vuln > 0)
+            await PowerCmd.Apply<DeniaShroudedStarPower>(ctx, Owner.Creature, vuln, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()

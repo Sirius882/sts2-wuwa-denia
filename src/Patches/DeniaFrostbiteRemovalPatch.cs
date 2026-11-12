@@ -11,7 +11,7 @@ namespace Denia;
 
 /// <summary>
 /// 冻伤只在「熔解实际造成伤害」或「自动引爆成功」时清除。
-/// 熔解清除已并入 DeniaResolveMeltEffectsPatch；本文件只保留 AutoBurst。
+/// 熔解清除已并入 DeniaMeltEffects 公开响应规则；本文件只保留 AutoBurst。
 /// 仅叠聚爆层、未引爆时不清除。
 /// </summary>
 public static class DeniaFrostbiteRemovalPatch

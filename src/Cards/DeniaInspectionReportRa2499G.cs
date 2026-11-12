@@ -1,56 +1,21 @@
-#nullable enable
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BaseLib.Abstracts;
 using BaseLib.Utils;
+using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using System.Linq;
-using TuneStrain;
 
 namespace Denia;
 
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaInspectionReportRa2499G : DeniaCard
 {
-    public override int CurrentDarkCoreCost => 1;
-
-    public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { TuneStrainKeywords.TuneStrainResponse };
-
-    public override string PortraitPath =>
-        "res://images/packed/card_portraits/denia/card_face_inspection_report_ra2499_g.png";
-
-    public DeniaInspectionReportRa2499G()
-        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
-
+    public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_inspection_report_ra2499_g.png";
+    public DeniaInspectionReportRa2499G() : base(0, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
     public override List<(string, string)>? Localization => new CardLoc(Title: "检验报告RA2499-G",
-            Description: "切换形态。对目标附加{IfUpgraded:show:2|1}[color=#9A6A18]集谐·偏移[/color]。\n黯核强化：附加的[color=#9A6A18]集谐·偏移[/color]扩展到所有敌人。");
-
-    protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
-    {
-        ArgumentNullException.ThrowIfNull(play.Target);
-        bool hitAllEnemies = await TrySpendDarkCore(play);
-
-        if (DeniaFormHelper.IsPink(Owner.Creature))
-            await DeniaFormHelper.SwitchToBlack(Owner.Creature, Owner.Creature, this);
-        else
-            await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
-
-        int bias = IsUpgraded ? 2 : 1;
-        if (hitAllEnemies)
-        {
-            var combatState = Owner.Creature.CombatState;
-            ArgumentNullException.ThrowIfNull(combatState);
-            foreach (var enemy in combatState.HittableEnemies.ToList())
-                await TuneStrainState.TryAddBias(enemy, bias, Owner.Creature, this);
-        }
-        else
-        {
-            await TuneStrainState.TryAddBias(play.Target, bias, Owner.Creature, this);
-        }
-    }
-
-    protected override void OnUpgrade() { }
+        Description: "本场战斗中，你的[color=#9A6A18]聚爆[/color]伤害不再是AOE伤害，而是把本应造成的AOE伤害总量全部集中在被引爆的单个目标上。");
+    protected override Task OnPlay(PlayerChoiceContext ctx, CardPlay play) =>
+        PowerCmd.Apply<DeniaInspectionReportPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+    protected override void OnUpgrade() => AddKeyword(CardKeyword.Innate);
 }

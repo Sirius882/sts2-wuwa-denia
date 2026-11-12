@@ -15,12 +15,13 @@ namespace Denia;
 /// 熵变强化: 获得 buff/debuff 时立刻获得格挡（按 instance 次数，非层数）。
 /// 通过 Power 生命周期 AfterPowerAmountChanged 实时结算（引擎 await 该 Hook）。
 /// </summary>
-public sealed class DeniaEntropyBoostPower : CustomPowerModel
+public class DeniaEntropyBoostPower : CustomPowerModel
 {
     private const int MaxTriggersPerTurn = 6;
+    protected virtual int BlockPerTrigger => 2;
 
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_entropy_boost_power.png";
@@ -29,8 +30,8 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
     public override List<(string, string)>? Localization =>
         new PowerLoc(
         Title: "熵变强化",
-        Description: "获得增益或给敌人附加减益时，获得{Amount}格挡。每回合最多触发6次。",
-        SmartDescription: "获得增益或给敌人附加减益时，获得{Amount}格挡。每回合最多触发6次。");
+        Description: $"获得增益或给敌人附加减益时，获得{BlockPerTrigger}格挡。每回合最多触发6次。不可叠加。",
+        SmartDescription: $"获得增益或给敌人附加减益时，获得{BlockPerTrigger}格挡。每回合最多触发6次。不可叠加。");
 
     public override async Task AfterPowerAmountChanged(
         PlayerChoiceContext choiceContext,
@@ -69,7 +70,7 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
         await PowerCmd.Apply<DeniaEntropyBoostTriggeredThisTurnPower>(
             choiceContext, Owner, 1m, Owner, cardSource);
 
-        int block = (int)Amount;
+        int block = BlockPerTrigger;
         // Move：受敏捷等格挡加成（不要用 Unpowered）
         if (block > 0)
             await CreatureCmd.GainBlock(Owner, new BlockVar(block, ValueProp.Move), null);
@@ -80,4 +81,9 @@ public sealed class DeniaEntropyBoostPower : CustomPowerModel
         if (creature == null) return;
         await PowerCmd.Remove<DeniaEntropyBoostTriggeredThisTurnPower>(creature);
     }
+}
+
+public sealed class DeniaEntropyBoostEnhancedPower : DeniaEntropyBoostPower
+{
+    protected override int BlockPerTrigger => 3;
 }

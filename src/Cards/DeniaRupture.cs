@@ -44,7 +44,7 @@ public sealed class DeniaRupture : DeniaCard
 
         await DamageCmd.Attack(baseDmg)
             .WithHitCount(2)
-            .FromCard(this)
+            .FromCard(this, play)
             .TargetingAllOpponents(combatState)
             .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
 
@@ -58,7 +58,7 @@ public sealed class DeniaRupture : DeniaCard
                 enemies = combatState.Enemies.Where(e => !e.IsDead).ToArray();
                 foreach (var enemy in enemies)
                 {
-                    await DamageCmd.Attack(capHitDmg).FromCard(this).Targeting(enemy)
+                    await DamageCmd.Attack(capHitDmg).FromCard(this, play).Targeting(enemy)
                         .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
                 }
             }

@@ -26,7 +26,7 @@ public sealed class DeniaMeltingAway : DeniaCard
         : base(2, CardType.Skill, CardRarity.Rare, TargetType.AllEnemies) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "熔毁殆尽",
-            Description: "随机引爆一名敌人，切换到[color=#9A6A18]粉色形态[/color]。回合开始时，对所有敌人附加1聚爆上限和上限{IfUpgraded:show:1/3|1/5}的[color=#9A6A18]聚爆[/color]。\n黯核强化：上述附加的[color=#9A6A18]聚爆[/color]层数和聚爆上限都+2。");
+            Description: "对随机1名敌人触发1次无条件聚爆上限引爆。若处于黑色形态，切换到粉色形态。此后每个回合开始时，对所有敌人提升聚爆上限1点（不超过硬上限），并附加上限{IfUpgraded:show:1/3|1/4}的聚爆。持续附加聚爆的效果不可叠加。\n黯核强化：上述附加的聚爆层数和聚爆上限都额外+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -40,29 +40,34 @@ public sealed class DeniaMeltingAway : DeniaCard
             }
         }
 
-        // 2. 黯核强化（在切换形态前消耗）
-        int dcBonus = await TrySpendDarkCore(play) ? 2 : 0;
-        // Power.Amount = 比例分母（未升级 1/5，升级 1/3）
-        int ratioDenom = IsUpgraded ? 3 : 5;
+        // 2. 黯核强化（在切换形态前消耗）；持续效果存在时不追加或替换。
+        bool applyOngoing = Owner.Creature.GetPower<DeniaMeltingAwayPower>() == null;
+        bool enhanced = applyOngoing && await TrySpendDarkCore(play);
 
-        // 3. 若处于黑色形态，切换到粉色，并附加持续性能力
+        // 3. 若处于黑色形态，切换到粉色，并附加持续性能力。
         if (DeniaFormHelper.IsBlack(Owner.Creature))
-        {
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
 
-            await PowerCmd.Apply<DeniaMeltingAwayPower>(ctx, Owner.Creature, ratioDenom, Owner.Creature, this);
-            if (dcBonus > 0)
-                await PowerCmd.Apply<DeniaMeltingAwayCapBonusPower>(ctx, Owner.Creature, dcBonus, Owner.Creature, this);
-        }
+        if (!applyOngoing) return;
+        if (enhanced && IsUpgraded)
+            await PowerCmd.Apply<DeniaMeltingAwayEnhancedPlusPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+        else if (enhanced)
+            await PowerCmd.Apply<DeniaMeltingAwayEnhancedPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+        else if (IsUpgraded)
+            await PowerCmd.Apply<DeniaMeltingAwayPlusPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+        else
+            await PowerCmd.Apply<DeniaMeltingAwayPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
     }
 
     protected override void OnUpgrade() { }
 }
 
-public sealed class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
+public class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    // Amount = 比例分母（5 或 3），不累加
+    // 比例分母（4 或 3）和黯核加成由具体状态表示，不累加
+    protected virtual int RatioDenominator => 4;
+    protected virtual int EnhancementBonus => 0;
     public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
@@ -72,14 +77,14 @@ public sealed class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
     public override List<(string, string)>? Localization =>
         new PowerLoc(
         Title: "熔毁殆尽",
-        Description: "回合开始时对所有敌人提升聚爆上限，再按上限比例附加聚爆。",
-        SmartDescription: "回合开始时对所有敌人提升聚爆上限，再按上限比例附加聚爆。");
+        Description: $"回合开始时对所有敌人提升{1 + EnhancementBonus}点聚爆上限，再附加上限1/{RatioDenominator}的聚爆{(EnhancementBonus > 0 ? $"+{EnhancementBonus}" : "")}。持续效果不可叠加。",
+        SmartDescription: $"回合开始时对所有敌人提升{1 + EnhancementBonus}点聚爆上限，再附加上限1/{RatioDenominator}的聚爆{(EnhancementBonus > 0 ? $"+{EnhancementBonus}" : "")}。持续效果不可叠加。");
 
     public override async Task AfterSideTurnStart(CombatSide side, IReadOnlyList<Creature> participants, ICombatState combatState)
     {
-        if (side != CombatSide.Player) return;
-        int ratioDenom = Math.Max(1, (int)Amount);
-        int dcBonus = Owner.GetPower<DeniaMeltingAwayCapBonusPower>()?.Amount ?? 0;
+        if (side != CombatSide.Player || !participants.Contains(Owner)) return;
+        int ratioDenom = RatioDenominator;
+        int dcBonus = EnhancementBonus;
         int capGain = 1 + dcBonus;
         var enemies = combatState.Enemies.Where(e => !e.IsDead).ToArray();
         foreach (var enemy in enemies)
@@ -91,4 +96,19 @@ public sealed class DeniaMeltingAwayPower : BaseLib.Abstracts.CustomPowerModel
                 await AemeathFusionBurstState.TryAddFusionBurst(enemy, burst, Owner, null!);
         }
     }
+}
+
+public sealed class DeniaMeltingAwayPlusPower : DeniaMeltingAwayPower
+{
+    protected override int RatioDenominator => 3;
+}
+
+public class DeniaMeltingAwayEnhancedPower : DeniaMeltingAwayPower
+{
+    protected override int EnhancementBonus => 2;
+}
+
+public sealed class DeniaMeltingAwayEnhancedPlusPower : DeniaMeltingAwayEnhancedPower
+{
+    protected override int RatioDenominator => 3;
 }

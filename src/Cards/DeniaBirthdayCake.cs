@@ -25,10 +25,12 @@ public sealed class DeniaBirthdayCake : DeniaCard
         : base(2, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "生日蛋糕",
-            Description: "[color=#9A6A18]粉色形态[/color]下，每回合开始时额外获得1黯核。");
+            Description: "[color=#9A6A18]粉色形态[/color]下，每回合开始时额外获得1黯核。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
+        if (Owner.Creature.GetPower<DeniaBirthdayCakePower>() != null) return;
+
         await PowerCmd.Apply<DeniaBirthdayCakePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
     }
 
@@ -41,7 +43,7 @@ public sealed class DeniaBirthdayCake : DeniaCard
 public sealed class DeniaBirthdayCakePower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Counter;
+    public override PowerStackType StackType => PowerStackType.Single;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_birthday_cake_power.png";

@@ -3,7 +3,7 @@ namespace Denia;
 public sealed class DeniaConformalEnergy : DeniaCard
 {
     public override int CurrentDarkCoreCost => 1;
-    public override IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust };
+    public override IEnumerable<CardKeyword> CanonicalKeywords => System.Array.Empty<CardKeyword>();
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_conformal_energy.png";
     public DeniaConformalEnergy() : base(0, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
     public override List<(string, string)>? Localization => new CardLoc(Title: "共形能量", Description: "抽{IfUpgraded:show:3|2}张牌。\n黯核强化：获得1点[color=#9A6A18]能量[/color]。");

@@ -1,3 +1,4 @@
+using TuneStrain;
 using System.Linq;
 using System.Threading.Tasks;
 using BaseLib.Abstracts;
@@ -14,39 +15,24 @@ namespace Denia;
 public sealed class DeniaVirtualParticle : DeniaCard
 {
     public override int CurrentDarkCoreCost => 1;
+    public override System.Collections.Generic.IEnumerable<CardKeyword> CanonicalKeywords => new[] { CardKeyword.Exhaust };
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_virtual_particle.png";
 
-    public DeniaVirtualParticle() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AllEnemies) { }
+    public DeniaVirtualParticle() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "虚质粒子",
-            Description: "给予所有敌人{IfUpgraded:show:3|2}层[color=#9A6A18]虚弱[/color]。\n黯核强化：若本次进入[color=#9A6A18]黑色形态[/color]后打出的是「直视我」，获得等于所给予的虚弱层数总和的[color=#9A6A18]力量[/color]。若是「怜悯我」，获得等量[color=#9A6A18]蔽星[/color]。若是通过「请您不要···宽恕我」进入[color=#9A6A18]黑色形态[/color]，则都获得。这些buff在切换粉色时清除。");
+            Description: "给你当前牌组中所有牌附加集谐响应。\n黯核强化：在弃牌堆里放入一张这张牌的复制品。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        int w = IsUpgraded ? 3 : 2;
-        var enemies = Owner.Creature.CombatState.Enemies.Where(e2 => !e2.IsDead).ToArray();
-
-        foreach (var e in enemies)
-            await PowerCmd.Apply<WeakPower>(ctx, e, w, Owner.Creature, this);
-
+        foreach (var card in Owner.PlayerCombatState!.AllCards.Concat(Owner.Deck.Cards).Where(card => !card.HasBeenRemovedFromState).ToArray())
+            TuneStrainState.AddTemporaryResponse(Owner, card);
         if (!await TrySpendDarkCore(play)) return;
-
-        int totalWeak = w * enemies.Length;
-        bool forgive = DeniaFormHelper.SawForgiveMePathThisBlackForm(Owner.Creature);
-        bool look = forgive || DeniaFormHelper.SawLookAtMeThisBlackForm(Owner.Creature);
-        bool pity = forgive || DeniaFormHelper.SawPityMeThisBlackForm(Owner.Creature);
-
-        if (look)
-        {
-            await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, totalWeak, Owner.Creature, this);
-            await DeniaFormHelper.AddWeaknessBonusStrengthDebt(Owner.Creature, totalWeak, Owner.Creature, this);
-        }
-        if (pity)
-        {
-            await PowerCmd.Apply<DeniaShroudedStarPower>(ctx, Owner.Creature, totalWeak, Owner.Creature, this);
-            await DeniaFormHelper.AddWeaknessBonusTrajectoryDebt(Owner.Creature, totalWeak, Owner.Creature, this);
-        }
+        var copy = CreateClone();
+        await CardPileCmd.AddGeneratedCardToCombat(copy, PileType.Discard, Owner, CardPilePosition.Bottom);
     }
 
-    protected override void OnUpgrade() { }
+    protected override void OnUpgrade() {
+        EnergyCost.UpgradeBy(-1);
+    }
 }

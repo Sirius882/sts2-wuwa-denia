@@ -14,9 +14,15 @@ namespace Denia;
 public sealed class Denia : PlaceholderCharacterModel
 {
     public override string PlaceholderID => "necrobinder";
+
+    /// <summary>
+    /// 自定义角色视觉场景路径。默认使用粉色形态，黑色形态通过运行时Patch动态切换。
+    /// </summary>
+    public override string CustomVisualPath => "res://scenes/creature_visuals/denia_pink.tscn";
+
     public override string CustomIconTexturePath =>
         "res://images/ui/top_panel/character_icon_denia.png";
-    public override string? CustomIconPath =>
+    public override string CustomIconPath =>
         "res://scenes/ui/character_icons/denia_icon.tscn";
     public override string? CustomCharacterSelectIconPath =>
         "res://images/char_select/denia_icon.jpg";
@@ -67,13 +73,15 @@ public sealed class Denia : PlaceholderCharacterModel
     public override RelicPoolModel RelicPool => ModelDb.RelicPool<DeniaRelicPool>();
     public override PotionPoolModel PotionPool => ModelDb.PotionPool<DeniaPotionPool>();
 
-    public override IEnumerable<CardModel> StartingDeck => new CardModel[11]
+    public override IEnumerable<CardModel> StartingDeck => new CardModel[13]
     {
         ModelDb.Card<DeniaStrike>(),
         ModelDb.Card<DeniaStrike>(),
         ModelDb.Card<DeniaStrike>(),
         ModelDb.Card<DeniaStrike>(),
+        ModelDb.Card<DeniaStrike>(),
         ModelDb.Card<DeniaSorrow>(),
+        ModelDb.Card<DeniaDefend>(),
         ModelDb.Card<DeniaDefend>(),
         ModelDb.Card<DeniaDefend>(),
         ModelDb.Card<DeniaDefend>(),
@@ -85,7 +93,7 @@ public sealed class Denia : PlaceholderCharacterModel
     public override IReadOnlyList<RelicModel> StartingRelics =>
         new RelicModel[] { ModelDb.Relic<DeniaTrickster>() };
 
-    public override float DeathAnimTime => 1.5f;
+    public override float DeathAnimTime => DeniaFormPatch.PinkDeathDuration;
     public override float AttackAnimDelay => 0.2f;
     public override float CastAnimDelay => 0.2f;
 
@@ -104,10 +112,7 @@ public sealed class Denia : PlaceholderCharacterModel
         // 双形态立绘
         "res://images/packed/character_select/denia_pink.png",
         "res://images/packed/character_select/denia_black.png",
-        // 形态切换中间图
-        "res://images/packed/character_select/denia_form_to_black.png",
-        "res://images/packed/character_select/denia_form_to_pink.png",
-        "res://images/packed/character_select/denia_weapon.png",
+        // 形态切换中间图已停用；保留黑态攻击特效预加载。
         "res://images/ui/combat/denia_black_attack_fx.png",
         // 战斗UI图标
         "res://images/ui/combat/denia_virtual_matter.png",

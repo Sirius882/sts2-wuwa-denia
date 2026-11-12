@@ -15,7 +15,7 @@ namespace Denia;
 /// <summary>乖~ — Uncommon Attack</summary>
 public sealed class DeniaBehave : DeniaCard
 {
-    public override int CurrentVirtualMatterCost => 5;
+    public override int CurrentVirtualMatterCost => 3;
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         new[] { new DamageVar(15m, ValueProp.Move) };
 
@@ -35,13 +35,13 @@ public sealed class DeniaBehave : DeniaCard
 
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
             .WithHitCount(hitCount)
-            .FromCard(this).Targeting(play.Target)
+            .FromCard(this, play).Targeting(play.Target)
             .WithHitFx("vfx/vfx_heavy_blunt").Execute(ctx);
 
         await PowerCmd.Apply<StrengthPower>(ctx, Owner.Creature, 2m, Owner.Creature, this);
     }
 
-    protected override void OnUpgrade() { DynamicVars.Damage.UpgradeValueBy(5m); }
+    protected override void OnUpgrade() { EnergyCost.UpgradeBy(-1); }
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "乖~", Description: "造成{Damage:diff()}点伤害。\n获得2点[color=#9A6A18]力量[/color]。\n虚质强化：再造成一段伤害。");

@@ -13,7 +13,6 @@ using MegaCrit.Sts2.Core.Entities.Powers;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
-using MegaCrit.Sts2.Core.Saves.Runs;
 using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
@@ -57,7 +56,7 @@ public sealed class DeniaTaintedDarkness : DeniaCard
 
         await DamageCmd.Attack(immediate)
             .WithHitCount(7)
-            .FromCard(this)
+            .FromCard(this, play)
             .Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(ctx);
@@ -90,9 +89,6 @@ public sealed class DeniaTaintedDarkness : DeniaCard
 public sealed class DeniaTaintedDarknessPower : CustomPowerModel
 {
     private const string TargetIndexKey = "TargetIndex";
-
-    static DeniaTaintedDarknessPower() =>
-        SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaTaintedDarknessPower));
 
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
@@ -137,6 +133,7 @@ public sealed class DeniaTaintedDarknessPower : CustomPowerModel
                 DynamicVars.Damage.BaseValue,
                 ValueProp.Move,
                 Owner,
+                null,
                 null);
         }
 

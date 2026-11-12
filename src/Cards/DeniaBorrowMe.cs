@@ -14,7 +14,7 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>借我用下 — Rare Skill, 1e. Block per distinct buff/debuff type. VM: multiplier+1.</summary>
+/// <summary>借我用下 — Uncommon Skill, 2e. Block per distinct buff/debuff type. VM: multiplier+1.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaBorrowMe : DeniaCard
 {
@@ -23,7 +23,7 @@ public sealed class DeniaBorrowMe : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_borrow_me.png";
 
     public DeniaBorrowMe()
-        : base(1, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
+        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "借我用下",

@@ -40,7 +40,7 @@ public sealed class DeniaTear : DeniaCard
 
         await DamageCmd.Attack(dmg)
             .WithHitCount(1)
-            .FromCard(this).Targeting(play.Target)
+            .FromCard(this, play).Targeting(play.Target)
             .WithHitFx("vfx/vfx_attack_slash").Execute(ctx);
     }
 

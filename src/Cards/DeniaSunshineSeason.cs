@@ -11,7 +11,7 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace Denia;
 
-/// <summary>阳光季节 — Rare Skill, 1e(upg:0e). 切换形态，抽1张牌，获得1能量和1黯核。</summary>
+/// <summary>阳光季节 — Rare Skill, 0e. 切换形态，抽2(4)张牌，获得2黯核。</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaSunshineSeason : DeniaCard
 {
@@ -19,10 +19,10 @@ public sealed class DeniaSunshineSeason : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_sunshine_season.png";
 
     public DeniaSunshineSeason()
-        : base(2, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
+        : base(0, CardType.Skill, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "阳光季节",
-            Description: "切换形态。抽1张牌。获得1点能量和1黯核。");
+            Description: "切换形态，抽{IfUpgraded:show:4|2}张牌，获得2黯核。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -31,13 +31,12 @@ public sealed class DeniaSunshineSeason : DeniaCard
         else
             await DeniaFormHelper.SwitchToPink(Owner.Creature, Owner.Creature, this);
 
-        await CardPileCmd.Draw(ctx, 1, Owner);
-        await PlayerCmd.GainEnergy(1, Owner);
-        await DeniaResourceState.GainDarkCore(Owner.Creature, 1, Owner.Creature, this);
+        await CardPileCmd.Draw(ctx, IsUpgraded ? 4 : 2, Owner);
+        await DeniaResourceState.GainDarkCore(Owner.Creature, 2, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()
     {
-        EnergyCost.UpgradeBy(-1);
+
     }
 }

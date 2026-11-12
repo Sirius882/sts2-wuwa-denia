@@ -24,9 +24,6 @@ public sealed class DeniaMoonlightSword : DeniaCard
     public DeniaMoonlightSword()
         : base(3, CardType.Skill, CardRarity.Rare, TargetType.AllEnemies) { }
 
-    public override IEnumerable<CardKeyword> CanonicalKeywords =>
-        new[] { CardKeyword.Exhaust };
-
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "亚杜拉的月光剑",
             Description: "令所有没有[color=#9A6A18]冻伤[/color]的敌人失去其生命上限20%的血量。\n对所有敌人附加[color=#9A6A18]冻伤[/color]。");
@@ -51,13 +48,10 @@ public sealed class DeniaMoonlightSword : DeniaCard
         // 2. 对所有敌人附加冻伤
         foreach (var enemy in enemies)
         {
-            if (enemy.GetPower<DeniaFrostbitePower>() == null)
+            if (!enemy.IsDead && enemy.GetPower<DeniaFrostbitePower>() == null)
                 await PowerCmd.Apply<DeniaFrostbitePower>(ctx, enemy, 1m, Owner.Creature, this);
         }
     }
 
-    protected override void OnUpgrade()
-    {
-        RemoveKeyword(CardKeyword.Exhaust);
-    }
+    protected override void OnUpgrade() => EnergyCost.UpgradeBy(-1);
 }

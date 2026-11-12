@@ -12,7 +12,7 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace Denia;
 
-/// <summary>幻灭之形 — Uncommon Attack</summary>
+/// <summary>幻灭之形 — Uncommon Skill</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaPhantomForm : DeniaCard
 {
@@ -25,7 +25,7 @@ public sealed class DeniaPhantomForm : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_phantom_form.png";
 
     public DeniaPhantomForm()
-        : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
+        : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override bool GainsBlock => true;
 

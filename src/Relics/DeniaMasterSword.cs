@@ -14,11 +14,6 @@ namespace Denia;
 [BaseLib.Utils.Pool(typeof(SharedRelicPool))]
 public sealed class DeniaMasterSword : CustomRelicModel
 {
-    static DeniaMasterSword()
-    {
-        SavedPropertiesTypeCache.InjectTypeIntoCache(typeof(DeniaMasterSword));
-    }
-
     public override RelicRarity Rarity => RelicRarity.Rare;
     protected override string IconBaseName => "denia_master_sword";
 

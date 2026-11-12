@@ -26,14 +26,14 @@ public sealed class DeniaDetermination : DeniaCard
     public DeniaDetermination() : base(1, CardType.Skill, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "飨宴",
-            Description: "获得等于牌组中[color=#9A6A18]集谐响应[/color]标记总量{IfUpgraded:show:+4|}的[color=#9A6A18]格挡[/color]。\n虚质强化：重复效果。");
+            Description: "获得等于当前牌组中集谐响应标记总量×2{IfUpgraded:show:+8|}的格挡。\n虚质强化：重复一次主效果。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int responseCards = CountResponseCards();
-        int bonus = IsUpgraded ? 4 : 0;
-        // 基础格挡 = 三堆集谐响应标记总量（非一半）+ 升级 +4
-        int val = responseCards + bonus;
+        int bonus = IsUpgraded ? 8 : 0;
+        // 基础格挡 = 三堆集谐响应标记总量×2 + 升级 +8
+        int val = responseCards * 2 + bonus;
         int times = await TrySpendVirtualMatter(play) ? 2 : 1;
 
         for (int i = 0; i < times; i++)
