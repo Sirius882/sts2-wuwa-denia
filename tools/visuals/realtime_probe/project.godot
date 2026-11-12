@@ -1,0 +1,19 @@
+config_version=5
+
+[application]
+config/name="Denia realtime animation mechanism probe"
+
+[display]
+window/size/viewport_width=1200
+window/size/viewport_height=720
+window/size/window_width_override=1200
+window/size/window_height_override=720
+window/vsync/vsync_mode=0
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+
+[physics]
+2d/physics_engine="Dummy"
+3d/physics_engine="Dummy"
