@@ -106,6 +106,11 @@ public sealed class Denia : PlaceholderCharacterModel
         DeniaExecutionTimeline.VideoPath,
         "res://shaders/denia_execution_screen.gdshader",
         "res://shaders/denia_execution_impact.gdshader",
+        // 粉态实时待机沿用角色预加载，避免首次进入战斗时同步上传整张图集。
+        "res://images/characters/denia/realtime_pink/frames.webp",
+        "res://images/characters/denia/realtime_pink/flow.png",
+        "res://images/characters/denia/realtime_pink/tracking.tres",
+        "res://shaders/denia_pink_idle.gdshader",
         // 角色图标
         "res://images/ui/top_panel/character_icon_denia.png",
         "res://scenes/ui/character_icons/denia_icon.tscn",
