@@ -1442,5 +1442,7 @@
   "DENIA-DENIA_ANIMATION_TEST.title": "Animation Test (Internal)",
   "DENIA-DENIA_ANIMATION_TEST.description": "Choose an animation to preview. Plays visuals and audio only, without damage or Tune Strain resolution.",
   "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.title": "Level 3 Tune Strain Execution",
-  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "Play the complete Level 3 Tune Strain execution visuals and soundtrack at normal speed. Preview only; no damage or Tune Strain resolution."
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "Play the complete Level 3 Tune Strain execution visuals and soundtrack at normal speed. Preview only; no damage or Tune Strain resolution.",
+  "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.title": "Black Form Rise (Spare)",
+  "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.description": "Play the 3-second black form rising animation at normal speed, then restore the current form. Preview only; no form or combat stat changes."
 }

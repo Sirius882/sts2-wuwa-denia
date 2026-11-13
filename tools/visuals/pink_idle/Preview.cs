@@ -20,6 +20,12 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black_rise")
+            {
+                await CheckRise();
+                GetTree().Quit();
+                return;
+            }
             _viewport = new SubViewport { Size = new Vector2I(592, 600), TransparentBg = true,
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
             AddChild(_viewport);
@@ -180,6 +186,64 @@ public partial class Preview : Node
             GetTree().Quit();
         }
         catch (Exception ex) { GD.PrintErr(ex); GetTree().Quit(1); }
+    }
+
+    private async Task CheckRise()
+    {
+        _viewport = new SubViewport { Size = new Vector2I(592, 600), TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
+        AddChild(_viewport);
+        var rise = new DeniaBlackRiseVisual();
+        rise.Position = rise.DesignOrigin;
+        _viewport.AddChild(rise);
+        rise.SetProcess(false);
+        Check(rise.Initialized, "rise resources initialize");
+        var material = (ShaderMaterial)rise.GetNode<ColorRect>("FlowBody").Material;
+        Check(material.GetShaderParameter("frames").As<Texture2D>().GetSize() == new Vector2(4736, 3600), "48 rise tiles");
+        Check(material.GetShaderParameter("flow_fields").As<Texture2D>().GetSize() == new Vector2(488, 408), "rise flow tiles");
+        rise.Seek(-1);
+        Check(rise.Clock == 0, "single play clamps negative seek");
+        foreach (int fps in new[] { 30, 60, 144 })
+        {
+            rise.Seek(0);
+            for (int f = 0; f < fps * 2; f++) rise._Process(1.0 / fps);
+            Check(Math.Abs(rise.Clock - 2) < 1e-8, "rise real time at " + fps);
+        }
+        rise.Seek(25.5 / 47 * 3);
+        Check(material.GetShaderParameter("uBub0").AsVector4().Z == 0
+            && material.GetShaderParameter("uBub1").AsVector4().Z == 62, "clean bubble spawn transition");
+        rise.Seek(26.5 / 47 * 3);
+        Check(material.GetShaderParameter("uBub0").AsVector4() == new Vector4(356, 360, 62, 84)
+            && material.GetShaderParameter("uBub1").AsVector4() == new Vector4(358, 361, 56, 108), "liquid ellipse tracking");
+        rise.Seek(10);
+        Check(rise.Clock == 3 && material.GetShaderParameter("frame_index").AsInt32() == 47
+            && material.GetShaderParameter("uFrac").AsSingle() == 0, "last pose clamps without first frame wrap");
+        rise.Seek(0);rise.Hide();rise._Process(1);
+        Check(rise.Clock == 0, "hidden preview pauses");rise.Show();
+        try { rise.Seek(double.NaN);Check(false, "reject invalid time"); }
+        catch (ArgumentOutOfRangeException) { Check(true, "reject invalid time"); }
+        var stopped = new DeniaBlackRiseVisual();_viewport.AddChild(stopped);
+        var completion = stopped.Completion;stopped.Free();
+        Check(completion.IsCompleted, "scene exit releases playback waiter");
+        if (_render)
+        {
+            for (int i = 0; i <= 180; i++)
+            {
+                rise.Seek(i / 60.0);
+                await Capture($"rise_{i:D4}");
+            }
+            rise.Seek(1.7);await Capture("facing_right");
+            // Translate back to the canonical canvas so the mirror can be compared pixel-for-pixel.
+            rise.Position = new Vector2(592 - rise.DesignOrigin.X, rise.DesignOrigin.Y);
+            rise.SetFacing(true);await Capture("facing_left");
+        }
+        rise.Seek(0);rise._Process(3.1);
+        Check(rise.Completion.IsCompleted && rise.Clock == 3, "single play completes at three seconds");
+        rise._Process(1);
+        Check(rise.Clock == 3, "completed preview stays on final pose");
+        File.WriteAllText(Path.Combine(_output, "checks.json"),
+            $"{{\"checks\":{_checks},\"form\":\"black_rise\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
+        GD.Print($"PASS: {_checks} black rise checks, render={_render}");
     }
 
     private async Task Capture(string name)
