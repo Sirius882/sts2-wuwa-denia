@@ -10,7 +10,7 @@ public partial class Preview : Node
     private bool _render;
     private readonly string _output = ProjectSettings.GlobalizePath("res://captures");
     private SubViewport _viewport = null!;
-    private DeniaPinkIdleVisual _idle = null!;
+    private DeniaFlowIdleVisual _idle = null!;
     private AnimatedSprite2D _actions = null!;
 
     public override async void _Ready()
@@ -18,16 +18,18 @@ public partial class Preview : Node
         try
         {
             _render = DisplayServer.GetName() != "headless";
+            bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
             _viewport = new SubViewport { Size = new Vector2I(592, 600), TransparentBg = true,
                 RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
             AddChild(_viewport);
             var scene = GD.Load<PackedScene>("res://scenes/creature_visuals/denia_pink.tscn").Instantiate<Node2D>();
             _viewport.AddChild(scene);
-            _actions = scene.GetNode<AnimatedSprite2D>("PinkVisuals");
-            _actions.Visible = false;
+            scene.GetNode<AnimatedSprite2D>("PinkVisuals").Visible = false;
             scene.GetNode<AnimatedSprite2D>("DarkVisuals").Visible = false;
-            _idle = new DeniaPinkIdleVisual { Position = DeniaPinkIdleVisual.Origin };
+            _actions = scene.GetNode<AnimatedSprite2D>(black ? "DarkVisuals" : "PinkVisuals");
+            _idle = black ? new DeniaBlackIdleVisual() : new DeniaPinkIdleVisual();
+            _idle.Position = _idle.DesignOrigin;
             _viewport.AddChild(_idle);
             _idle.SetProcess(false);
             Check(_idle.Initialized, "production resources initialize");
@@ -37,7 +39,7 @@ public partial class Preview : Node
             _actions.AnimationFinished += () => {
                 if (_actions.Animation == "attack" || _actions.Animation == "dodge") _actions.Play("idle");
             };
-            foreach (string action in new[] { "attack", "dodge", "death" })
+            foreach (string action in black ? new[] { "attack", "dodge" } : new[] { "attack", "dodge", "death" })
             {
                 Check(_actions.SpriteFrames.HasAnimation(action), action + " retained");
                 _actions.Play(action);
@@ -62,8 +64,8 @@ public partial class Preview : Node
                 Check(Math.Abs(_idle.Clock - 2) < 1e-8, fps + " FPS preserves elapsed time");
             }
             _idle.Seek(-0.25);
-            Check(Math.Abs(_idle.Clock - (DeniaPinkIdleVisual.Duration - 0.25)) < 1e-8, "negative seek wraps");
-            _idle.Seek(DeniaPinkIdleVisual.Duration);
+            Check(Math.Abs(_idle.Clock - (_idle.DurationSeconds - 0.25)) < 1e-8, "negative seek wraps");
+            _idle.Seek(_idle.DurationSeconds);
             Check(_idle.Clock == 0, "loop duration wraps exactly");
             try { _idle.Seek(double.NaN); Check(false, "invalid clock rejected"); }
             catch (ArgumentOutOfRangeException) { Check(true, "invalid clock rejected"); }
@@ -71,24 +73,44 @@ public partial class Preview : Node
             _idle._Process(1);
             Check(_idle.Clock == 0, "hidden form pauses work and clock");
             _idle.Show();
-            var second = new DeniaPinkIdleVisual { Visible = false };
+            DeniaFlowIdleVisual second = black ? new DeniaBlackIdleVisual() : new DeniaPinkIdleVisual();
+            second.Visible = false;
             _viewport.AddChild(second);
             second.Seek(5);
-            Check(_idle.Clock == 0 && second.Clock == 5, "creature clocks are independent");
+            Check(_idle.Clock == 0 && Math.Abs(second.Clock - 5) < 1e-8, "creature clocks are independent");
             second.QueueFree();
             var material = (ShaderMaterial)_idle.GetNode<ColorRect>("FlowBody").Material;
             var frames = material.GetShaderParameter("frames").AsGodotObject() as Texture2D;
-            Check(frames != null && frames.GetSize() == new Vector2(4736, 4200), "all 56 frame tiles resident");
+            Check(frames != null && frames.GetSize() == new Vector2(4736, black ? 3600 : 4200), "all frame tiles resident");
             var flow = material.GetShaderParameter("flow_fields").AsGodotObject() as Texture2D;
-            Check(flow != null && flow.GetSize() == new Vector2(536, 483), "flow atlas dimensions");
+            Check(flow != null && flow.GetSize() == (black ? new Vector2(328, 402) : new Vector2(536, 483)), "flow atlas dimensions");
+            _idle.Seek(_idle.DurationSeconds - 0.001);
+            Check(material.GetShaderParameter("frame_index").AsInt32() == (black ? 47 : 54), "last interval selects correct frame");
+            if (black)
+            {
+                Check(material.GetShaderParameter("fraction").AsSingle() > 0.98f, "last black frame interpolates back to first");
+                var before = material.GetShaderParameter("halo").AsVector2();
+                _idle.Seek(0);
+                Check(before.DistanceTo(material.GetShaderParameter("halo").AsVector2()) < 0.02f, "tracked halo continuous across loop");
+            }
+            _idle.Seek(0);
+            var hiddenParent = new Node2D { Visible = false };
+            _viewport.AddChild(hiddenParent);
+            _idle.Reparent(hiddenParent);
+            _idle._Process(1);
+            Check(_idle.Clock == 0, "parent form visibility pauses hidden idle");
+            _idle.Reparent(_viewport);
+            hiddenParent.QueueFree();
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            Check(_actions.SpeedScale == 1 && !_actions.IsPlaying(), "old idle is paused without changing action speed");
             if (_render)
             {
-                for (int i = 0; i < 56; i++)
+                for (int i = 0; i < _idle.FrameCount; i++)
                 {
-                    _idle.Seek(i / 55.0 * DeniaPinkIdleVisual.Duration + (i == 55 ? -0.000001 : 0));
+                    _idle.Seek(i / (double)(black ? 48 : 55) * _idle.DurationSeconds + (!black && i == 55 ? -0.000001 : 0));
                     await Capture($"key_{i:D2}");
                 }
-                _idle.Seek(4.125);
+                _idle.Seek(black ? 2.125 : 4.125);
                 await Capture("interpolated");
                 _idle.SetFacing(true);
                 await Capture("flipped");
@@ -100,31 +122,31 @@ public partial class Preview : Node
                 _idle.Position = new Vector2(296, 448);
                 await Capture("game_size");
                 _idle.Scale = Vector2.One;
-                _idle.Position = DeniaPinkIdleVisual.Origin;
+                _idle.Position = _idle.DesignOrigin;
                 _actions.Play("idle");
                 // Isolate the real production shader for comparison against the supplied GLSL math.
                 var body = _idle.GetNode<ColorRect>("FlowBody");
                 body.Reparent(_viewport, false);
                 body.Position = Vector2.Zero;
                 _idle.Hide();
-                foreach (double seconds in new[] { 0, 4.125, 10.631 })
+                foreach (double seconds in black ? new[] { 0, 2.125, 5.315 } : new[] { 0, 4.125, 10.631 })
                 {
                     _idle.Seek(seconds);
                     await Capture($"pure_{seconds:F3}");
                 }
                 body.Reparent(_idle, false);
-                body.Position = -DeniaPinkIdleVisual.Origin;
+                body.Position = -_idle.DesignOrigin;
                 _idle.Show();
                 // Capture a complete 60 Hz loop, including the wrap, from the production renderer.
-                for (int i = 0; i <= 640; i++)
+                for (int i = 0; i <= (int)Math.Ceiling(_idle.DurationSeconds * 60) + 2; i++)
                 {
                     _idle.Seek(i / 60.0);
                     await Capture($"loop_{i:D4}");
                 }
             }
             File.WriteAllText(Path.Combine(_output, "checks.json"),
-                $"{{\"checks\":{_checks},\"render\":{_render.ToString().ToLowerInvariant()}}}");
-            GD.Print($"PASS: {_checks} pink idle checks, render={_render}");
+                $"{{\"checks\":{_checks},\"form\":\"{(black ? "black" : "pink")}\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
+            GD.Print($"PASS: {_checks} idle checks, black={black}, render={_render}");
             GetTree().Quit();
         }
         catch (Exception ex) { GD.PrintErr(ex); GetTree().Quit(1); }

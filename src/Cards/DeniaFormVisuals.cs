@@ -285,9 +285,11 @@ public static class DeniaFormPatch
             }
         };
         overlay.Texture = null;
-        if (nodeName == "PinkVisuals")
+        if (nodeName == "PinkVisuals" || nodeName == "DarkVisuals")
         {
-            var realtime = new DeniaPinkIdleVisual { Name = "RealtimeIdle" };
+            DeniaFlowIdleVisual realtime = nodeName == "PinkVisuals"
+                ? new DeniaPinkIdleVisual() : new DeniaBlackIdleVisual();
+            realtime.Name = "RealtimeIdle";
             overlay.AddChild(realtime);
             if (realtime.Initialized) realtime.BindActions(sprite);
             else realtime.QueueFree();
@@ -459,11 +461,11 @@ public static class DeniaFormPatch
             idle.Position = size * 0.5f;
             idle.Scale = Vector2.One * (size.Y / BodyReferenceHeight);
         }
-        var realtime = rect.GetNodeOrNull<DeniaPinkIdleVisual>("RealtimeIdle");
+        var realtime = rect.GetNodeOrNull<DeniaFlowIdleVisual>("RealtimeIdle");
         if (realtime != null && GodotObject.IsInstanceValid(realtime))
         {
             realtime.Position = new Vector2(size.X * 0.5f, size.Y);
-            realtime.Scale = Vector2.One * (size.Y / DeniaPinkIdleVisual.ReferenceHeight);
+            realtime.Scale = Vector2.One * (size.Y / realtime.LayoutHeight);
         }
     }
 
@@ -494,7 +496,7 @@ public static class DeniaFormPatch
         rect.FlipH = flip;
         var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Idle");
         if (idle != null && GodotObject.IsInstanceValid(idle)) idle.FlipH = flip;
-        rect.GetNodeOrNull<DeniaPinkIdleVisual>("RealtimeIdle")?.SetFacing(flip);
+        rect.GetNodeOrNull<DeniaFlowIdleVisual>("RealtimeIdle")?.SetFacing(flip);
     }
 
     private static TextureRect MakeOverlay(string name, Texture2D tex)
