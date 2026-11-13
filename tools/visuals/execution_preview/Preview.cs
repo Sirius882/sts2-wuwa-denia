@@ -33,6 +33,7 @@ public partial class Preview : Control
             }
             var cookie = (Vector2[])typeof(DeniaExecutionOverlay).GetField("Cookie", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
             Check(Geometry2D.TriangulatePolygon(cookie).Length == (cookie.Length - 2) * 3, "cookie is a simple triangulatable contour");
+            CheckEntry(cookie);
             Check(Math.Abs(DeniaExecutionTimeline.Video - 104f / 30) < 0.0001, "video frame timing");
             await Play();
             var interrupted = new DeniaExecutionOverlay();
@@ -61,7 +62,7 @@ public partial class Preview : Control
         Check(animation.SpeedScale == 1 && overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer").SpeedScale == 1,
             "code animation and video always play at original speed");
         float maxVideoPosition = 0;
-        bool released = false, videoSeen = false, impactSeen = false;
+        bool released = false, videoSeen = false, impactSeen = false, whiteBodySeen = false;
         int frame = 0;
         string folder = Path.Combine(_output, name);
         Directory.CreateDirectory(folder);
@@ -82,8 +83,19 @@ public partial class Preview : Control
                 overlay.RevealGame();
                 released = true;
             }
-            if (_render && GetViewport().GetTexture().GetImage().SavePng(Path.Combine(folder, $"frame_{frame:D4}.png")) != Error.Ok)
-                throw new IOException("frame capture failed");
+            if (_render)
+            {
+                var image = GetViewport().GetTexture().GetImage();
+                if (image.SavePng(Path.Combine(folder, $"frame_{frame:D4}.png")) != Error.Ok)
+                    throw new IOException("frame capture failed");
+                if (clock >= 1.84f && clock < 1.89f)
+                {
+                    image.Convert(Image.Format.Rgb8);
+                    foreach (byte channel in image.GetData())
+                        if (channel < 250) throw new InvalidOperationException("incoming white body must cover every viewport pixel, including bars");
+                    whiteBodySeen = true;
+                }
+            }
             frame++;
         }
         Check(released, $"{name} reached white flash");
@@ -91,7 +103,39 @@ public partial class Preview : Control
         Check(maxVideoPosition >= DeniaExecutionTimeline.Video - 1f / 30 - 0.015f,
             $"{name} video decoded through character segment ({maxVideoPosition:F3})");
         Check(!GodotObject.IsInstanceValid(overlay) || !overlay.IsInsideTree(), $"{name} overlay completed");
+        if (_render) Check(whiteBodySeen, "GPU captured a fully white body before the video cut");
         GD.Print($"{name}: frames={frame}, video={maxVideoPosition:F3}s, elapsed={(Time.GetTicksMsec() - start) / 1000:F3}s");
+    }
+
+    private void CheckEntry(Vector2[] cookie)
+    {
+        var first = DeniaExecutionOverlay.EntryPose(0.76f);
+        var centered = DeniaExecutionOverlay.EntryPose(1.2f);
+        var near = DeniaExecutionOverlay.EntryPose(1.8f);
+        Check(first.Position.X + first.Size < 0 && centered.Position.IsEqualApprox(new Vector2(960, 443)),
+            "main cookie flies from outside the left edge to the center");
+        bool approaching = true;
+        float previousSize = centered.Size;
+        for (float time = 1.21f; time <= 1.8f; time += 0.01f)
+        {
+            var pose = DeniaExecutionOverlay.EntryPose(time);
+            approaching &= pose.Position.IsEqualApprox(centered.Position) && pose.Size > previousSize;
+            previousSize = pose.Size;
+        }
+        Check(approaching && near.Size > centered.Size * 10, "cookie approaches camera after reaching center, without shrinking or drifting");
+        var contour = new Vector2[cookie.Length];
+        for (int i = 0; i < cookie.Length; i++)
+            contour[i] = near.Position + (cookie[i] * near.Perspective).Rotated(near.Rotation) * near.Size;
+        bool covered = true;
+        foreach (float aspect in new[] { 16f / 9, 21f / 9, 4f / 3 })
+        {
+            Vector2 viewport = aspect >= 1920f / 886 ? new Vector2(886 * aspect, 886) : new Vector2(1920, 1920 / aspect);
+            Vector2 topLeft = centered.Position - viewport / 2;
+            for (int x = 0; x <= 20; x++)
+                for (int y = 0; y <= 20; y++)
+                    covered &= Geometry2D.IsPointInPolygon(topLeft + viewport * new Vector2(x / 20f, y / 20f), contour);
+        }
+        Check(covered, "the body geometry covers the full 16:9, 21:9 and 4:3 viewport before cutting");
     }
 
     private void Check(bool condition, string message)
