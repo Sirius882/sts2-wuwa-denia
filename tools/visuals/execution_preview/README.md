@@ -13,8 +13,11 @@ The checks link the production overlay and timeline, and load the installed Rits
 They cover the three-stack gate, dead/immune cases, contour triangulation, original-speed playback,
 video completion, the RitsuLib-driven timeline and node cleanup when leaving the tree.
 Entry regression checks require a flight from the left to the center before approaching the camera,
+with the body horizontal and rolling through an edge-on silhouette rather than standing upright.
 and verify the enlarged body covers the entire 16:9, 21:9 and 4:3 viewport geometrically.
 The GPU run also requires every pixel to be white just before the video cut, including the cinema bars.
+It additionally renders the dream shader on a neutral backdrop at three times, verifying stronger edges,
+a translucent center and different growth rates across the screen. These captures are `dream_*.png`.
 
 `--render` uses a hidden D3D12 window and captures actual GPU output at 30 FPS; this is a visual check,
 not a performance benchmark. The backdrop is a schematic standalone scene, not an actual combat.
