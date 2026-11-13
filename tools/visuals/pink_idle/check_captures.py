@@ -19,7 +19,7 @@ def bilinear(image, uv):
     return a * (1 - f[:, 1:]) + b * f[:, 1:]
 
 
-def sharpen(image, uv):
+def sharpen(image, uv, black=False):
     p = uv * RES - .5
     i = np.floor(p)
     f = p - i
@@ -36,38 +36,91 @@ def sharpen(image, uv):
     t01 = bilinear(image, np.column_stack([h0[:, 0], h1[:, 1]]))
     t11 = bilinear(image, h1)
     bic = (t00 * g0[:, :1] + t10 * g1[:, :1]) * g0[:, 1:] + (t01 * g0[:, :1] + t11 * g1[:, :1]) * g1[:, 1:]
-    c = np.clip(bic * .42 + bilinear(image, uv) * .58, 0, 1)
+    blend = .55 if black else .58
+    c = np.clip(bic * (1 - blend) + bilinear(image, uv) * blend, 0, 1)
     lap = c[:, :3] * 4
-    for shift in ([0, -.85], [0, .85], [.85, 0], [-.85, 0]):
+    step = .82 if black else .85
+    for shift in ([0, -step], [0, step], [step, 0], [-step, 0]):
         lap -= bilinear(image, uv + shift / RES)[:, :3]
-    c[:, :3] = np.clip(c[:, :3] + lap * .14, 0, 1)
+    c[:, :3] = np.clip(c[:, :3] + lap * (.15 if black else .14), 0, 1)
     return c
 
 
-def check(folder: Path, assets: Path):
+def smoothstep(a, b, x):
+    t = np.clip((x - a) / (b - a), 0, 1)
+    return t * t * (3 - 2 * t)
+
+
+def track(values, frame):
+    i, f = int(frame), frame % 1
+    a, b, c, d = (values[n % 48] for n in (i - 1, i, i + 1, i + 2))
+    return .5 * (2 * b + (c - a) * f + (2 * a - 5 * b + 4 * c - d) * f * f
+                 + (-a + 3 * b - 3 * c + d) * f * f * f)
+
+
+def black_shading(rgb, alpha, uv, seconds, meta, frame):
+    px = uv * RES
+    center = np.array([265, track(meta['bubble_cy'], frame)])
+    d = (px - center) / 76
+    r2 = (d * d).sum(axis=1, keepdims=True)
+    r = np.sqrt(r2)
+    nz = np.sqrt(np.maximum(.01, 1 - np.minimum(r2, 1)))
+    fresnel = (1 - nz) ** 2.8
+    wave = np.sin(r * 28 - seconds * 3.4 + d[:, :1] * 6) * np.cos(d[:, 1:] * 18 + seconds * 2.1)
+    mask = smoothstep(.92, .25, r) * smoothstep(-.2, .75, d[:, 1:]) * smoothstep(.45, -.35, d[:, :1])
+    blend = .5 + .5 * wave
+    caustic = (np.array([.18, .75, 1]) * (1 - blend) + np.array([.95, .88, .55]) * blend) * np.maximum(0, wave) * mask * .09
+    rim_mask = smoothstep(.76, .99, r) * smoothstep(1.05, .96, r)
+    rim = (np.array([.22, .68, 1]) * (1 - rim_mask) + np.array([.68, .88, 1]) * rim_mask) * (fresnel * .16 + rim_mask * .26)
+    iridescence = np.where(r2 > 1.05, 0, caustic + rim)
+    # rgb enters premultiplied; source applies iridescence to straight RGB before compositing halo.
+    straight = np.divide(rgb, alpha, out=np.zeros_like(rgb), where=alpha > 1e-4)
+    straight = np.clip(straight + iridescence * alpha, 0, 1)
+    halo = np.array([track(meta['orb_x'], frame), track(meta['orb_y'], frame)])
+    halo_r = np.linalg.norm((px - halo) * [.55, 1.25], axis=1, keepdims=True)
+    glow = np.exp(-halo_r * .085) * (.14 + .05 * np.sin(seconds * 3.6))
+    bloom_alpha = np.clip(glow * .35, 0, 1)
+    combined_alpha = np.clip(alpha + bloom_alpha * (1 - alpha), 0, 1)
+    premultiplied = straight * alpha + np.array([.32, .78, 1]) * glow * (1 - alpha * .4)
+    # Source clamps combined straight RGB to 0..1 before the transparent framebuffer blend.
+    straight = np.divide(premultiplied, combined_alpha, out=np.zeros_like(rgb), where=combined_alpha > 1e-4)
+    return np.clip(straight, 0, 1) * combined_alpha, combined_alpha
+
+
+def check(folder: Path, assets: Path, form='pink'):
+    black = form == 'black'
+    if black:
+        import json
+        import re
+        source = Path(__file__).parent / 'source/black_idle_animator.js'
+        meta = json.loads(re.search(r'^const BLACK_SYNC_F0_DATA = (.+);$', source.read_text(encoding='utf-8-sig'), re.M)[1])['meta']
     atlas = np.array(Image.open(assets / 'frames.webp').convert('RGBA'), dtype=float) / 255
     flow_atlas = np.array(Image.open(assets / 'flow.png').convert('RGB'), dtype=float) / 255
     yy, xx = np.mgrid[1:600:3, 1:592:3]
     uv = (np.column_stack([xx.ravel(), yy.ravel()]) + .5) / RES
     errors = {}
-    for seconds in (0, 4.125, 10.631):
-        frame = seconds / 10.632 * 55
+    for seconds in ((0, 2.125, 5.315) if black else (0, 4.125, 10.631)):
+        frame = seconds / (5.316 if black else 10.632) * (48 if black else 55)
         index, frac = int(frame), frame % 1
 
         def tile_image(image, n, w, h):
             return image[n // 8 * h:(n // 8 + 1) * h, n % 8 * w:(n % 8 + 1) * w]
 
-        flow_uv = (uv * RES - [24, 44]) / [536, 552]
+        flow_uv = (uv * RES - ([76, 64] if black else [24, 44])) / ([328, 536] if black else [536, 552])
         inside = ((flow_uv >= 0) & (flow_uv <= 1)).all(axis=1)
-        flow = (bilinear(tile_image(flow_atlas, index, 67, 69), flow_uv)[:, :2] * 255 - 128) * .5
+        fw, fh = (41, 67) if black else (67, 69)
+        flow = (bilinear(tile_image(flow_atlas, index, fw, fh), flow_uv)[:, :2] * 255 - 128) * (.25 if black else .5)
         flow[~inside] = 0
-        c0 = sharpen(tile_image(atlas, index, 592, 600), np.clip(uv - frac * flow / RES, .001, .999))
-        c1 = sharpen(tile_image(atlas, min(55, index + 1), 592, 600), np.clip(uv + (1 - frac) * flow / RES, .001, .999))
+        c0 = sharpen(tile_image(atlas, index, 592, 600), np.clip(uv - frac * flow / RES, .001, .999), black)
+        c1 = sharpen(tile_image(atlas, (index + 1) % 48 if black else min(55, index + 1), 592, 600), np.clip(uv + (1 - frac) * flow / RES, .001, .999), black)
         a_diff = c1[:, 3:] - c0[:, 3:]
-        weight = np.where(np.abs(a_diff) > .22, np.clip((frac + a_diff * .42 - .16) / .68, 0, 1), frac)
+        weight = (np.where(np.abs(a_diff) > .35, np.clip(frac + a_diff * .18 * np.sin(frac * 3.14159), 0, 1), frac)
+                  if black else np.where(np.abs(a_diff) > .22, np.clip((frac + a_diff * .42 - .16) / .68, 0, 1), frac))
         alpha = c0[:, 3:] * (1 - weight) + c1[:, 3:] * weight
         # Transparent viewport readback is premultiplied, like a browser canvas framebuffer.
         rgb = c0[:, :3] * c0[:, 3:] * (1 - weight) + c1[:, :3] * c1[:, 3:] * weight
+        if black:
+            rgb, alpha = black_shading(rgb, alpha, uv, seconds, meta, frame)
         expected = np.column_stack([rgb, alpha])
         actual = np.array(Image.open(folder / f'pure_{seconds:.3f}.png'), dtype=float)[yy.ravel(), xx.ravel()] / 255
         error = np.abs(actual - expected)
@@ -75,8 +128,12 @@ def check(folder: Path, assets: Path):
         assert np.quantile(error, .99) < .018, (seconds, np.quantile(error, .99))
         errors[str(seconds)] = round(float(error.mean()), 6)
     normal = np.array(Image.open(folder / 'interpolated.png'), dtype=float)
-    flipped = np.array(Image.open(folder / 'flipped.png'), dtype=float)[:, ::-1]
-    assert np.abs(normal - flipped).mean() < .5, 'body and procedural effects must mirror together'
+    flipped = np.array(Image.open(folder / 'flipped.png'), dtype=float)
+    # Black's authored crop is centered at x=240, so its mirror axis differs from canvas x=296.
+    mirror_width = 480 if black else 592
+    normal_mirror = normal[:, :mirror_width]
+    flipped = flipped[:, :mirror_width][:, ::-1]
+    assert np.abs(normal_mirror - flipped).mean() < .5, 'body and procedural effects must mirror together'
     half = np.array(Image.open(folder / 'half_alpha.png'), dtype=float)
     # Effects may overlap one another, but isolated body pixels must inherit parent alpha.
     mask = (normal[:, :, 3] > 240) & (np.indices(normal.shape[:2])[1] > 270) & (np.indices(normal.shape[:2])[1] < 380)
@@ -85,7 +142,7 @@ def check(folder: Path, assets: Path):
     return errors
 
 
-def make_preview(folder: Path):
+def make_preview(folder: Path, form='pink'):
     output = folder.parent / 'preview_frames'
     output.mkdir(exist_ok=True)
     background = np.array([35, 34, 49], dtype=float)
@@ -95,7 +152,7 @@ def make_preview(folder: Path):
         Image.fromarray(rgb).save(output / path.name)
     sheet = Image.new('RGB', (1184, 960), tuple(background.astype(int)))
     pen = ImageDraw.Draw(sheet)
-    for i, frame in enumerate((0, 126, 247, 408, 492, 638)):
+    for i, frame in enumerate((0, 60, 120, 180, 240, 318) if form == 'black' else (0, 126, 247, 408, 492, 638)):
         picture = Image.open(output / f'loop_{frame:04d}.png')
         picture.thumbnail((380, 440))
         sheet.paste(picture, (i % 3 * 394 + (394 - picture.width) // 2, i // 3 * 480 + 30))

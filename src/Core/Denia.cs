@@ -112,6 +112,10 @@ public sealed class Denia : PlaceholderCharacterModel
         "res://images/characters/denia/realtime_pink/flow.png",
         "res://images/characters/denia/realtime_pink/tracking.tres",
         "res://shaders/denia_pink_idle.gdshader",
+        "res://images/characters/denia/realtime_black/frames.webp",
+        "res://images/characters/denia/realtime_black/flow.png",
+        "res://images/characters/denia/realtime_black/tracking.tres",
+        "res://shaders/denia_black_idle.gdshader",
         // 角色图标
         "res://images/ui/top_panel/character_icon_denia.png",
         "res://scenes/ui/character_icons/denia_icon.tscn",

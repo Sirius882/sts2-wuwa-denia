@@ -1,21 +1,19 @@
-using System;
 using Godot;
 
 namespace Denia;
 
 /// <summary>原 JS 的高清光流待机：GPU 连续补间，附属泡泡／晶片由 CPU 实时绘制。</summary>
-public partial class DeniaPinkIdleVisual : Node2D
+public partial class DeniaPinkIdleVisual : DeniaFlowIdleVisual
 {
     public const double Duration = 10.632;
     public const float ReferenceHeight = 552f;
     public static readonly Vector2 Origin = new(296, 596);
-    private const string Assets = "res://images/characters/denia/realtime_pink/";
-    private ShaderMaterial _material = null!;
-    private ColorRect _body = null!;
-    private AnimatedSprite2D? _actions;
-    private float[] _bubbleCy = null!, _orbX = null!, _orbY = null!;
-    private double _clock;
-    private bool _flip;
+    protected override string Assets => "res://images/characters/denia/realtime_pink/";
+    protected override string ShaderPath => "res://shaders/denia_pink_idle.gdshader";
+    public override double DurationSeconds => Duration;
+    public override int FrameCount => 56;
+    public override float LayoutHeight => ReferenceHeight;
+    public override Vector2 DesignOrigin => Origin;
 
     // Authored parameters from _drawCrispVectorEnhancements; no gameplay RNG.
     private static readonly float[] Angles = [-0.28f, 0.22f, 0.55f, 2.62f, 3.32f, -0.65f];
@@ -25,89 +23,12 @@ public partial class DeniaPinkIdleVisual : Node2D
     private static readonly float[] Phases = [0.2f, 1.4f, 2.7f, 3.8f, 5.1f, 6.2f];
     private static readonly float[] Hues = [315, 280, 325, 268, 305, 292];
 
-    public double Clock => _clock;
-    public bool Initialized { get; private set; }
-
-    public override void _Ready()
-    {
-        var tracking = GD.Load<Resource>(Assets + "tracking.tres")
-            ?? throw new InvalidOperationException("Pink idle tracking resource is missing");
-        _bubbleCy = tracking.GetMeta("bubble_cy").AsFloat32Array();
-        _orbX = tracking.GetMeta("orb_x").AsFloat32Array();
-        _orbY = tracking.GetMeta("orb_y").AsFloat32Array();
-        if (_bubbleCy.Length != 56 || _orbX.Length != 56 || _orbY.Length != 56)
-            throw new InvalidOperationException("Pink idle requires 56 tracking samples");
-        _material = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/denia_pink_idle.gdshader") };
-        var frames = GD.Load<Texture2D>(Assets + "frames.webp");
-        var flow = GD.Load<Texture2D>(Assets + "flow.png");
-        if (_material.Shader == null || frames == null || flow == null)
-            throw new InvalidOperationException("Pink idle shader or textures are missing");
-        _material.SetShaderParameter("frames", frames);
-        _material.SetShaderParameter("flow_fields", flow);
-        _body = new ColorRect {
-            Name = "FlowBody", Position = -Origin, Size = new Vector2(592, 600),
-            MouseFilter = Control.MouseFilterEnum.Ignore, Material = _material, ShowBehindParent = true };
-        AddChild(_body);
-        Seek(0);
-        Initialized = true;
-    }
-
-    public void BindActions(AnimatedSprite2D actions)
-    {
-        _actions = actions;
-        actions.AnimationChanged += SyncAction;
-        SyncAction();
-    }
-
-    private void SyncAction()
-    {
-        if (_actions == null || !GodotObject.IsInstanceValid(_actions)) return;
-        bool idle = _actions.Animation == "idle";
-        _actions.Visible = !idle;
-        Visible = idle;
-        // 原 idle 只保留首帧作场景加载占位，不再运行旧待机帧图集。
-        if (idle) _actions.Pause();
-    }
-
-    public void SetFacing(bool flip)
-    {
-        _flip = flip;
-        _material.SetShaderParameter("flip_h", flip);
-        QueueRedraw();
-    }
-
-    public void Seek(double seconds)
-    {
-        if (!double.IsFinite(seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
-        _clock = ((seconds % Duration) + Duration) % Duration;
-        float frame = (float)(_clock / Duration * 55);
-        _material.SetShaderParameter("frame_index", (int)frame);
-        _material.SetShaderParameter("fraction", frame - (int)frame);
-        QueueRedraw();
-    }
-
-    public override void _Process(double delta)
-    {
-        if (IsVisibleInTree()) Seek(_clock + delta);
-    }
-
-    private float Track(float[] values)
-    {
-        float frame = (float)(_clock / Duration * 55);
-        int i = (int)frame;
-        float f = frame - i;
-        float a = values[Math.Max(0, i - 1)], b = values[i];
-        float c = values[Math.Min(55, i + 1)], d = values[Math.Min(55, i + 2)];
-        return 0.5f * (2 * b + (c - a) * f + (2 * a - 5 * b + 4 * c - d) * f * f
-            + (-a + 3 * b - 3 * c + d) * f * f * f);
-    }
-
     public override void _Draw()
     {
-        if (_bubbleCy == null) return;
-        float t = (float)_clock, cy = Track(_bubbleCy);
-        DrawSetTransform(new Vector2(_flip ? Origin.X : -Origin.X, -Origin.Y), 0,
-            new Vector2(_flip ? -1 : 1, 1));
+        if (BubbleCy == null) return;
+        float t = (float)Clock, cy = Track(BubbleCy);
+        DrawSetTransform(new Vector2(Flip ? Origin.X : -Origin.X, -Origin.Y), 0,
+            new Vector2(Flip ? -1 : 1, 1));
         for (int i = 0; i < 6; i++)
         {
             float cycle = ((t * Speeds[i] + Phases[i]) % 3.3f) / 3.3f;
@@ -124,7 +45,7 @@ public partial class DeniaPinkIdleVisual : Node2D
                 new Color(1, 1, 1, alpha * 0.85f), true, -1, true);
         }
 
-        Vector2 orb = new(Track(_orbX), Track(_orbY));
+        Vector2 orb = new(Track(OrbX), Track(OrbY));
         float glowR = 22 * (1 + Mathf.Sin(t * 3.2f) * 0.10f);
         // Concentric low-alpha rings approximate the source's radial canvas gradient.
         for (int i = 12; i > 0; i--)
