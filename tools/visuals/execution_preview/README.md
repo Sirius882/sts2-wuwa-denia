@@ -8,17 +8,22 @@ python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py
 python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --render
 ```
 
-The first command regenerates the tracked character-only OGV from source frames 87–190.
-The checks link the production overlay and timeline, and load the installed RitsuLib 0.6.11 / API 0.113 modules.
-They cover the three-stack gate, dead/immune cases, contour triangulation, original-speed playback,
-video completion, the RitsuLib-driven timeline and node cleanup when leaving the tree.
-Entry regression checks require a flight from the left to the center before approaching the camera,
-with the body horizontal and making a full front/edge/back/edge/front flip after becoming visible.
-The signed projection must reverse twice; squashing and expanding the front face does not pass.
-They also verify the enlarged body covers the entire 16:9, 21:9 and 4:3 viewport geometrically.
-The GPU run also requires every pixel to be white just before the video cut, including the cinema bars.
-It additionally renders the dream shader on a neutral backdrop at three times, verifying stronger edges,
-a translucent center and different growth rates across the screen. These captures are `dream_*.png`.
+The first command regenerates the tracked OGV from source frames 54–190: the extreme-close-up
+gingerbread transition and the character segment. The legacy resource filename remains
+`denia_execution_middle.ogv`. It has 137 frame intervals at 30 FPS (4.566667 seconds).
+Theora may represent repeated frames with empty packets, so the preparation check uses its timeline
+length rather than requiring a decoded picture for every interval.
+
+The overlay applies a growing, uneven pink-white filter for 0.8 seconds, then cuts directly to the clip.
+It does not draw gingerbread geometry. It resumes the predecoded player one frame before the cut,
+without the old 0.2-second pre-roll that would skip the extreme close-up. Damage release stays at
+169/30 seconds, followed by the existing code-driven impact and return.
+
+The checks link production code and use the installed RitsuLib 0.6.11 / API 0.113 modules.
+They cover the three-stack/dead/immune gates, original-speed playback, video timing and completion,
+the RitsuLib timeline and cleanup. GPU checks require an early video position and a pale first visible
+video frame at the direct cut. Neutral-backdrop captures test uneven opacity, spatially different
+growth rates and the final pink-white veil. These captures are `dream_*.png`.
 
 `--render` uses a hidden D3D12 window and captures actual GPU output at 30 FPS; this is a visual check,
 not a performance benchmark. The backdrop is a schematic standalone scene, not an actual combat.

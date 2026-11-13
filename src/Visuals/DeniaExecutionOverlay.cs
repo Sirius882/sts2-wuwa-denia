@@ -6,14 +6,10 @@ using STS2RitsuLib.Scaffolding.Visuals.StateMachine.Backends;
 
 namespace Denia;
 
-/// <summary>房间拥有的全屏演出：代码几何入场／冲击 + Theora人物中段。</summary>
+/// <summary>房间拥有的全屏演出：粉白滤镜入场 + 原片姜饼人／人物 + 代码冲击。</summary>
 public partial class DeniaExecutionOverlay : Control
 {
     private static readonly Vector2 Design = new(1920, 886);
-    private static readonly Color Blue = new(0.24f, 0.53f, 1f);
-    private static readonly Color Pink = new(1f, 0.25f, 0.69f);
-    private static readonly Vector2[] Cookie = BuildCookie();
-    private static readonly ArrayMesh CookieMesh = BuildCookieMesh();
     private readonly CancellationTokenSource _exit = new();
     private AnimationPlayer _player = null!;
     private VideoStreamPlayer _video = null!;
@@ -107,18 +103,19 @@ public partial class DeniaExecutionOverlay : Control
             _age += delta;
             if (_age > DeniaExecutionTimeline.Total + 2) { QueueFree(); return; }
             if (_video == null || _ink == null) return;
-            _frameClock = Clock;
+            // 抵消浮点插值误差，避免恰好在30 FPS切点时晚显示一帧。
+            _frameClock = Clock + 0.00001f;
             if (!_videoStarted && ++_warmFrames >= 2) _video.Paused = true;
-            // 姜饼人遮屏时预滚0.2秒，覆盖Theora的帧调度延迟；人物显现前仍由代码层遮挡。
-            if (!_videoStarted && Clock >= DeniaExecutionTimeline.Enter - 0.2f)
+            // 首帧预解码后暂停；只提前一帧恢复以抵消解码调度，保留贴近镜头的开头。
+            if (!_videoStarted && _frameClock >= DeniaExecutionTimeline.Enter - 1f / 30)
             {
                 _videoStarted = true;
                 _video.Paused = false;
             }
-            bool videoPhase = Clock >= DeniaExecutionTimeline.Enter
-                && Clock < DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video;
+            bool videoPhase = _frameClock >= DeniaExecutionTimeline.Enter
+                && _frameClock < DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video;
             _video.Visible = videoPhase;
-            bool impact = Clock >= DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video && !_returning;
+            bool impact = _frameClock >= DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video && !_returning;
             if (impact)
             {
                 _video.Paused = true;
@@ -131,13 +128,13 @@ public partial class DeniaExecutionOverlay : Control
             UpdateFrame();
             float ret = Mathf.Clamp((Clock - DeniaExecutionTimeline.Release) / DeniaExecutionTimeline.Return, 0, 1);
             float enter = Mathf.Clamp(Clock / 0.8f, 0, 1);
-            _screen.Visible = Clock < DeniaExecutionTimeline.Enter || _returning;
+            _screen.Visible = _frameClock < DeniaExecutionTimeline.Enter || _returning;
             _screenMaterial.SetShaderParameter("center", _returning
                 ? new Vector2(0.25f, 0.58f).Lerp(TargetUv, Smooth(ret)) : new Vector2(0.5f, 0.52f));
             _screenMaterial.SetShaderParameter("blur_amount", _returning
                 ? 0.022f * (1 - ret) * (1 - ret) : 0.004f * enter);
             _screenMaterial.SetShaderParameter("wash", _returning ? 0.35f * (1 - ret) : 0.85f * Smooth(enter));
-            _screenMaterial.SetShaderParameter("entrance_time", _returning ? -1f : Clock);
+            _screenMaterial.SetShaderParameter("entrance_time", _returning ? -1f : Clock * 1.4f / DeniaExecutionTimeline.Enter);
             _screenMaterial.SetShaderParameter("zoom", _returning ? 1 + 0.08f * (1 - ret) : 1.04f - 0.04f * enter);
             _ink.QueueRedraw();
         }
@@ -173,27 +170,18 @@ public partial class DeniaExecutionOverlay : Control
 
     internal void DrawFrame(Control canvas)
     {
-        bool entering = _frameClock < DeniaExecutionTimeline.Enter + 0.12f;
-        // 入场时黑边也应被迎面而来的白色身体遮住。
-        if (entering) DrawBars(canvas);
         float scale = _frame.Size.X / Design.X;
         canvas.DrawSetTransform(_frame.Position, 0, new Vector2(scale, scale));
-        if (_frameClock < DeniaExecutionTimeline.Enter) DrawEnter(canvas);
-        else if (_frameClock < DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video)
-        {
-            float alpha = 1 - Smooth((_frameClock - DeniaExecutionTimeline.Enter) / 0.12f);
-            if (alpha > 0) DrawEntryCookie(canvas, alpha);
-        }
-        else if (!_returning) DrawImpact(canvas);
-        else
+        if (!_returning && _frameClock >= DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video) DrawImpact(canvas);
+        else if (_returning)
         {
             float t = (_frameClock - DeniaExecutionTimeline.Release) / DeniaExecutionTimeline.Return;
             float flash = 1 - Smooth(t / 0.45f);
             if (flash > 0) canvas.DrawRect(new Rect2(Vector2.Zero, Design), new Color(1, 1, 1, flash));
         }
         canvas.DrawSetTransform(Vector2.Zero);
-        // 人物段和退场的黑边最后绘制，保持冲击线在电影画幅内。
-        if (!entering) DrawBars(canvas);
+        // 始终保持电影画幅，入场滤镜在切点直接交给原视频。
+        DrawBars(canvas);
     }
 
     private void DrawBars(Control canvas)
@@ -210,71 +198,6 @@ public partial class DeniaExecutionOverlay : Control
             canvas.DrawRect(new Rect2(0, 0, _frame.Position.X * bars, Size.Y), Colors.Black);
             canvas.DrawRect(new Rect2(Size.X - _frame.Position.X * bars, 0, _frame.Position.X * bars, Size.Y), Colors.Black);
         }
-    }
-
-    private void DrawEnter(Control canvas)
-    {
-        if (_frameClock < 0.76f) return;
-        DrawEntryCookie(canvas, 1);
-    }
-
-    internal static (Vector2 Position, float Size, float Rotation, Vector2 Perspective) EntryPose(float clock)
-    {
-        float flight = Smooth((clock - 0.76f) / 0.44f);
-        float approach = Smooth((clock - 1.2f) / 0.6f);
-        float flip = Smooth((clock - 0.94f) / 0.62f);
-        // 横躺飞入后完成一周翻转；保留投影正负号，才能经过背面而非压扁后弹回。
-        return (new Vector2(-450, 500).Lerp(Design / 2, flight) + new Vector2(0, -90 * MathF.Sin(flight * Mathf.Pi)),
-            Mathf.Lerp(120, 380, flight) / (1 - 0.95f * approach),
-            Mathf.Pi / 2 + 0.24f * MathF.Sin(flight * Mathf.Tau) - 0.16f * MathF.Sin(approach * Mathf.Pi),
-            new Vector2(MathF.Cos(flip * Mathf.Tau), 1));
-    }
-
-    private void DrawEntryCookie(Control canvas, float opacity)
-    {
-        var pose = EntryPose(_frameClock);
-        float whiteout = Smooth((_frameClock - 1.3f) / 0.3f);
-        DrawCookie(canvas, pose.Position, pose.Size, pose.Rotation, pose.Perspective, opacity, whiteout);
-    }
-
-    private static void DrawCookie(Control canvas, Vector2 position, float size, float rotation,
-        Vector2 perspective, float opacity, float whiteout)
-    {
-        if (opacity <= 0.001f || size < 1) return;
-        bool front = perspective.X >= 0;
-        var points = new Vector2[Cookie.Length];
-        for (int i = 0; i < Cookie.Length; i++)
-            points[i] = position + (Cookie[i] * perspective).Rotated(rotation) * size;
-        var fill = (front ? new Color(0.98f, 0.94f, 1f) : new Color(0.68f, 0.58f, 0.86f)).Lerp(Colors.White, whiteout);
-        fill.A = opacity;
-        canvas.DrawMesh(CookieMesh, null, new Transform2D(rotation, perspective * size, 0, position), fill);
-        opacity *= 1 - whiteout;
-        if (opacity <= 0.001f) return;
-        var closed = new Vector2[points.Length + 1];
-        points.CopyTo(closed, 0); closed[^1] = closed[0];
-        for (int pass = 3; pass >= 0; pass--)
-        {
-            float width = Mathf.Max(1, size * 0.018f) * (1 + pass * 1.5f);
-            var color = Blue.Lerp(Pink, 0.5f);
-            color.A = opacity * (pass == 0 ? 0.95f : 0.055f);
-            canvas.DrawPolyline(closed, color, width, true);
-        }
-        for (int i = 0; i < points.Length; i++)
-        {
-            Color color = Blue.Lerp(Pink, Mathf.Clamp((Cookie[i].X + 0.8f) / 1.6f, 0, 1));
-            color.A = opacity * 0.95f;
-            canvas.DrawLine(points[i], points[(i + 1) % points.Length], color, Mathf.Max(1, size * 0.007f), true);
-        }
-        // 胸口星光只在正面可见，背面沿用被翻转的蓝粉边缘。
-        if (!front) return;
-        var star = new Vector2[8];
-        for (int i = 0; i < star.Length; i++)
-        {
-            float radius = i % 2 == 0 ? 0.18f : 0.035f;
-            star[i] = position + (new Vector2(Mathf.Cos(i * Mathf.Pi / 4), Mathf.Sin(i * Mathf.Pi / 4))
-                * radius * perspective).Rotated(rotation) * size;
-        }
-        canvas.DrawColoredPolygon(star, new Color(1f, 0.55f, 0.88f, opacity));
     }
 
     private int ImpactTick() => Mathf.Clamp((int)((_frameClock - DeniaExecutionTimeline.Enter - DeniaExecutionTimeline.Video) * 30), 0, 7);
@@ -317,43 +240,6 @@ public partial class DeniaExecutionOverlay : Control
 
     private static float Hash(int i) => Mathf.PosMod(MathF.Sin(i * 127.1f + 311.7f) * 43758.5453f, 1);
     private static float Smooth(float t) { t = Mathf.Clamp(t, 0, 1); return t * t * (3 - 2 * t); }
-
-    private static Vector2[] BuildCookie()
-    {
-        Vector2[] anchors = [new(0, -0.96f), new(0.24f, -0.86f), new(0.28f, -0.64f),
-            new(0.17f, -0.45f), new(0.58f, -0.55f), new(0.78f, -0.46f), new(0.72f, -0.29f),
-            new(0.34f, -0.21f), new(0.29f, 0.04f), new(0.53f, 0.54f), new(0.44f, 0.73f),
-            new(0.26f, 0.72f), new(0, 0.34f), new(-0.26f, 0.72f), new(-0.44f, 0.73f),
-            new(-0.53f, 0.54f), new(-0.29f, 0.04f), new(-0.34f, -0.21f), new(-0.72f, -0.29f),
-            new(-0.78f, -0.46f), new(-0.58f, -0.55f), new(-0.17f, -0.45f),
-            new(-0.28f, -0.64f), new(-0.24f, -0.86f)];
-        var points = new Vector2[anchors.Length * 6];
-        for (int i = 0; i < anchors.Length; i++)
-        {
-            Vector2 a = anchors[(i + anchors.Length - 1) % anchors.Length], b = anchors[i],
-                c = anchors[(i + 1) % anchors.Length], d = anchors[(i + 2) % anchors.Length];
-            for (int j = 0; j < 6; j++)
-            {
-                float t = j / 6f;
-                points[i * 6 + j] = 0.5f * (2 * b + (-a + c) * t
-                    + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
-            }
-        }
-        return points;
-    }
-
-    private static ArrayMesh BuildCookieMesh()
-    {
-        var vertices = new Vector3[Cookie.Length];
-        for (int i = 0; i < Cookie.Length; i++) vertices[i] = new Vector3(Cookie[i].X, Cookie[i].Y, 0);
-        var arrays = new Godot.Collections.Array();
-        arrays.Resize((int)Mesh.ArrayType.Max);
-        arrays[(int)Mesh.ArrayType.Vertex] = vertices;
-        arrays[(int)Mesh.ArrayType.Index] = Geometry2D.TriangulatePolygon(Cookie);
-        var mesh = new ArrayMesh();
-        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-        return mesh;
-    }
 }
 
 internal partial class DeniaExecutionInk : Control
