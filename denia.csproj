@@ -19,6 +19,7 @@
   <Import Project="$(RitsuLibDirectory)/RitsuLib.References.props" />
   <ItemGroup>
     <Compile Remove="tools/visuals/execution_preview/Preview.cs" />
+    <Compile Remove="tools/visuals/pink_idle/Preview.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Alchyr.Sts2.BaseLib" Version="3.3.0" />

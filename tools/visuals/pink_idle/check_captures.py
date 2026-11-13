@@ -1,0 +1,104 @@
+"""Compare native GPU output with the original GLSL formula, including flow sign and atlas edges."""
+from pathlib import Path
+
+import numpy as np
+from PIL import Image, ImageDraw
+
+RES = np.array([592, 600])
+
+
+def bilinear(image, uv):
+    height, width = image.shape[:2]
+    p = uv * [width, height] - .5
+    i = np.floor(p).astype(int)
+    f = p - i
+    x0, y0 = np.clip(i[:, 0], 0, width - 1), np.clip(i[:, 1], 0, height - 1)
+    x1, y1 = np.clip(i[:, 0] + 1, 0, width - 1), np.clip(i[:, 1] + 1, 0, height - 1)
+    a = image[y0, x0] * (1 - f[:, :1]) + image[y0, x1] * f[:, :1]
+    b = image[y1, x0] * (1 - f[:, :1]) + image[y1, x1] * f[:, :1]
+    return a * (1 - f[:, 1:]) + b * f[:, 1:]
+
+
+def sharpen(image, uv):
+    p = uv * RES - .5
+    i = np.floor(p)
+    f = p - i
+    f2, f3 = f * f, f * f * f
+    w0 = (1 - 3 * f + 3 * f2 - f3) / 6
+    w1 = (4 - 6 * f2 + 3 * f3) / 6
+    w2 = (1 + 3 * f + 3 * f2 - 3 * f3) / 6
+    w3 = f3 / 6
+    g0, g1 = w0 + w1, w2 + w3
+    h0 = (i + w1 / np.maximum(g0, 1e-5) - .5) / RES
+    h1 = (i + w3 / np.maximum(g1, 1e-5) + 1.5) / RES
+    t00 = bilinear(image, h0)
+    t10 = bilinear(image, np.column_stack([h1[:, 0], h0[:, 1]]))
+    t01 = bilinear(image, np.column_stack([h0[:, 0], h1[:, 1]]))
+    t11 = bilinear(image, h1)
+    bic = (t00 * g0[:, :1] + t10 * g1[:, :1]) * g0[:, 1:] + (t01 * g0[:, :1] + t11 * g1[:, :1]) * g1[:, 1:]
+    c = np.clip(bic * .42 + bilinear(image, uv) * .58, 0, 1)
+    lap = c[:, :3] * 4
+    for shift in ([0, -.85], [0, .85], [.85, 0], [-.85, 0]):
+        lap -= bilinear(image, uv + shift / RES)[:, :3]
+    c[:, :3] = np.clip(c[:, :3] + lap * .14, 0, 1)
+    return c
+
+
+def check(folder: Path, assets: Path):
+    atlas = np.array(Image.open(assets / 'frames.webp').convert('RGBA'), dtype=float) / 255
+    flow_atlas = np.array(Image.open(assets / 'flow.png').convert('RGB'), dtype=float) / 255
+    yy, xx = np.mgrid[1:600:3, 1:592:3]
+    uv = (np.column_stack([xx.ravel(), yy.ravel()]) + .5) / RES
+    errors = {}
+    for seconds in (0, 4.125, 10.631):
+        frame = seconds / 10.632 * 55
+        index, frac = int(frame), frame % 1
+
+        def tile_image(image, n, w, h):
+            return image[n // 8 * h:(n // 8 + 1) * h, n % 8 * w:(n % 8 + 1) * w]
+
+        flow_uv = (uv * RES - [24, 44]) / [536, 552]
+        inside = ((flow_uv >= 0) & (flow_uv <= 1)).all(axis=1)
+        flow = (bilinear(tile_image(flow_atlas, index, 67, 69), flow_uv)[:, :2] * 255 - 128) * .5
+        flow[~inside] = 0
+        c0 = sharpen(tile_image(atlas, index, 592, 600), np.clip(uv - frac * flow / RES, .001, .999))
+        c1 = sharpen(tile_image(atlas, min(55, index + 1), 592, 600), np.clip(uv + (1 - frac) * flow / RES, .001, .999))
+        a_diff = c1[:, 3:] - c0[:, 3:]
+        weight = np.where(np.abs(a_diff) > .22, np.clip((frac + a_diff * .42 - .16) / .68, 0, 1), frac)
+        alpha = c0[:, 3:] * (1 - weight) + c1[:, 3:] * weight
+        # Transparent viewport readback is premultiplied, like a browser canvas framebuffer.
+        rgb = c0[:, :3] * c0[:, 3:] * (1 - weight) + c1[:, :3] * c1[:, 3:] * weight
+        expected = np.column_stack([rgb, alpha])
+        actual = np.array(Image.open(folder / f'pure_{seconds:.3f}.png'), dtype=float)[yy.ravel(), xx.ravel()] / 255
+        error = np.abs(actual - expected)
+        assert error.mean() < .004, (seconds, error.mean())
+        assert np.quantile(error, .99) < .018, (seconds, np.quantile(error, .99))
+        errors[str(seconds)] = round(float(error.mean()), 6)
+    normal = np.array(Image.open(folder / 'interpolated.png'), dtype=float)
+    flipped = np.array(Image.open(folder / 'flipped.png'), dtype=float)[:, ::-1]
+    assert np.abs(normal - flipped).mean() < .5, 'body and procedural effects must mirror together'
+    half = np.array(Image.open(folder / 'half_alpha.png'), dtype=float)
+    # Effects may overlap one another, but isolated body pixels must inherit parent alpha.
+    mask = (normal[:, :, 3] > 240) & (np.indices(normal.shape[:2])[1] > 270) & (np.indices(normal.shape[:2])[1] < 380)
+    assert np.quantile(np.abs(half[:, :, 3][mask] - normal[:, :, 3][mask] * .5), .90) < 2
+    print(f'PASS: original GLSL reference at 3 timestamps ({len(uv)} pixels each), mirror and parent alpha; MAE={errors}')
+    return errors
+
+
+def make_preview(folder: Path):
+    output = folder.parent / 'preview_frames'
+    output.mkdir(exist_ok=True)
+    background = np.array([35, 34, 49], dtype=float)
+    for path in sorted(folder.glob('loop_*.png')):
+        raw = np.array(Image.open(path), dtype=float)
+        rgb = np.clip(raw[:, :, :3] + background * (1 - raw[:, :, 3:] / 255), 0, 255).astype('uint8')
+        Image.fromarray(rgb).save(output / path.name)
+    sheet = Image.new('RGB', (1184, 960), tuple(background.astype(int)))
+    pen = ImageDraw.Draw(sheet)
+    for i, frame in enumerate((0, 126, 247, 408, 492, 638)):
+        picture = Image.open(output / f'loop_{frame:04d}.png')
+        picture.thumbnail((380, 440))
+        sheet.paste(picture, (i % 3 * 394 + (394 - picture.width) // 2, i // 3 * 480 + 30))
+        pen.text((i % 3 * 394 + 12, i // 3 * 480 + 12), f'{frame / 60:.2f}s', fill='white')
+    sheet.save(folder.parent / 'keyframes.png')
+    return output
