@@ -66,11 +66,13 @@ void fragment() {
     vec2 uv0 = clamp(uv - fraction * shift, vec2(0.001), vec2(0.999));
     vec2 uv1 = clamp(uv + (1.0 - fraction) * shift, vec2(0.001), vec2(0.999));
     vec4 c0 = sharpened_frame(frame_index, uv0);
-    vec4 c1 = sharpened_frame(min(55, frame_index + 1), uv1);
+    vec4 c1 = sharpened_frame((frame_index + 1) % 56, uv1);
     // Original occlusion-aware, premultiplied sub-frame blend.
     float a_diff = c1.a - c0.a;
     float weight = abs(a_diff) > 0.22
         ? clamp((fraction + a_diff * 0.42 - 0.16) / 0.68, 0.0, 1.0) : fraction;
+    // Preserve exact interval endpoints; alpha-aware bias must not leave a ghost at the loop boundary.
+    weight = mix(fraction, weight, 4.0 * fraction * (1.0 - fraction));
     float alpha = mix(c0.a, c1.a, weight);
     vec3 rgb = alpha > 1e-4 ? mix(c0.rgb * c0.a, c1.rgb * c1.a, weight) / alpha : vec3(0.0);
     COLOR = vec4(clamp(rgb, 0.0, 1.0), alpha) * tint;

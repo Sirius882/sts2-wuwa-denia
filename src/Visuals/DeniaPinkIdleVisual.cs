@@ -14,6 +14,7 @@ public partial class DeniaPinkIdleVisual : DeniaFlowIdleVisual
     public override int FrameCount => 56;
     public override float LayoutHeight => ReferenceHeight;
     public override Vector2 DesignOrigin => Origin;
+    protected override bool WrapFrames => true;
 
     // Authored parameters from _drawCrispVectorEnhancements; no gameplay RNG.
     private static readonly float[] Angles = [-0.28f, 0.22f, 0.55f, 2.62f, 3.32f, -0.65f];
@@ -27,14 +28,17 @@ public partial class DeniaPinkIdleVisual : DeniaFlowIdleVisual
     {
         if (BubbleCy == null) return;
         float t = (float)Clock, cy = Track(BubbleCy);
+        float loop = t / (float)Duration, angle = loop * Mathf.Tau;
         DrawSetTransform(new Vector2(Flip ? Origin.X : -Origin.X, -Origin.Y), 0,
             new Vector2(Flip ? -1 : 1, 1));
         for (int i = 0; i < 6; i++)
         {
-            float cycle = ((t * Speeds[i] + Phases[i]) % 3.3f) / 3.3f;
+            // 相位按完整周期闭合，避免主体接上后泡泡／晶片仍在循环点跳变。
+            float cycles = Mathf.Round((float)Duration * Speeds[i] / 3.3f);
+            float cycle = (loop * cycles + Phases[i] / 3.3f) % 1;
             float alpha = Mathf.Sin(cycle * Mathf.Pi);
             if (alpha <= 0.05f) continue;
-            Vector2 p = new(307 + Mathf.Cos(Angles[i]) * Distances[i] + Mathf.Sin(t * 2 + i) * 7,
+            Vector2 p = new(307 + Mathf.Cos(Angles[i]) * Distances[i] + Mathf.Sin(angle * 3 + i) * 7,
                 cy + Mathf.Sin(Angles[i]) * Distances[i] * 0.55f - cycle * 76 + 18);
             float r = Radii[i] * (0.7f + 0.35f * alpha);
             // HSL colors retain the source's pale, translucent bubble palette.
@@ -46,7 +50,7 @@ public partial class DeniaPinkIdleVisual : DeniaFlowIdleVisual
         }
 
         Vector2 orb = new(Track(OrbX), Track(OrbY));
-        float glowR = 22 * (1 + Mathf.Sin(t * 3.2f) * 0.10f);
+        float glowR = 22 * (1 + Mathf.Sin(angle * 5) * 0.10f);
         // Concentric low-alpha rings approximate the source's radial canvas gradient.
         for (int i = 12; i > 0; i--)
             DrawCircle(orb, glowR * i / 12, new Color(0.90f, 0.70f, 1, 0.018f), true, -1, true);
@@ -83,12 +87,13 @@ public partial class DeniaPinkIdleVisual : DeniaFlowIdleVisual
         for (int i = 0; i < 14; i++)
         {
             float phase = i * 0.75f;
-            float pulse = 0.5f + 0.5f * Mathf.Sin(t * (0.85f + i % 3 * 0.32f) * 2.4f + phase);
+            float cycles = Mathf.Round((0.85f + i % 3 * 0.32f) * 2.4f * (float)Duration / Mathf.Tau);
+            float pulse = 0.5f + 0.5f * Mathf.Sin(angle * cycles + phase);
             if (pulse <= 0.28f) continue;
-            Vector2 p = new(350 + Mathf.Sin(i * 2.1f) * 142 + Mathf.Sin(t + phase) * 6,
-                290 + Mathf.Cos(i * 1.7f) * 162 + Mathf.Cos(t * 0.9f + phase) * 6);
+            Vector2 p = new(350 + Mathf.Sin(i * 2.1f) * 142 + Mathf.Sin(angle * 2 + phase) * 6,
+                290 + Mathf.Cos(i * 1.7f) * 162 + Mathf.Cos(angle * 2 + phase) * 6);
             float s = (2.4f + i % 3 * 1.3f) * (0.65f + pulse * 0.45f);
-            float rot = Mathf.Sin(t + i) * 0.25f;
+            float rot = Mathf.Sin(angle * 2 + i) * 0.25f;
             Color color = new(i % 2 == 0 ? "f6b8ff" : "b894ff");
             color.A = (pulse - 0.25f) * 0.82f;
             DrawColoredPolygon([
