@@ -45,6 +45,7 @@ public partial class Preview : Control
             Check(exit.IsCancellationRequested, "leaving room cancels presentation wait");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(GetChildCount() == 0, "all presentation nodes released");
+            if (_render) await CheckDreamShader();
             File.WriteAllText(Path.Combine(_output, "checks.json"), $"{{\"checks\":{_checks},\"render\":{_render.ToString().ToLowerInvariant()}}}");
             GD.Print($"PASS: {_checks} execution checks, render={_render}");
             GetTree().Quit();
@@ -114,6 +115,21 @@ public partial class Preview : Control
         var near = DeniaExecutionOverlay.EntryPose(1.8f);
         Check(first.Position.X + first.Size < 0 && centered.Position.IsEqualApprox(new Vector2(960, 443)),
             "main cookie flies from outside the left edge to the center");
+        bool horizontal = true;
+        float thinnest = 1, thickest = 0, lowestRotation = 10, highestRotation = -10;
+        for (float time = 0.76f; time <= 1.2f; time += 0.01f)
+        {
+            var pose = DeniaExecutionOverlay.EntryPose(time);
+            Vector2 bodyAxis = Vector2.Up.Rotated(pose.Rotation);
+            horizontal &= Math.Abs(bodyAxis.X) > Math.Abs(bodyAxis.Y) * 2;
+            thinnest = Math.Min(thinnest, pose.Perspective.X);
+            thickest = Math.Max(thickest, pose.Perspective.X);
+            lowestRotation = Math.Min(lowestRotation, pose.Rotation);
+            highestRotation = Math.Max(highestRotation, pose.Rotation);
+        }
+        Check(horizontal, "incoming cookie lies horizontally with its head pointing right");
+        Check(thinnest < 0.2f && thickest > 0.95f && highestRotation - lowestRotation > 0.4f,
+            "flight visibly rolls through an edge-on silhouette and banks before facing camera");
         bool approaching = true;
         float previousSize = centered.Size;
         for (float time = 1.21f; time <= 1.8f; time += 0.01f)
@@ -136,6 +152,48 @@ public partial class Preview : Control
                     covered &= Geometry2D.IsPointInPolygon(topLeft + viewport * new Vector2(x / 20f, y / 20f), contour);
         }
         Check(covered, "the body geometry covers the full 16:9, 21:9 and 4:3 viewport before cutting");
+    }
+
+    private async Task CheckDreamShader()
+    {
+        var backdrop = new ColorRect { Size = GetViewportRect().Size, Color = new Color(0.12f, 0.12f, 0.12f) };
+        var copy = new BackBufferCopy { CopyMode = BackBufferCopy.CopyModeEnum.Viewport };
+        var material = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/denia_execution_screen.gdshader") };
+        var screen = new ColorRect { Size = backdrop.Size, Material = material };
+        AddChild(backdrop); AddChild(copy); AddChild(screen);
+        var samples = new Image[3];
+        float[] times = [0, 0.55f, 1.2f];
+        for (int i = 0; i < times.Length; i++)
+        {
+            material.SetShaderParameter("entrance_time", times[i]);
+            await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+            samples[i] = GetViewport().GetTexture().GetImage();
+            samples[i].SavePng(Path.Combine(_output, $"dream_{i}.png"));
+        }
+        float Center(Image image) => Brightness(image, new Vector2(0.5f, 0.5f));
+        float Edge(Image image) => (Brightness(image, new Vector2(0.08f, 0.5f))
+            + Brightness(image, new Vector2(0.5f, 0.12f)) + Brightness(image, new Vector2(0.92f, 0.5f))
+            + Brightness(image, new Vector2(0.5f, 0.88f))) / 4;
+        Check(Math.Abs(Center(samples[0]) - Edge(samples[0])) < 0.01f, "dream filter starts without an opaque tint");
+        Check(Edge(samples[2]) > Center(samples[2]) + 0.10f, "dream opacity is stronger near edges while center stays translucent");
+        float edgeGrowth = Edge(samples[2]) - Edge(samples[1]), centerGrowth = Center(samples[2]) - Center(samples[1]);
+        Check(edgeGrowth > 0.05f && centerGrowth > 0 && Math.Abs(edgeGrowth - centerGrowth) > 0.03f,
+            "dream filter grows over time at different rates across the screen");
+        backdrop.QueueFree(); copy.QueueFree(); screen.QueueFree();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+    }
+
+    private static float Brightness(Image image, Vector2 uv)
+    {
+        float sum = 0;
+        for (int x = -8; x <= 8; x += 4)
+            for (int y = -8; y <= 8; y += 4)
+            {
+                Color c = image.GetPixel((int)(image.GetWidth() * uv.X) + x, (int)(image.GetHeight() * uv.Y) + y);
+                sum += (c.R + c.G + c.B) / 3;
+            }
+        return sum / 25;
     }
 
     private void Check(bool condition, string message)

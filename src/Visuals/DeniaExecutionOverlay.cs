@@ -137,6 +137,7 @@ public partial class DeniaExecutionOverlay : Control
             _screenMaterial.SetShaderParameter("blur_amount", _returning
                 ? 0.022f * (1 - ret) * (1 - ret) : 0.004f * enter);
             _screenMaterial.SetShaderParameter("wash", _returning ? 0.35f * (1 - ret) : 0.85f * Smooth(enter));
+            _screenMaterial.SetShaderParameter("entrance_time", _returning ? -1f : Clock);
             _screenMaterial.SetShaderParameter("zoom", _returning ? 1 + 0.08f * (1 - ret) : 1.04f - 0.04f * enter);
             _ink.QueueRedraw();
         }
@@ -213,14 +214,6 @@ public partial class DeniaExecutionOverlay : Control
 
     private void DrawEnter(Control canvas)
     {
-        for (int i = 0; i < 14; i++)
-        {
-            float k = i / 14f;
-            float a = k * Mathf.Tau + _frameClock * 0.7f;
-            var p = new Vector2(960 + Mathf.Cos(a) * (420 + 220 * k), 443 + Mathf.Sin(a) * 240);
-            float fade = MathF.Sin(Mathf.Clamp(_frameClock / 1.8f, 0, 1) * Mathf.Pi) * 0.7f;
-            DrawCookie(canvas, p, 8 + 19 * k, a - 1, new Vector2(1, 1), fade, 0.7f);
-        }
         if (_frameClock < 0.76f) return;
         DrawEntryCookie(canvas, 1);
     }
@@ -229,28 +222,28 @@ public partial class DeniaExecutionOverlay : Control
     {
         float flight = Smooth((clock - 0.76f) / 0.44f);
         float approach = Smooth((clock - 1.2f) / 0.6f);
-        // 先飞到中央，再按透视迎向镜头；最终身体的实体轮廓覆盖整个视野。
-        return (new Vector2(-450, 500).Lerp(Design / 2, flight),
+        // 横躺着沿弧线侧翻飞入；先到中央，再迎向镜头，以身体实体遮满视野。
+        return (new Vector2(-450, 500).Lerp(Design / 2, flight) + new Vector2(0, -90 * MathF.Sin(flight * Mathf.Pi)),
             Mathf.Lerp(120, 380, flight) / (1 - 0.95f * approach),
-            Mathf.Lerp(-0.65f, -0.18f, flight) * (1 - approach),
-            new Vector2(1.2f, 0.6f).Lerp(Vector2.One, flight));
+            Mathf.Pi / 2 + 0.24f * MathF.Sin(flight * Mathf.Tau) - 0.16f * MathF.Sin(approach * Mathf.Pi),
+            new Vector2(0.12f + 0.88f * MathF.Abs(MathF.Cos(flight * Mathf.Pi)), 1));
     }
 
     private void DrawEntryCookie(Control canvas, float opacity)
     {
         var pose = EntryPose(_frameClock);
         float whiteout = Smooth((_frameClock - 1.3f) / 0.3f);
-        DrawCookie(canvas, pose.Position, pose.Size, pose.Rotation, pose.Perspective, opacity, 0, whiteout);
+        DrawCookie(canvas, pose.Position, pose.Size, pose.Rotation, pose.Perspective, opacity, whiteout);
     }
 
     private static void DrawCookie(Control canvas, Vector2 position, float size, float rotation,
-        Vector2 perspective, float opacity, float dark, float whiteout = 0)
+        Vector2 perspective, float opacity, float whiteout)
     {
         if (opacity <= 0.001f || size < 1) return;
         var points = new Vector2[Cookie.Length];
         for (int i = 0; i < Cookie.Length; i++)
             points[i] = position + (Cookie[i] * perspective).Rotated(rotation) * size;
-        var fill = new Color(0.96f, 0.88f, 1f).Lerp(new Color(0.035f, 0.009f, 0.12f), dark).Lerp(Colors.White, whiteout);
+        var fill = new Color(0.98f, 0.94f, 1f).Lerp(Colors.White, whiteout);
         fill.A = opacity;
         canvas.DrawMesh(CookieMesh, null, new Transform2D(rotation, perspective * size, 0, position), fill);
         opacity *= 1 - whiteout;
