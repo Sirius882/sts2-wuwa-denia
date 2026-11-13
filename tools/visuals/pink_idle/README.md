@@ -15,6 +15,8 @@ python myModresources/denia/tools/visuals/pink_idle/run_preview.py --form black 
 
 导入器只提取输入已经内嵌的 WebP、光流和跟踪数据，组合无损图集，不执行 JS、不录制新帧。旧待机首帧裁成 `action_rest.png`，继续作为现有攻击／后撤的端点。
 
+粉态现按56个间隔闭环，启用原最后一组光流返回首帧，并约束遮挡混合端点；原10.632秒周期不变。预览额外捕获完整人物／特效的循环边界，独立公式检查包含此改动。两态都额外检查空白GUI分类、点击泡泡粒子寿命及30／60／144FPS按秒运动，捕获 `bubble_*.png`；游戏侧本机身份和战斗／UI状态门禁另见工作区 `docs/ui/denia-combat-click-bubbles.md`。
+
 预览工具需要已有 Python Pillow／NumPy、dotnet、Godot 4.5.1 Mono 和 ffmpeg。输出默认为工作区根 `.cache/denia-pink-idle/`，工程与截图位于 `<form>/checks` 或 `<form>/render`；`--output` 只能指定根 `.cache` 内目录。所有工程／日志／截图均可删除重建。`--render` 在 RX 9070 XT 的 D3D12 / Forward+ 下运行隐藏窗口，生成完整 60 Hz 循环、关键帧、三个时刻与原 GLSL 的独立公式对比，以及 `pink_idle.mp4` 或 `black_idle.mp4`。黑态对比包含48→0的闭环、虹彩／水纹与眼部光环。透明 viewport 读回是预乘颜色，预览导出按预乘公式合成底色，避免再次乘 alpha 导致人物变暗。
 
 预览的动作检查使用生产场景 SpriteFrames 和同一实时视觉类；它不是游戏战斗录像，也不代表联机／性能验收。维护说明见工作区 `docs/ui/denia-pink-realtime-idle.md` 与 `docs/ui/denia-black-realtime-idle.md`。

@@ -62,7 +62,8 @@ project/assembly_name="PinkIdlePreview"
 script=ExtResource("1")
 ''', encoding='utf-8')
     links = ''.join(f'<Compile Include="{MOD / "src/Visuals" / (name + ".cs")}" Link="{name}.cs" />'
-                    for name in ('DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual'))
+                    for name in ('DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
+                                 'DeniaBubbleBurst', 'DeniaBlankClick'))
     (runtime / 'PinkIdlePreview.csproj').write_text(f'''<Project Sdk="Godot.NET.Sdk/4.5.1">
 <PropertyGroup><TargetFramework>net9.0</TargetFramework><Nullable>enable</Nullable>
 <EnableDynamicLoading>true</EnableDynamicLoading></PropertyGroup>
@@ -86,6 +87,9 @@ script=ExtResource("1")
         run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-framerate', '60',
              '-i', str(pictures / 'loop_%04d.png'), '-c:v', 'libx264', '-crf', '18',
              '-pix_fmt', 'yuv420p', str(output / f'{args.form}_idle.mp4')], ROOT, runtime / 'encode.log')
+        run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-framerate', '60',
+             '-i', str(pictures / 'bubble_%03d.png'), '-c:v', 'libx264', '-crf', '18',
+             '-pix_fmt', 'yuv420p', str(output / f'{args.form}_click.mp4')], ROOT, runtime / 'encode-click.log')
     print(json.dumps(report, ensure_ascii=False))
 
 

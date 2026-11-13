@@ -100,7 +100,7 @@ def check(folder: Path, assets: Path, form='pink'):
     uv = (np.column_stack([xx.ravel(), yy.ravel()]) + .5) / RES
     errors = {}
     for seconds in ((0, 2.125, 5.315) if black else (0, 4.125, 10.631)):
-        frame = seconds / (5.316 if black else 10.632) * (48 if black else 55)
+        frame = seconds / (5.316 if black else 10.632) * (48 if black else 56)
         index, frac = int(frame), frame % 1
 
         def tile_image(image, n, w, h):
@@ -112,10 +112,12 @@ def check(folder: Path, assets: Path, form='pink'):
         flow = (bilinear(tile_image(flow_atlas, index, fw, fh), flow_uv)[:, :2] * 255 - 128) * (.25 if black else .5)
         flow[~inside] = 0
         c0 = sharpen(tile_image(atlas, index, 592, 600), np.clip(uv - frac * flow / RES, .001, .999), black)
-        c1 = sharpen(tile_image(atlas, (index + 1) % 48 if black else min(55, index + 1), 592, 600), np.clip(uv + (1 - frac) * flow / RES, .001, .999), black)
+        c1 = sharpen(tile_image(atlas, (index + 1) % (48 if black else 56), 592, 600), np.clip(uv + (1 - frac) * flow / RES, .001, .999), black)
         a_diff = c1[:, 3:] - c0[:, 3:]
         weight = (np.where(np.abs(a_diff) > .35, np.clip(frac + a_diff * .18 * np.sin(frac * 3.14159), 0, 1), frac)
                   if black else np.where(np.abs(a_diff) > .22, np.clip((frac + a_diff * .42 - .16) / .68, 0, 1), frac))
+        if not black:
+            weight = frac * (1 - 4 * frac * (1 - frac)) + weight * (4 * frac * (1 - frac))
         alpha = c0[:, 3:] * (1 - weight) + c1[:, 3:] * weight
         # Transparent viewport readback is premultiplied, like a browser canvas framebuffer.
         rgb = c0[:, :3] * c0[:, 3:] * (1 - weight) + c1[:, :3] * c1[:, 3:] * weight
@@ -138,7 +140,14 @@ def check(folder: Path, assets: Path, form='pink'):
     # Effects may overlap one another, but isolated body pixels must inherit parent alpha.
     mask = (normal[:, :, 3] > 240) & (np.indices(normal.shape[:2])[1] > 270) & (np.indices(normal.shape[:2])[1] < 380)
     assert np.quantile(np.abs(half[:, :, 3][mask] - normal[:, :, 3][mask] * .5), .90) < 2
-    print(f'PASS: original GLSL reference at 3 timestamps ({len(uv)} pixels each), mirror and parent alpha; MAE={errors}')
+    if not black:
+        seam = [np.array(Image.open(folder / f'seam_{time:.5f}.png'), dtype=float)
+                for time in (-.001, 0, .001, -1 / 60, 1 / 60)]
+        seam_error = np.abs(seam[0] - seam[1]).mean() / 255
+        assert seam_error < .0015, ('loop discontinuity', seam_error)
+        assert np.quantile(np.abs(seam[0] - seam[1]), .99) < 5, 'loop edge has a visible jump'
+        print(f'PASS: full pink body/effects loop seam mean error {seam_error:.6f}')
+    print(f'PASS: GLSL reference including loop changes at 3 timestamps ({len(uv)} pixels each), mirror and parent alpha; MAE={errors}')
     return errors
 
 
@@ -146,7 +155,7 @@ def make_preview(folder: Path, form='pink'):
     output = folder.parent / 'preview_frames'
     output.mkdir(exist_ok=True)
     background = np.array([35, 34, 49], dtype=float)
-    for path in sorted(folder.glob('loop_*.png')):
+    for path in sorted(folder.glob('loop_*.png')) + sorted(folder.glob('bubble_*.png')):
         raw = np.array(Image.open(path), dtype=float)
         rgb = np.clip(raw[:, :, :3] + background * (1 - raw[:, :, 3:] / 255), 0, 255).astype('uint8')
         Image.fromarray(rgb).save(output / path.name)

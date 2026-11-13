@@ -85,7 +85,8 @@ public partial class Preview : Node
             var flow = material.GetShaderParameter("flow_fields").AsGodotObject() as Texture2D;
             Check(flow != null && flow.GetSize() == (black ? new Vector2(328, 402) : new Vector2(536, 483)), "flow atlas dimensions");
             _idle.Seek(_idle.DurationSeconds - 0.001);
-            Check(material.GetShaderParameter("frame_index").AsInt32() == (black ? 47 : 54), "last interval selects correct frame");
+            Check(material.GetShaderParameter("frame_index").AsInt32() == (black ? 47 : 55), "last interval selects correct frame");
+            Check(material.GetShaderParameter("fraction").AsSingle() > 0.98f, "last frame interpolates back to first");
             if (black)
             {
                 Check(material.GetShaderParameter("fraction").AsSingle() > 0.98f, "last black frame interpolates back to first");
@@ -103,11 +104,22 @@ public partial class Preview : Node
             hiddenParent.QueueFree();
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(_actions.SpeedScale == 1 && !_actions.IsPlaying(), "old idle is paused without changing action speed");
+            CheckBlankUi();
+            foreach (int fps in new[] { 30, 60, 144 })
+            {
+                var burst = new DeniaBubbleBurst { IsBlack = black };
+                _viewport.AddChild(burst);
+                burst.SetProcess(false);
+                for (int f = 0; f < fps; f++) burst._Process(1.0 / fps);
+                Check(Math.Abs(burst.Elapsed - 1) < 1e-8, "bubble speed uses elapsed time at " + fps + " FPS");
+                burst._Process(0.6);
+                Check(burst.IsQueuedForDeletion(), "bubble cleans itself after lifetime");
+            }
             if (_render)
             {
                 for (int i = 0; i < _idle.FrameCount; i++)
                 {
-                    _idle.Seek(i / (double)(black ? 48 : 55) * _idle.DurationSeconds + (!black && i == 55 ? -0.000001 : 0));
+                    _idle.Seek(i / (double)_idle.FrameCount * _idle.DurationSeconds);
                     await Capture($"key_{i:D2}");
                 }
                 _idle.Seek(black ? 2.125 : 4.125);
@@ -137,11 +149,29 @@ public partial class Preview : Node
                 body.Reparent(_idle, false);
                 body.Position = -_idle.DesignOrigin;
                 _idle.Show();
+                if (!black)
+                {
+                    foreach (double time in new[] { -0.001, 0, 0.001, -1.0 / 60, 1.0 / 60 })
+                    {
+                        _idle.Seek(time);
+                        await Capture($"seam_{time:F5}");
+                    }
+                }
                 // Capture a complete 60 Hz loop, including the wrap, from the production renderer.
                 for (int i = 0; i <= (int)Math.Ceiling(_idle.DurationSeconds * 60) + 2; i++)
                 {
                     _idle.Seek(i / 60.0);
                     await Capture($"loop_{i:D4}");
+                }
+                _idle.Hide();
+                var click = new DeniaBubbleBurst { IsBlack = black, Position = new Vector2(296, 300), Scale = Vector2.One * 2 };
+                _viewport.AddChild(click);
+                click.SetProcess(false);
+                for (int i = 0; i < 91; i++)
+                {
+                    if (i > 0) click._Process(1.0 / 60);
+                    if (click.IsQueuedForDeletion()) break;
+                    await Capture($"bubble_{i:D3}");
                 }
             }
             File.WriteAllText(Path.Combine(_output, "checks.json"),
@@ -161,9 +191,46 @@ public partial class Preview : Node
             "transparent corners " + name);
     }
 
+    private void CheckBlankUi()
+    {
+        Check(DeniaBlankClick.IsBlank(null), "empty viewport is blank");
+        var layout = new Control { MouseFilter = Control.MouseFilterEnum.Stop };
+        var label = new Label();
+        layout.AddChild(label);
+        Check(DeniaBlankClick.IsBlank(layout) && DeniaBlankClick.IsBlank(label), "layout swallowing mouse and plain label stay blank");
+        var button = new Button();
+        layout.AddChild(button);
+        Check(!DeniaBlankClick.IsBlank(button), "native button blocks bubbles");
+        var text = new Label { MouseFilter = Control.MouseFilterEnum.Pass };
+        button.AddChild(text);
+        Check(!DeniaBlankClick.IsBlank(text), "button label resolves clickable ancestor");
+        var spacer = new Node2D();
+        button.AddChild(spacer);
+        var nestedText = new Label { MouseFilter = Control.MouseFilterEnum.Pass };
+        spacer.AddChild(nestedText);
+        Check(!DeniaBlankClick.IsBlank(nestedText), "Node2D wrapper does not hide a clickable ancestor");
+        button.Disabled = true;
+        Check(DeniaBlankClick.IsBlank(text), "disabled native button has no click response");
+        var callback = new TextureRect();
+        layout.AddChild(callback);
+        callback.GuiInput += _ => { };
+        Check(!DeniaBlankClick.IsBlank(callback), "custom GUI input signal blocks bubbles");
+        callback.MouseFilter = Control.MouseFilterEnum.Ignore;
+        Check(DeniaBlankClick.IsBlank(callback), "ignored GUI passes through");
+        var scripted = new ClickProbe();
+        layout.AddChild(scripted);
+        Check(!DeniaBlankClick.IsBlank(scripted), "C# GUI input override blocks bubbles");
+        layout.Free();
+    }
+
     private void Check(bool pass, string message)
     {
         if (!pass) throw new InvalidOperationException(message);
         _checks++;
     }
+}
+
+public partial class ClickProbe : Control
+{
+    public override void _GuiInput(InputEvent input) { }
 }

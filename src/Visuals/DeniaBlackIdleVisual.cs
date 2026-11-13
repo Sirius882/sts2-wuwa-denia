@@ -83,14 +83,17 @@ public partial class DeniaBlackIdleVisual : DeniaFlowIdleVisual
     }
 
     private void DrawStar(Vector2 pos, float size, Color color, Color core, float alpha)
+        => DrawFourPointStar(this, pos, size, color, core, alpha);
+
+    internal static void DrawFourPointStar(CanvasItem canvas, Vector2 pos, float size, Color color, Color core, float alpha)
     {
         if (alpha <= 0.02f) return;
         var points = new Vector2[StarShape.Length];
         for (int i = 0; i < points.Length; i++) points[i] = pos + StarShape[i] * size;
         color.A *= Mathf.Clamp(alpha, 0, 1);
         core.A *= Mathf.Clamp(alpha, 0, 1);
-        DrawColoredPolygon(points, color);
-        DrawCircle(pos, size * 0.24f, core, true, -1, true);
+        canvas.DrawColoredPolygon(points, color);
+        canvas.DrawCircle(pos, size * 0.24f, core, true, -1, true);
     }
 
     private static Vector2[] MakeStarShape()
