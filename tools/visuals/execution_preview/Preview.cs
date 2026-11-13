@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Runtime.Loader;
 using System.Threading.Tasks;
 using Denia;
@@ -31,10 +30,8 @@ public partial class Preview : Control
                 Check(!DeniaExecutionTimeline.ShouldPlay(bias, true, false), "dead gate");
                 Check(!DeniaExecutionTimeline.ShouldPlay(bias, false, true), "immune gate");
             }
-            var cookie = (Vector2[])typeof(DeniaExecutionOverlay).GetField("Cookie", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-            Check(Geometry2D.TriangulatePolygon(cookie).Length == (cookie.Length - 2) * 3, "cookie is a simple triangulatable contour");
-            CheckEntry(cookie);
-            Check(Math.Abs(DeniaExecutionTimeline.Video - 104f / 30) < 0.0001, "video frame timing");
+            Check(Math.Abs(DeniaExecutionTimeline.Video - 137f / 30) < 0.0001, "video frame timing includes original gingerbread");
+            Check(Math.Abs(DeniaExecutionTimeline.Release - 169f / 30) < 0.0001, "damage release timing is unchanged");
             await Play();
             var interrupted = new DeniaExecutionOverlay();
             AddChild(interrupted);
@@ -63,7 +60,7 @@ public partial class Preview : Control
         Check(animation.SpeedScale == 1 && overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer").SpeedScale == 1,
             "code animation and video always play at original speed");
         float maxVideoPosition = 0;
-        bool released = false, videoSeen = false, impactSeen = false, whiteBodySeen = false, backFaceSeen = false;
+        bool released = false, videoSeen = false, impactSeen = false, handoffSeen = false;
         int frame = 0;
         string folder = Path.Combine(_output, name);
         Directory.CreateDirectory(folder);
@@ -89,19 +86,14 @@ public partial class Preview : Control
                 var image = GetViewport().GetTexture().GetImage();
                 if (image.SavePng(Path.Combine(folder, $"frame_{frame:D4}.png")) != Error.Ok)
                     throw new IOException("frame capture failed");
-                if (clock >= 1.22f && clock < 1.28f)
+                if (!handoffSeen && video.Visible)
                 {
+                    Check(Math.Abs(clock - DeniaExecutionTimeline.Enter) < 1f / 30 + 0.0001f && video.StreamPosition <= 0.10,
+                        "direct video handoff preserves the close-up instead of pre-rolling past it");
                     Color body = image.GetPixel(image.GetWidth() / 2, image.GetHeight() / 2);
-                    if (body.R >= 0.85f || body.B < 0.7f || body.B - body.R < 0.08f)
-                        throw new InvalidOperationException("flip must render the lavender back without a front-facing chest star");
-                    backFaceSeen = true;
-                }
-                if (clock >= 1.84f && clock < 1.89f)
-                {
-                    image.Convert(Image.Format.Rgb8);
-                    foreach (byte channel in image.GetData())
-                        if (channel < 250) throw new InvalidOperationException("incoming white body must cover every viewport pixel, including bars");
-                    whiteBodySeen = true;
+                    Check(body.R > 0.60f && body.G > 0.55f && body.B > 0.60f,
+                        "first visible video frame is the pale extreme close-up, not a black frame");
+                    handoffSeen = true;
                 }
             }
             frame++;
@@ -111,65 +103,8 @@ public partial class Preview : Control
         Check(maxVideoPosition >= DeniaExecutionTimeline.Video - 1f / 30 - 0.015f,
             $"{name} video decoded through character segment ({maxVideoPosition:F3})");
         Check(!GodotObject.IsInstanceValid(overlay) || !overlay.IsInsideTree(), $"{name} overlay completed");
-        if (_render) Check(whiteBodySeen, "GPU captured a fully white body before the video cut");
-        if (_render) Check(backFaceSeen, "GPU captured a visible back face during the flip");
+        if (_render) Check(handoffSeen, "GPU captured the direct filter-to-video handoff");
         GD.Print($"{name}: frames={frame}, video={maxVideoPosition:F3}s, elapsed={(Time.GetTicksMsec() - start) / 1000:F3}s");
-    }
-
-    private void CheckEntry(Vector2[] cookie)
-    {
-        var first = DeniaExecutionOverlay.EntryPose(0.76f);
-        var centered = DeniaExecutionOverlay.EntryPose(1.2f);
-        var near = DeniaExecutionOverlay.EntryPose(1.8f);
-        Check(first.Position.X + first.Size < 0 && centered.Position.IsEqualApprox(new Vector2(960, 443)),
-            "main cookie flies from outside the left edge to the center");
-        bool horizontal = true;
-        float lowestRotation = 10, highestRotation = -10;
-        for (float time = 0.76f; time <= 1.2f; time += 0.01f)
-        {
-            var pose = DeniaExecutionOverlay.EntryPose(time);
-            Vector2 bodyAxis = Vector2.Up.Rotated(pose.Rotation);
-            horizontal &= Math.Abs(bodyAxis.X) > Math.Abs(bodyAxis.Y) * 2;
-            lowestRotation = Math.Min(lowestRotation, pose.Rotation);
-            highestRotation = Math.Max(highestRotation, pose.Rotation);
-        }
-        Check(horizontal, "incoming cookie lies horizontally with its head pointing right");
-        Check(highestRotation - lowestRotation > 0.4f, "horizontal flight banks along its arc");
-        int faceChanges = 0;
-        float previousProjection = DeniaExecutionOverlay.EntryPose(0.94f).Perspective.X;
-        bool backSeen = false, thinSeen = false;
-        for (float time = 0.95f; time <= 1.56f; time += 0.005f)
-        {
-            var pose = DeniaExecutionOverlay.EntryPose(time);
-            if (pose.Perspective.X * previousProjection < 0) faceChanges++;
-            backSeen |= pose.Perspective.X < -0.95f && pose.Position.X > 500;
-            thinSeen |= Math.Abs(pose.Perspective.X) < 0.08f;
-            previousProjection = pose.Perspective.X;
-        }
-        Check(faceChanges == 2 && backSeen && thinSeen && DeniaExecutionOverlay.EntryPose(1.56f).Perspective.X > 0.99f,
-            "visible full flip passes front, edge, back, edge and front with signed orientation");
-        bool approaching = true;
-        float previousSize = centered.Size;
-        for (float time = 1.21f; time <= 1.8f; time += 0.01f)
-        {
-            var pose = DeniaExecutionOverlay.EntryPose(time);
-            approaching &= pose.Position.IsEqualApprox(centered.Position) && pose.Size > previousSize;
-            previousSize = pose.Size;
-        }
-        Check(approaching && near.Size > centered.Size * 10, "cookie approaches camera after reaching center, without shrinking or drifting");
-        var contour = new Vector2[cookie.Length];
-        for (int i = 0; i < cookie.Length; i++)
-            contour[i] = near.Position + (cookie[i] * near.Perspective).Rotated(near.Rotation) * near.Size;
-        bool covered = true;
-        foreach (float aspect in new[] { 16f / 9, 21f / 9, 4f / 3 })
-        {
-            Vector2 viewport = aspect >= 1920f / 886 ? new Vector2(886 * aspect, 886) : new Vector2(1920, 1920 / aspect);
-            Vector2 topLeft = centered.Position - viewport / 2;
-            for (int x = 0; x <= 20; x++)
-                for (int y = 0; y <= 20; y++)
-                    covered &= Geometry2D.IsPointInPolygon(topLeft + viewport * new Vector2(x / 20f, y / 20f), contour);
-        }
-        Check(covered, "the body geometry covers the full 16:9, 21:9 and 4:3 viewport before cutting");
     }
 
     private async Task CheckDreamShader()
@@ -179,8 +114,8 @@ public partial class Preview : Control
         var material = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/denia_execution_screen.gdshader") };
         var screen = new ColorRect { Size = backdrop.Size, Material = material };
         AddChild(backdrop); AddChild(copy); AddChild(screen);
-        var samples = new Image[3];
-        float[] times = [0, 0.55f, 1.2f];
+        var samples = new Image[4];
+        float[] times = [0, 0.45f, 0.85f, 1.4f];
         for (int i = 0; i < times.Length; i++)
         {
             material.SetShaderParameter("entrance_time", times[i]);
@@ -198,6 +133,8 @@ public partial class Preview : Control
         float edgeGrowth = Edge(samples[2]) - Edge(samples[1]), centerGrowth = Center(samples[2]) - Center(samples[1]);
         Check(edgeGrowth > 0.05f && centerGrowth > 0 && Math.Abs(edgeGrowth - centerGrowth) > 0.03f,
             "dream filter grows over time at different rates across the screen");
+        Check(Center(samples[3]) > 0.70f && Edge(samples[3]) > 0.70f,
+            "pink-white filter becomes strong enough for the pale close-up handoff");
         backdrop.QueueFree(); copy.QueueFree(); screen.QueueFree();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }

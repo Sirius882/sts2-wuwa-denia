@@ -1,4 +1,4 @@
-"""Rebuild the execution's character-only Theora clip from the original video."""
+"""Rebuild the execution's gingerbread-and-character Theora clip from the original video."""
 import json
 from pathlib import Path
 import subprocess
@@ -13,7 +13,7 @@ def main():
     destination = OUTPUT / 'denia_execution_middle.ogv'
     subprocess.run([
         'ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-i', str(SOURCE),
-        '-vf', 'trim=start_frame=87:end_frame=191,setpts=PTS-STARTPTS',
+        '-vf', 'trim=start_frame=54:end_frame=191,setpts=PTS-STARTPTS',
         '-an', '-r', '30', '-fps_mode', 'cfr', '-c:v', 'libtheora', '-q:v', '8',
         str(destination),
     ], check=True)
@@ -22,8 +22,9 @@ def main():
     ]))['streams'][0]
     assert probe['codec_name'] == 'theora'
     assert (probe['width'], probe['height']) == (1920, 886)
-    assert int(probe['nb_read_frames']) == 104, probe
-    print(f'{destination.name}: {probe["nb_read_frames"]} frames, {probe["duration"]} seconds')
+    # Theora可用空包表示重复帧，按固定30 FPS的时间格检查完整时长。
+    assert probe['time_base'] == '1/30' and int(probe['duration_ts']) == 137, probe
+    print(f'{destination.name}: 137 frame intervals, {probe["nb_read_frames"]} decoded pictures, {probe["duration"]} seconds')
 
 
 if __name__ == '__main__':
