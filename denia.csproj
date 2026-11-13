@@ -10,6 +10,16 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <NoWarn>STS001;STS002</NoWarn>
   </PropertyGroup>
+  <PropertyGroup>
+    <!-- Steam 安装的完整多版本运行时；其他机器可通过 RITSULIB_DIR / RitsuLibDirectory 覆盖。 -->
+    <RitsuLibDirectory Condition="'$(RitsuLibDirectory)' == ''">$(RITSULIB_DIR)</RitsuLibDirectory>
+    <RitsuLibDirectory Condition="'$(RitsuLibDirectory)' == ''">F:\SteamLibrary\steamapps\workshop\content\2868840\3747602295</RitsuLibDirectory>
+    <RitsuLibReferenceTarget Condition="'$(RitsuLibReferenceTarget)' == ''">0.111.0</RitsuLibReferenceTarget>
+  </PropertyGroup>
+  <Import Project="$(RitsuLibDirectory)/RitsuLib.References.props" />
+  <ItemGroup>
+    <Compile Remove="tools/visuals/execution_preview/Preview.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Alchyr.Sts2.BaseLib" Version="3.3.0" />
     <PackageReference Include="Alchyr.Sts2.ModAnalyzers" Version="0.1.9" />

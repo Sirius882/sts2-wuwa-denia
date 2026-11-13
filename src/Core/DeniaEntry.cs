@@ -37,6 +37,7 @@ public static class DeniaEntry
             DeniaShroudedStarDamagePatch.Init();
             DeniaBuffTracker.Init();
             DeniaCrushDistributionPatch.Init();
+            AemeathWw.Scripts.AemeathDetuneRules.RegisterResonanceBreakRule(DeniaExecutionRule.Instance);
 
             // 仅当 TuneStrain、Harmony 和所有 Denia 规则均成功初始化后才提交幂等状态。
             // 若其中任一步骤抛异常，后续 ModManager 调用仍可重新尝试完整初始化。
