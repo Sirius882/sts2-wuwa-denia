@@ -103,6 +103,9 @@ public sealed class Denia : PlaceholderCharacterModel
     // 预加载自定义资源，避免运行时同步加载卡顿
     protected override IEnumerable<string> ExtraAssetPaths => new string[]
     {
+        DeniaExecutionTimeline.VideoPath,
+        "res://shaders/denia_execution_screen.gdshader",
+        "res://shaders/denia_execution_impact.gdshader",
         // 角色图标
         "res://images/ui/top_panel/character_icon_denia.png",
         "res://scenes/ui/character_icons/denia_icon.tscn",
