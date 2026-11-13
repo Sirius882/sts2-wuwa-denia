@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using Godot;
+using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Extensions;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Models.Powers;
@@ -21,7 +22,9 @@ internal sealed class DeniaExecutionRule : IAemeathResonanceBreakRule
         DeniaExecutionTimeline.ShouldPlay(TuneStrainState.GetBias(context.Target), context.Target.IsDead,
             context.Target.GetPower<IllusionPower>() != null);
 
-    public async Task Apply(AemeathResonanceBreakContext context)
+    public Task Apply(AemeathResonanceBreakContext context) => Play(context.Target);
+
+    internal static async Task Play(Creature? target)
     {
         if (NonInteractiveMode.IsActive) return;
         var room = NCombatRoom.Instance;
@@ -36,7 +39,7 @@ internal sealed class DeniaExecutionRule : IAemeathResonanceBreakRule
                 room.RemoveChild(previous);
                 previous.QueueFree();
             }
-            var targetNode = room.GetCreatureNode(context.Target);
+            var targetNode = target == null ? null : room.GetCreatureNode(target);
             Vector2 size = room.GetViewportRect().Size;
             overlay = new DeniaExecutionOverlay { Name = NodeName,
                 TargetUv = targetNode == null ? new Vector2(0.7f, 0.5f)
