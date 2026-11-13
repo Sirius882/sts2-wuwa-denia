@@ -1,0 +1,19 @@
+{
+  "origin_file": "三级集谐处决有声源视频.mp4",
+  "origin_sha256": "50c94df4a57817793e59c101c1be92ffc5adbc938ec5c1ff3f4f43fe7387d727",
+  "slice_file": "三级集谐处决动画素材.mp4",
+  "slice_sha256": "39663cfdff65bd84ff86d7c606f1749977f65fa577e1dbb7183bce787990fbf0",
+  "frames_checked": 191,
+  "identical_frames_at_offset": 191,
+  "maximum_frame_mse": 0.0,
+  "slice_frame_offset": 150,
+  "origin_video_first_pts": 0.106,
+  "clip_first_source_frame": 54,
+  "source_video_start_seconds": 6.906,
+  "entrance_seconds": 0.8,
+  "source_audio_start_seconds": 6.106,
+  "audio_sample_rate": 48000,
+  "audio_start_sample": 293088,
+  "audio_sample_count": 294400,
+  "duration_seconds": 6.133333333333334
+}

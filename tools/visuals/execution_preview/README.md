@@ -4,8 +4,10 @@ Run from the workspace root:
 
 ```powershell
 python -B myModresources/denia/tools/visuals/prepare_execution_video.py
+python -B myModresources/denia/tools/visuals/prepare_execution_audio.py
 python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py
 python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --render
+python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --audio-check
 ```
 
 The first command regenerates the tracked OGV from source frames 54–190: the extreme-close-up
@@ -32,3 +34,15 @@ Deleting that directory is safe. `RITSULIB_DIR` can override the installed runti
 Standalone Godot may report that the Sentry extension is absent; it is not needed for this preview.
 
 All game speed modes, including Instant, use the same 1x execution animation and video.
+
+The separate stereo WAV starts at filter time zero, independently of the hidden video pre-roll.
+`execution_audio_alignment.json` records the preserved sound source, hashes, frame offset and exact
+sample range. Slice frame 54 matches sound-source frame 204 at PTS 6.906s; the 0.8s entrance
+therefore starts at source audio 6.106s (sample 293088 at 48 kHz). The WAV contains 294400 samples,
+covering the whole 6.133333s presentation including the impact and return. The video remains silent
+to avoid doubled audio. Leaving the room stops both players.
+
+The rendered MP4 now includes this WAV from timestamp zero. Its sound is muxed from the verified
+samples; offline fixed-FPS GPU capture is not a real-time audio recording. `--audio-check` separately
+runs at real-time 60 FPS with WASAPI audio output and checks the native playback clock against the
+presentation clock, accounting for mixer/output latency. It does not test physical speakers or game mixing.

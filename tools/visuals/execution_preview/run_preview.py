@@ -25,16 +25,21 @@ def run(command, cwd, log, timeout=180):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('--audio-check', action='store_true', help='Check native audio clock at real-time 60 FPS')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-execution-preview')
     args = parser.parse_args()
     output = args.output.resolve()
     if not output.is_relative_to((ROOT / '.cache').resolve()):
         parser.error('output must stay inside the workspace .cache')
-    runtime = output / ('render' if args.render else 'checks')
+    if args.render and args.audio_check:
+        parser.error('--render and --audio-check are separate checks')
+    runtime = output / ('audio-check' if args.audio_check else 'render' if args.render else 'checks')
     runtime.mkdir(parents=True, exist_ok=True)
-    for folder in ('videos', 'shaders'):
+    for folder in ('videos', 'shaders', 'sounds'):
         (runtime / folder).mkdir(exist_ok=True)
     shutil.copyfile(MOD / 'videos/denia_execution_middle.ogv', runtime / 'videos/denia_execution_middle.ogv')
+    shutil.copyfile(MOD / 'sounds/denia_execution.wav', runtime / 'sounds/denia_execution.wav')
+    shutil.copyfile(MOD / 'sounds/denia_execution.wav.import', runtime / 'sounds/denia_execution.wav.import')
     for path in (MOD / 'shaders').glob('denia_execution_*.gdshader'):
         shutil.copyfile(path, runtime / 'shaders' / path.name)
     (runtime / 'project.godot').write_text('''config_version=5
@@ -77,10 +82,13 @@ script=ExtResource("1")
         shutil.copyfile(GAME / name, binary / name)
     godot = ROOT / 'Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe'
     run([str(godot), '--headless', '--path', str(runtime), '--editor', '--import'], ROOT, runtime / 'import.log')
-    command = [str(godot), '--path', str(runtime), '--audio-driver', 'Dummy', '--fixed-fps', '30',
+    command = [str(godot), '--path', str(runtime), '--audio-driver', 'WASAPI' if args.audio_check else 'Dummy',
                '--log-file', str(runtime / 'godot.log')]
+    command += ['--max-fps', '60'] if args.audio_check else ['--fixed-fps', '30']
     command += ['--display-driver', 'windows', '--position', '-16000,-16000',
-                '--rendering-method', 'forward_plus', '--rendering-driver', 'd3d12'] if args.render else ['--headless']
+                '--rendering-method', 'forward_plus', '--rendering-driver', 'd3d12'] if args.render or args.audio_check else ['--headless']
+    if args.audio_check:
+        command += ['--', '--audio-check']
     result = run(command, ROOT, runtime / 'process.log')
     report = runtime / 'captures/checks.json'
     if not report.exists() or 'ERROR:' in result.stdout + result.stderr:
@@ -88,8 +96,10 @@ script=ExtResource("1")
     print(json.dumps(json.loads(report.read_text()), ensure_ascii=False))
     if args.render:
         run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-framerate', '30',
-             '-i', str(runtime / 'captures/normal/frame_%04d.png'), '-c:v', 'libx264',
-             '-crf', '18', '-pix_fmt', 'yuv420p', str(output / 'normal.mp4')], ROOT, runtime / 'encode.log')
+             '-i', str(runtime / 'captures/normal/frame_%04d.png'),
+             '-i', str(MOD / 'sounds/denia_execution.wav'), '-c:v', 'libx264',
+             '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k',
+             str(output / 'normal.mp4')], ROOT, runtime / 'encode.log')
 
 
 if __name__ == '__main__':

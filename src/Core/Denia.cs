@@ -104,6 +104,7 @@ public sealed class Denia : PlaceholderCharacterModel
     protected override IEnumerable<string> ExtraAssetPaths => new string[]
     {
         DeniaExecutionTimeline.VideoPath,
+        DeniaExecutionTimeline.AudioPath,
         "res://shaders/denia_execution_screen.gdshader",
         "res://shaders/denia_execution_impact.gdshader",
         // 粉态实时待机沿用角色预加载，避免首次进入战斗时同步上传整张图集。

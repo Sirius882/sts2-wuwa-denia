@@ -10,6 +10,7 @@ internal static class DeniaExecutionTimeline
     public const float Return = 0.5f;
     public const float Total = Release + Return;
     public const string VideoPath = "res://videos/denia_execution_middle.ogv";
+    public const string AudioPath = "res://sounds/denia_execution.wav";
 
     public static bool ShouldPlay(int bias, bool dead, bool immune) => bias >= 3 && !dead && !immune;
 }
