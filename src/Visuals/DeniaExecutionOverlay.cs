@@ -109,7 +109,7 @@ public partial class DeniaExecutionOverlay : Control
             if (_video == null || _ink == null) return;
             _frameClock = Clock;
             if (!_videoStarted && ++_warmFrames >= 2) _video.Paused = true;
-            // 黑场尾部预滚0.2秒，覆盖Theora的帧调度延迟；人物显现前仍由代码层遮挡。
+            // 姜饼人遮屏时预滚0.2秒，覆盖Theora的帧调度延迟；人物显现前仍由代码层遮挡。
             if (!_videoStarted && Clock >= DeniaExecutionTimeline.Enter - 0.2f)
             {
                 _videoStarted = true;
@@ -131,7 +131,7 @@ public partial class DeniaExecutionOverlay : Control
             UpdateFrame();
             float ret = Mathf.Clamp((Clock - DeniaExecutionTimeline.Release) / DeniaExecutionTimeline.Return, 0, 1);
             float enter = Mathf.Clamp(Clock / 0.8f, 0, 1);
-            _screen.Visible = Clock < 1.2f || _returning;
+            _screen.Visible = Clock < DeniaExecutionTimeline.Enter || _returning;
             _screenMaterial.SetShaderParameter("center", _returning
                 ? new Vector2(0.25f, 0.58f).Lerp(TargetUv, Smooth(ret)) : new Vector2(0.5f, 0.52f));
             _screenMaterial.SetShaderParameter("blur_amount", _returning
@@ -172,13 +172,16 @@ public partial class DeniaExecutionOverlay : Control
 
     internal void DrawFrame(Control canvas)
     {
+        bool entering = _frameClock < DeniaExecutionTimeline.Enter + 0.12f;
+        // 入场时黑边也应被迎面而来的白色身体遮住。
+        if (entering) DrawBars(canvas);
         float scale = _frame.Size.X / Design.X;
         canvas.DrawSetTransform(_frame.Position, 0, new Vector2(scale, scale));
         if (_frameClock < DeniaExecutionTimeline.Enter) DrawEnter(canvas);
         else if (_frameClock < DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video)
         {
             float alpha = 1 - Smooth((_frameClock - DeniaExecutionTimeline.Enter) / 0.12f);
-            if (alpha > 0) canvas.DrawRect(new Rect2(Vector2.Zero, Design), new Color(0, 0, 0, alpha));
+            if (alpha > 0) DrawEntryCookie(canvas, alpha);
         }
         else if (!_returning) DrawImpact(canvas);
         else
@@ -188,7 +191,12 @@ public partial class DeniaExecutionOverlay : Control
             if (flash > 0) canvas.DrawRect(new Rect2(Vector2.Zero, Design), new Color(1, 1, 1, flash));
         }
         canvas.DrawSetTransform(Vector2.Zero);
-        // 黑边最后绘制，近景姜饼人和冲击线不能越过电影画幅。
+        // 人物段和退场的黑边最后绘制，保持冲击线在电影画幅内。
+        if (!entering) DrawBars(canvas);
+    }
+
+    private void DrawBars(Control canvas)
+    {
         float bars = _frameClock < 0.8f ? Smooth(_frameClock / 0.8f)
             : _returning ? 1 - Smooth((_frameClock - DeniaExecutionTimeline.Release) / DeniaExecutionTimeline.Return) : 1;
         if (_frame.Position.Y > 0)
@@ -205,8 +213,6 @@ public partial class DeniaExecutionOverlay : Control
 
     private void DrawEnter(Control canvas)
     {
-        float darkness = Smooth((_frameClock - 0.75f) / 0.38f);
-        canvas.DrawRect(new Rect2(Vector2.Zero, Design), new Color(0.007f, 0.002f, 0.025f, darkness));
         for (int i = 0; i < 14; i++)
         {
             float k = i / 14f;
@@ -216,24 +222,39 @@ public partial class DeniaExecutionOverlay : Control
             DrawCookie(canvas, p, 8 + 19 * k, a - 1, new Vector2(1, 1), fade, 0.7f);
         }
         if (_frameClock < 0.76f) return;
-        float q = Mathf.Clamp((_frameClock - 0.76f) / 1.14f, 0, 1);
-        float size = 1900 * MathF.Pow(1 - q, 3.2f) + 2;
-        var position = new Vector2(1370, 420).Lerp(new Vector2(850, 390), Smooth(q));
-        float opacity = 1 - Smooth((q - 0.78f) / 0.22f);
-        DrawCookie(canvas, position, size, -0.9f + q * 1.6f,
-            new Vector2(1.35f - 0.5f * q, 0.35f + 0.65f * Smooth(q)), opacity, Smooth((q - 0.2f) / 0.35f));
+        DrawEntryCookie(canvas, 1);
+    }
+
+    internal static (Vector2 Position, float Size, float Rotation, Vector2 Perspective) EntryPose(float clock)
+    {
+        float flight = Smooth((clock - 0.76f) / 0.44f);
+        float approach = Smooth((clock - 1.2f) / 0.6f);
+        // 先飞到中央，再按透视迎向镜头；最终身体的实体轮廓覆盖整个视野。
+        return (new Vector2(-450, 500).Lerp(Design / 2, flight),
+            Mathf.Lerp(120, 380, flight) / (1 - 0.95f * approach),
+            Mathf.Lerp(-0.65f, -0.18f, flight) * (1 - approach),
+            new Vector2(1.2f, 0.6f).Lerp(Vector2.One, flight));
+    }
+
+    private void DrawEntryCookie(Control canvas, float opacity)
+    {
+        var pose = EntryPose(_frameClock);
+        float whiteout = Smooth((_frameClock - 1.3f) / 0.3f);
+        DrawCookie(canvas, pose.Position, pose.Size, pose.Rotation, pose.Perspective, opacity, 0, whiteout);
     }
 
     private static void DrawCookie(Control canvas, Vector2 position, float size, float rotation,
-        Vector2 perspective, float opacity, float dark)
+        Vector2 perspective, float opacity, float dark, float whiteout = 0)
     {
         if (opacity <= 0.001f || size < 1) return;
         var points = new Vector2[Cookie.Length];
         for (int i = 0; i < Cookie.Length; i++)
             points[i] = position + (Cookie[i] * perspective).Rotated(rotation) * size;
-        var fill = new Color(0.96f, 0.88f, 1f).Lerp(new Color(0.035f, 0.009f, 0.12f), dark);
+        var fill = new Color(0.96f, 0.88f, 1f).Lerp(new Color(0.035f, 0.009f, 0.12f), dark).Lerp(Colors.White, whiteout);
         fill.A = opacity;
         canvas.DrawMesh(CookieMesh, null, new Transform2D(rotation, perspective * size, 0, position), fill);
+        opacity *= 1 - whiteout;
+        if (opacity <= 0.001f) return;
         var closed = new Vector2[points.Length + 1];
         points.CopyTo(closed, 0); closed[^1] = closed[0];
         for (int pass = 3; pass >= 0; pass--)
