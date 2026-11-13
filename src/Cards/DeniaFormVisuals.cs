@@ -145,6 +145,16 @@ public static class DeniaFormPatch
         catch { }
     }
 
+    internal static Task PlayBlackRise(Creature creature)
+    {
+        if (MegaCrit.Sts2.Core.Helpers.NonInteractiveMode.IsActive || creature.Player?.Character is not Denia)
+            return Task.CompletedTask;
+        var node = GetCreatureNode(creature);
+        if (node == null || IsDying(node) || creature.IsDead) return Task.CompletedTask;
+        EnsureOverlays(node);
+        return GetSyncNode(node)?.PlayBlackRise() ?? Task.CompletedTask;
+    }
+
     internal static bool TryPlayDodge(NCreature node)
     {
         if (node?.Entity?.Player?.Character is not Denia) return false;
@@ -625,6 +635,7 @@ public partial class DeniaFormOverlaySync : Node
     private Vector2 _baseSize = new(200f, 300f);
     private bool _hasBaseLayout;
     private bool _hasIdleFrames;
+    private DeniaBlackRiseVisual? _risePreview;
 
     private Vector2 _lastBodyScale = Vector2.One;
     private Vector2 _lastVisualsScale = Vector2.One;
@@ -669,6 +680,37 @@ public partial class DeniaFormOverlaySync : Node
         _baseSize = size;
         _hasBaseLayout = true;
         ApplyTransforms();
+    }
+
+    internal async Task PlayBlackRise()
+    {
+        if (_risePreview != null || !_hasBaseLayout || _creatureNode == null
+            || DeniaFormPatch.IsDying(_creatureNode)) return;
+        var preview = new DeniaBlackRiseVisual { Name = "BlackRisePreview" };
+        try
+        {
+            GetParent().AddChild(preview);
+            if (!preview.Initialized) return;
+            _risePreview = preview;
+            ApplyTransforms();
+            await preview.Completion;
+        }
+        catch (Exception exception)
+        {
+            GD.PrintErr($"[DeniaBlackRise] Preview skipped: {exception.Message}");
+        }
+        finally
+        {
+            if (GodotObject.IsInstanceValid(preview)) preview.QueueFree();
+            if (ReferenceEquals(_risePreview, preview)) _risePreview = null;
+            if (GodotObject.IsInstanceValid(_creatureNode) && !DeniaFormPatch.IsDying(_creatureNode!))
+                DeniaFormPatch.RefreshForCreature(_creatureNode!.Entity);
+        }
+    }
+
+    public override void _ExitTree()
+    {
+        if (GodotObject.IsInstanceValid(_risePreview)) _risePreview!.QueueFree();
     }
 
     public void PlayAttack(bool isBlack)
@@ -1013,6 +1055,20 @@ public partial class DeniaFormOverlaySync : Node
         ApplyBody(_black, pos, centerPivot: true);
 
         ApplyBody(_corpse, pos, centerPivot: true);
+
+        if (GodotObject.IsInstanceValid(_risePreview))
+        {
+            if (_state is AnimState.DeathTransition or AnimState.Dead || _creatureNode?.Entity.IsDead == true)
+                _risePreview!.QueueFree();
+            else
+            {
+                if (_pink != null) _pink.Visible = false;
+                if (_black != null) _black.Visible = false;
+                _risePreview!.Position = pos + new Vector2(_baseSize.X * 0.5f, _baseSize.Y);
+                _risePreview.Scale = Vector2.One * (_baseSize.Y / _risePreview.LayoutHeight);
+                _risePreview.SetFacing(_creatureNode?.Body?.Scale.X < 0);
+            }
+        }
 
         // 黑色形态攻击特效：左下角对齐黑立绘中心
         if (_blackFx != null && GodotObject.IsInstanceValid(_blackFx))

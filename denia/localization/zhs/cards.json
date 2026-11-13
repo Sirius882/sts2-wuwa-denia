@@ -1423,5 +1423,7 @@
   "DENIA-DENIA_ANIMATION_TEST.title": "动画测试（内部）",
   "DENIA-DENIA_ANIMATION_TEST.description": "选择并播放一个待测试动画。仅播放演出，不触发伤害或集谐结算。",
   "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.title": "三级集谐处决",
-  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "原速播放三级集谐处决的完整画面与音轨。仅测试演出，不触发伤害或集谐结算。"
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "原速播放三级集谐处决的完整画面与音轨。仅测试演出，不触发伤害或集谐结算。",
+  "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.title": "黑态起身（备用）",
+  "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.description": "原速播放3秒黑态起身动画，结束后恢复当前形态。仅测试演出，不改变形态或战斗数值。"
 }

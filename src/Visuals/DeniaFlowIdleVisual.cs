@@ -13,6 +13,7 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
     public abstract float LayoutHeight { get; }
     public abstract Vector2 DesignOrigin { get; }
     protected virtual bool WrapFrames => false;
+    protected virtual bool Loop => true;
     protected ShaderMaterial FlowMaterial = null!;
     protected float[] BubbleCy = null!, OrbX = null!, OrbY = null!;
     protected bool Flip;
@@ -80,7 +81,8 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
     public void Seek(double seconds)
     {
         if (!double.IsFinite(seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
-        _clock = ((seconds % DurationSeconds) + DurationSeconds) % DurationSeconds;
+        _clock = Loop ? ((seconds % DurationSeconds) + DurationSeconds) % DurationSeconds
+            : Math.Clamp(seconds, 0, DurationSeconds);
         double frame = _clock / DurationSeconds * (WrapFrames ? FrameCount : FrameCount - 1);
         int index = Math.Min((int)frame, FrameCount - 1);
         FlowMaterial.SetShaderParameter("frame_index", index);

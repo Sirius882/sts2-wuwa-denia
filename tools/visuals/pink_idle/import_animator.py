@@ -16,12 +16,13 @@ MOD = HERE.parents[2]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--form', choices=('pink', 'black'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise'), default='pink')
     args = parser.parse_args()
-    black = args.form == 'black'
+    rise = args.form == 'black_rise'
+    black = args.form != 'pink'
     output = MOD / f'images/characters/denia/realtime_{args.form}'
-    prefix = 'BLACK_' if black else ''
-    source = HERE / f'source/{args.form}_idle_animator.js'
+    prefix = 'RISE_' if rise else 'BLACK_' if black else ''
+    source = HERE / ('source/black_rise_animator.js' if rise else f'source/{args.form}_idle_animator.js')
     text = source.read_text(encoding='utf-8-sig')
 
     def constant(name):
@@ -65,14 +66,19 @@ def main():
     atlas.save(output / 'frames.webp', lossless=True, exact=True, method=6)
     flow_atlas.save(output / 'flow.png')
     # Existing attacks/dodges use the old idle's first pose as their endpoint.
-    legacy_name = 'dark' if black else 'pink'
-    legacy = Image.open(MOD / f'images/characters/denia/sprite_sheets/denia_{legacy_name}_idle.png')
-    legacy.crop((0, 0, 264, 528)).save(output / 'action_rest.png')
+    if not rise:
+        legacy_name = 'dark' if black else 'pink'
+        legacy = Image.open(MOD / f'images/characters/denia/sprite_sheets/denia_{legacy_name}_idle.png')
+        legacy.crop((0, 0, 264, 528)).save(output / 'action_rest.png')
     # A native Resource keeps the metadata in the PCK without an export include filter.
     lines = ['[gd_resource type="Resource" format=3]', '', '[resource]']
-    for key in ('bubble_cy', 'orb_x', 'orb_y'):
-        assert len(meta[key]) == count
-        lines.append(f'metadata/{key} = PackedFloat32Array({", ".join(map(str, meta[key]))})')
+    tracking = dict(meta)
+    if rise:
+        tracking.update(orb_x=meta['halo_x'], orb_y=meta['halo_y'])
+    keys = ('bubble_cy', 'orb_x', 'orb_y') + (('bubble_cx', 'bubble_rx', 'bubble_ry') if rise else ())
+    for key in keys:
+        assert len(tracking[key]) == count
+        lines.append(f'metadata/{key} = PackedFloat32Array({", ".join(map(str, tracking[key]))})')
     lines.append(f'metadata/source_sha256 = "{hashlib.sha256(source.read_bytes()).hexdigest()}"')
     (output / 'tracking.tres').write_text('\n'.join(lines) + '\n', encoding='utf-8')
     print(f'Extracted {count} original WebP frames and flow fields to {output}')

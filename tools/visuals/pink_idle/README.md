@@ -20,3 +20,14 @@ python myModresources/denia/tools/visuals/pink_idle/run_preview.py --form black 
 预览工具需要已有 Python Pillow／NumPy、dotnet、Godot 4.5.1 Mono 和 ffmpeg。输出默认为工作区根 `.cache/denia-pink-idle/`，工程与截图位于 `<form>/checks` 或 `<form>/render`；`--output` 只能指定根 `.cache` 内目录。所有工程／日志／截图均可删除重建。`--render` 在 RX 9070 XT 的 D3D12 / Forward+ 下运行隐藏窗口，生成完整 60 Hz 循环、关键帧、三个时刻与原 GLSL 的独立公式对比，以及 `pink_idle.mp4` 或 `black_idle.mp4`。黑态对比包含48→0的闭环、虹彩／水纹与眼部光环。透明 viewport 读回是预乘颜色，预览导出按预乘公式合成底色，避免再次乘 alpha 导致人物变暗。
 
 预览的动作检查使用生产场景 SpriteFrames 和同一实时视觉类；它不是游戏战斗录像，也不代表联机／性能验收。维护说明见工作区 `docs/ui/denia-pink-realtime-idle.md` 与 `docs/ui/denia-black-realtime-idle.md`。
+
+## 备用黑态起身（2026-11-14）
+
+`--form black_rise` 提取并检查用户的 `source/black_rise_animator.js`；同目录保留原始HTML。生产类 `DeniaBlackRiseVisual` 共用光流基类，单次3秒、47个插值间隔、末帧钳制，使用独立的 `realtime_black_rise/` 资源与 `denia_black_rise.gdshader`。保留原始液态泡泡径向光流／出生遮挡、跟踪光环、代码星芒和无横截面的漂浮球。小泡渐变沿用原生同心绘制近似，不启用浏览器或视频。
+
+```powershell
+python -B myModresources/denia/tools/visuals/pink_idle/import_animator.py --form black_rise
+python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form black_rise --render
+```
+
+该分支检查末帧不回绕、30/60/144 FPS计时、凝泡前后椭圆跟踪、隐藏暂停和移除释放等待者；捕获181张60Hz帧、两张镜像对照和 `black_rise.mp4`。普通粉黑待机的检查入口不变。游戏调用仅通过内部动画测试牌第二选项，经 `DeniaFormPatch.PlayBlackRise` 在持有者身上播放并恢复当前形态；没有接到正式的切态或复活触发器。
