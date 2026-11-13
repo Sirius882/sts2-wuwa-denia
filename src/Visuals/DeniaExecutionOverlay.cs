@@ -13,6 +13,7 @@ public partial class DeniaExecutionOverlay : Control
     private readonly CancellationTokenSource _exit = new();
     private AnimationPlayer _player = null!;
     private VideoStreamPlayer _video = null!;
+    private AudioStreamPlayer _audio = null!;
     private TextureRect _poster = null!;
     private ColorRect _screen = null!;
     private DeniaExecutionInk _ink = null!;
@@ -73,6 +74,12 @@ public partial class DeniaExecutionOverlay : Control
             builder.AddState("Return");
             builder.AddAnyState("Release", "Return");
             _machine = builder.Build(_backend);
+            // 音轨已提前裁到滤镜起点；不跟随视频预解码暂停，也不等视频显现才播放。
+            _audio = new AudioStreamPlayer { Name = "ExecutionAudio", Bus = "SFX",
+                Stream = GD.Load<AudioStream>(DeniaExecutionTimeline.AudioPath) };
+            if (_audio.Stream == null) throw new InvalidOperationException("Execution audio is missing");
+            AddChild(_audio);
+            _audio.Play();
             UpdateFrame();
         }
         catch (Exception ex) { Abort(ex); }
@@ -165,6 +172,7 @@ public partial class DeniaExecutionOverlay : Control
         _backend?.Stop();
         _backend?.Dispose();
         if (GodotObject.IsInstanceValid(_video)) _video.Stop();
+        if (GodotObject.IsInstanceValid(_audio)) _audio.Stop();
         _exit.Dispose();
     }
 

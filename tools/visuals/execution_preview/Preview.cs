@@ -10,6 +10,7 @@ public partial class Preview : Control
     private int _checks;
     private readonly string _output = ProjectSettings.GlobalizePath("res://captures");
     private bool _render;
+    private readonly bool _audioCheck = Array.Exists(OS.GetCmdlineUserArgs(), arg => arg == "--audio-check");
 
     public override async void _Ready()
     {
@@ -21,7 +22,10 @@ public partial class Preview : Control
                 string path = Path.Combine(binary, name.Name + ".dll");
                 return File.Exists(path) ? context.LoadFromAssemblyPath(path) : null;
             };
-            _render = DisplayServer.GetName() != "headless";
+            _render = DisplayServer.GetName() != "headless" && !_audioCheck;
+            if (_audioCheck) Check(AudioServer.GetDriverName() == "WASAPI", "real-time check uses native audio output");
+            AudioServer.AddBus();
+            AudioServer.SetBusName(AudioServer.BusCount - 1, "SFX");
             Directory.CreateDirectory(_output);
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
             for (int bias = 0; bias <= 5; bias++)
@@ -36,10 +40,12 @@ public partial class Preview : Control
             var interrupted = new DeniaExecutionOverlay();
             AddChild(interrupted);
             var exit = interrupted.ExitToken;
+            var interruptedAudio = interrupted.GetNode<AudioStreamPlayer>("ExecutionAudio");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             RemoveChild(interrupted);
             interrupted.QueueFree();
             Check(exit.IsCancellationRequested, "leaving room cancels presentation wait");
+            Check(!interruptedAudio.Playing, "leaving room stops execution audio immediately");
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(GetChildCount() == 0, "all presentation nodes released");
             if (_render) await CheckDreamShader();
@@ -56,22 +62,38 @@ public partial class Preview : Control
         var overlay = new DeniaExecutionOverlay();
         AddChild(overlay);
         var animation = overlay.GetNode<AnimationPlayer>("AnimationPlayer");
+        var audio = overlay.GetNode<AudioStreamPlayer>("ExecutionAudio");
+        Check(audio.Playing && !overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer").Visible,
+            "audio starts with the filter before the video becomes visible");
+        Check(audio.PitchScale == 1 && audio.Bus == "SFX" && !audio.StreamPaused,
+            "execution audio uses original speed and the SFX bus independently of video pre-roll");
+        Check(Math.Abs(audio.Stream.GetLength() - DeniaExecutionTimeline.Total) < 0.0001,
+            "soundtrack spans filter, video, impact and return");
         Check(animation.HasAnimation("Execution") && animation.HasAnimation("Return"), "Ritsu backend clips available");
         Check(animation.SpeedScale == 1 && overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer").SpeedScale == 1,
             "code animation and video always play at original speed");
         float maxVideoPosition = 0;
+        double maxAudioDrift = 0;
+        double outputLatency = AudioServer.GetOutputLatency();
+        int audioSamples = 0;
         bool released = false, videoSeen = false, impactSeen = false, handoffSeen = false;
         int frame = 0;
         string folder = Path.Combine(_output, name);
         Directory.CreateDirectory(folder);
         foreach (string oldFrame in Directory.EnumerateFiles(folder, "frame_*.png")) File.Delete(oldFrame);
         double start = Time.GetTicksMsec();
-        while (GodotObject.IsInstanceValid(overlay) && overlay.IsInsideTree() && frame < 280)
+        while (GodotObject.IsInstanceValid(overlay) && overlay.IsInsideTree() && frame < 2000)
         {
             if (_render) await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
             else await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             if (!GodotObject.IsInstanceValid(overlay) || !overlay.IsInsideTree()) break;
             float clock = overlay.Clock;
+            if (_audioCheck && clock > 0.2f && clock < DeniaExecutionTimeline.Release)
+            {
+                maxAudioDrift = Math.Max(maxAudioDrift,
+                    Math.Abs(audio.GetPlaybackPosition() + AudioServer.GetTimeSinceLastMix() - outputLatency - clock));
+                audioSamples++;
+            }
             videoSeen |= clock >= DeniaExecutionTimeline.Enter && clock < DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video;
             impactSeen |= clock >= DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video && clock < DeniaExecutionTimeline.Release;
             var video = overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer");
@@ -104,6 +126,13 @@ public partial class Preview : Control
             $"{name} video decoded through character segment ({maxVideoPosition:F3})");
         Check(!GodotObject.IsInstanceValid(overlay) || !overlay.IsInsideTree(), $"{name} overlay completed");
         if (_render) Check(handoffSeen, "GPU captured the direct filter-to-video handoff");
+        if (_audioCheck)
+        {
+            Check(audioSamples > 100 && maxAudioDrift < 0.08,
+                $"native audio stays on the presentation clock ({maxAudioDrift:F4}s maximum drift)");
+            File.WriteAllText(Path.Combine(_output, "audio_sync.json"),
+                $"{{\"samples\":{audioSamples},\"maxDriftSeconds\":{maxAudioDrift.ToString(System.Globalization.CultureInfo.InvariantCulture)},\"outputLatencySeconds\":{outputLatency.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}");
+        }
         GD.Print($"{name}: frames={frame}, video={maxVideoPosition:F3}s, elapsed={(Time.GetTicksMsec() - start) / 1000:F3}s");
     }
 
