@@ -1438,5 +1438,9 @@
   "DENIA-DENIA_STRENGTH_SINGLE_CHOICE.description": "The target loses {IfUpgraded:show:8|6} Strength for 1 turn.",
   "DENIA-DENIA_STRENGTH_SINGLE_CHOICE.title": "Single Target: Strength Loss",
   "DENIA-DENIA_STRENGTH_ALL_CHOICE.description": "All enemies lose {IfUpgraded:show:6|4} Strength for 1 turn.",
-  "DENIA-DENIA_STRENGTH_ALL_CHOICE.title": "All Enemies: Strength Loss"
+  "DENIA-DENIA_STRENGTH_ALL_CHOICE.title": "All Enemies: Strength Loss",
+  "DENIA-DENIA_ANIMATION_TEST.title": "Animation Test (Internal)",
+  "DENIA-DENIA_ANIMATION_TEST.description": "Choose an animation to preview. Plays visuals and audio only, without damage or Tune Strain resolution.",
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.title": "Level 3 Tune Strain Execution",
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "Play the complete Level 3 Tune Strain execution visuals and soundtrack at normal speed. Preview only; no damage or Tune Strain resolution."
 }

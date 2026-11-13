@@ -1419,5 +1419,9 @@
   "DENIA-DENIA_STRENGTH_SINGLE_CHOICE.description": "令目标失去{IfUpgraded:show:8|6}点力量。持续1回合。",
   "DENIA-DENIA_STRENGTH_SINGLE_CHOICE.title": "单体失去力量",
   "DENIA-DENIA_STRENGTH_ALL_CHOICE.description": "令所有敌人失去{IfUpgraded:show:6|4}点力量。持续1回合。",
-  "DENIA-DENIA_STRENGTH_ALL_CHOICE.title": "全体失去力量"
+  "DENIA-DENIA_STRENGTH_ALL_CHOICE.title": "全体失去力量",
+  "DENIA-DENIA_ANIMATION_TEST.title": "动画测试（内部）",
+  "DENIA-DENIA_ANIMATION_TEST.description": "选择并播放一个待测试动画。仅播放演出，不触发伤害或集谐结算。",
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.title": "三级集谐处决",
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "原速播放三级集谐处决的完整画面与音轨。仅测试演出，不触发伤害或集谐结算。"
 }
