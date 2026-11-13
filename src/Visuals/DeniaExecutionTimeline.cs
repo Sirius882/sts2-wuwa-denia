@@ -9,6 +9,7 @@ internal static class DeniaExecutionTimeline
     public const float Release = Enter + Video + Impact;
     public const float Return = 0.5f;
     public const float Total = Release + Return;
+    public const float AudioEnd = Enter + Video + 3f;
     public const string VideoPath = "res://videos/denia_execution_middle.ogv";
     public const string AudioPath = "res://sounds/denia_execution.wav";
 

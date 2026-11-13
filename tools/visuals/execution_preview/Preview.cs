@@ -67,8 +67,8 @@ public partial class Preview : Control
             "audio starts with the filter before the video becomes visible");
         Check(audio.PitchScale == 1 && audio.Bus == "SFX" && !audio.StreamPaused,
             "execution audio uses original speed and the SFX bus independently of video pre-roll");
-        Check(Math.Abs(audio.Stream.GetLength() - DeniaExecutionTimeline.Total) < 0.0001,
-            "soundtrack spans filter, video, impact and return");
+        Check(Math.Abs(audio.Stream.GetLength() - DeniaExecutionTimeline.AudioEnd) < 0.0001,
+            "soundtrack continues for three seconds after the video ends");
         Check(animation.HasAnimation("Execution") && animation.HasAnimation("Return"), "Ritsu backend clips available");
         Check(animation.SpeedScale == 1 && overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer").SpeedScale == 1,
             "code animation and video always play at original speed");
@@ -76,7 +76,7 @@ public partial class Preview : Control
         double maxAudioDrift = 0;
         double outputLatency = AudioServer.GetOutputLatency();
         int audioSamples = 0;
-        bool released = false, videoSeen = false, impactSeen = false, handoffSeen = false;
+        bool released = false, videoSeen = false, impactSeen = false, handoffSeen = false, tailSeen = false;
         int frame = 0;
         string folder = Path.Combine(_output, name);
         Directory.CreateDirectory(folder);
@@ -97,6 +97,12 @@ public partial class Preview : Control
             videoSeen |= clock >= DeniaExecutionTimeline.Enter && clock < DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video;
             impactSeen |= clock >= DeniaExecutionTimeline.Enter + DeniaExecutionTimeline.Video && clock < DeniaExecutionTimeline.Release;
             var video = overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer");
+            if (!overlay.Visible && !tailSeen)
+            {
+                Check(overlay.MouseFilter == MouseFilterEnum.Ignore && (!_audioCheck || audio.Playing) && !video.IsPlaying(),
+                    "audio tail survives the visual return without blocking input or decoding video");
+                tailSeen = true;
+            }
             maxVideoPosition = Math.Max(maxVideoPosition, (float)video.StreamPosition);
             if (!released && clock >= DeniaExecutionTimeline.Release - 0.005f)
             {
@@ -125,6 +131,7 @@ public partial class Preview : Control
         Check(maxVideoPosition >= DeniaExecutionTimeline.Video - 1f / 30 - 0.015f,
             $"{name} video decoded through character segment ({maxVideoPosition:F3})");
         Check(!GodotObject.IsInstanceValid(overlay) || !overlay.IsInsideTree(), $"{name} overlay completed");
+        Check(tailSeen, "presentation retained its fading audio after returning to game");
         if (_render) Check(handoffSeen, "GPU captured the direct filter-to-video handoff");
         if (_audioCheck)
         {

@@ -38,9 +38,13 @@ All game speed modes, including Instant, use the same 1x execution animation and
 The separate stereo WAV starts at filter time zero, independently of the hidden video pre-roll.
 `execution_audio_alignment.json` records the preserved sound source, hashes, frame offset and exact
 sample range. Slice frame 54 matches sound-source frame 204 at PTS 6.906s; the 0.8s entrance
-therefore starts at source audio 6.106s (sample 293088 at 48 kHz). The WAV contains 294400 samples,
-covering the whole 6.133333s presentation including the impact and return. The video remains silent
-to avoid doubled audio. Leaving the room stops both players.
+therefore starts at source audio 6.106s (sample 293088 at 48 kHz). The WAV contains 401600 samples
+(8.366667s): a smooth 0.8s fade-in, unchanged aligned middle, then a 3s fade-out from the end of the
+video at presentation time 5.366667s. The source ends before this tail finishes, so decaying echoes
+extend only its post-video audio; dialogue and the video segment are not looped or stretched.
+The visual return still ends at 6.133333s. The hidden overlay then releases input and only retains
+the fading audio until it finishes. Leaving the room or replacing the presentation stops both players.
+The video remains silent to avoid doubled audio.
 
 The rendered MP4 now includes this WAV from timestamp zero. Its sound is muxed from the verified
 samples; offline fixed-FPS GPU capture is not a real-time audio recording. `--audio-check` separately
