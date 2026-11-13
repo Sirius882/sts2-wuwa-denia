@@ -24,6 +24,7 @@ public partial class DeniaExecutionOverlay : Control
     private Rect2 _frame;
     private bool _videoStarted;
     private bool _returning;
+    private bool _visualFinished;
     private int _warmFrames;
     private double _age;
     private float _frameClock;
@@ -66,7 +67,13 @@ public partial class DeniaExecutionOverlay : Control
             AddClip(library, "Return", DeniaExecutionTimeline.Release, DeniaExecutionTimeline.Return);
             _player.AddAnimationLibrary("", library);
             _backend = new GodotAnimationPlayerBackend(_player);
-            _backend.Completed += id => { if (id == "Return") QueueFree(); };
+            _backend.Completed += id => {
+                if (id != "Return") return;
+                _visualFinished = true;
+                Hide();
+                MouseFilter = MouseFilterEnum.Ignore;
+                _video.Stop();
+            };
             var builder = ModAnimStateMachineBuilder.Create();
             // 入场／人物／冲击共用一条时钟，避免逐段切换累计一帧的误差。
             builder.AddState("Execution");
@@ -108,7 +115,9 @@ public partial class DeniaExecutionOverlay : Control
         try
         {
             _age += delta;
-            if (_age > DeniaExecutionTimeline.Total + 2) { QueueFree(); return; }
+            // 画面结束后仅保留房间拥有的声音尾段，不阻挡输入或延迟原结算。
+            if (_age >= DeniaExecutionTimeline.AudioEnd) { QueueFree(); return; }
+            if (_visualFinished) return;
             if (_video == null || _ink == null) return;
             // 抵消浮点插值误差，避免恰好在30 FPS切点时晚显示一帧。
             _frameClock = Clock + 0.00001f;
