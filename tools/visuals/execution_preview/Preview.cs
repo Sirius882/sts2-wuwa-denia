@@ -63,7 +63,7 @@ public partial class Preview : Control
         Check(animation.SpeedScale == 1 && overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer").SpeedScale == 1,
             "code animation and video always play at original speed");
         float maxVideoPosition = 0;
-        bool released = false, videoSeen = false, impactSeen = false, whiteBodySeen = false;
+        bool released = false, videoSeen = false, impactSeen = false, whiteBodySeen = false, backFaceSeen = false;
         int frame = 0;
         string folder = Path.Combine(_output, name);
         Directory.CreateDirectory(folder);
@@ -89,6 +89,13 @@ public partial class Preview : Control
                 var image = GetViewport().GetTexture().GetImage();
                 if (image.SavePng(Path.Combine(folder, $"frame_{frame:D4}.png")) != Error.Ok)
                     throw new IOException("frame capture failed");
+                if (clock >= 1.22f && clock < 1.28f)
+                {
+                    Color body = image.GetPixel(image.GetWidth() / 2, image.GetHeight() / 2);
+                    if (body.R >= 0.85f || body.B < 0.7f || body.B - body.R < 0.08f)
+                        throw new InvalidOperationException("flip must render the lavender back without a front-facing chest star");
+                    backFaceSeen = true;
+                }
                 if (clock >= 1.84f && clock < 1.89f)
                 {
                     image.Convert(Image.Format.Rgb8);
@@ -105,6 +112,7 @@ public partial class Preview : Control
             $"{name} video decoded through character segment ({maxVideoPosition:F3})");
         Check(!GodotObject.IsInstanceValid(overlay) || !overlay.IsInsideTree(), $"{name} overlay completed");
         if (_render) Check(whiteBodySeen, "GPU captured a fully white body before the video cut");
+        if (_render) Check(backFaceSeen, "GPU captured a visible back face during the flip");
         GD.Print($"{name}: frames={frame}, video={maxVideoPosition:F3}s, elapsed={(Time.GetTicksMsec() - start) / 1000:F3}s");
     }
 
@@ -116,20 +124,30 @@ public partial class Preview : Control
         Check(first.Position.X + first.Size < 0 && centered.Position.IsEqualApprox(new Vector2(960, 443)),
             "main cookie flies from outside the left edge to the center");
         bool horizontal = true;
-        float thinnest = 1, thickest = 0, lowestRotation = 10, highestRotation = -10;
+        float lowestRotation = 10, highestRotation = -10;
         for (float time = 0.76f; time <= 1.2f; time += 0.01f)
         {
             var pose = DeniaExecutionOverlay.EntryPose(time);
             Vector2 bodyAxis = Vector2.Up.Rotated(pose.Rotation);
             horizontal &= Math.Abs(bodyAxis.X) > Math.Abs(bodyAxis.Y) * 2;
-            thinnest = Math.Min(thinnest, pose.Perspective.X);
-            thickest = Math.Max(thickest, pose.Perspective.X);
             lowestRotation = Math.Min(lowestRotation, pose.Rotation);
             highestRotation = Math.Max(highestRotation, pose.Rotation);
         }
         Check(horizontal, "incoming cookie lies horizontally with its head pointing right");
-        Check(thinnest < 0.2f && thickest > 0.95f && highestRotation - lowestRotation > 0.4f,
-            "flight visibly rolls through an edge-on silhouette and banks before facing camera");
+        Check(highestRotation - lowestRotation > 0.4f, "horizontal flight banks along its arc");
+        int faceChanges = 0;
+        float previousProjection = DeniaExecutionOverlay.EntryPose(0.94f).Perspective.X;
+        bool backSeen = false, thinSeen = false;
+        for (float time = 0.95f; time <= 1.56f; time += 0.005f)
+        {
+            var pose = DeniaExecutionOverlay.EntryPose(time);
+            if (pose.Perspective.X * previousProjection < 0) faceChanges++;
+            backSeen |= pose.Perspective.X < -0.95f && pose.Position.X > 500;
+            thinSeen |= Math.Abs(pose.Perspective.X) < 0.08f;
+            previousProjection = pose.Perspective.X;
+        }
+        Check(faceChanges == 2 && backSeen && thinSeen && DeniaExecutionOverlay.EntryPose(1.56f).Perspective.X > 0.99f,
+            "visible full flip passes front, edge, back, edge and front with signed orientation");
         bool approaching = true;
         float previousSize = centered.Size;
         for (float time = 1.21f; time <= 1.8f; time += 0.01f)

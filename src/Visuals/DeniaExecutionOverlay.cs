@@ -222,11 +222,12 @@ public partial class DeniaExecutionOverlay : Control
     {
         float flight = Smooth((clock - 0.76f) / 0.44f);
         float approach = Smooth((clock - 1.2f) / 0.6f);
-        // 横躺着沿弧线侧翻飞入；先到中央，再迎向镜头，以身体实体遮满视野。
+        float flip = Smooth((clock - 0.94f) / 0.62f);
+        // 横躺飞入后完成一周翻转；保留投影正负号，才能经过背面而非压扁后弹回。
         return (new Vector2(-450, 500).Lerp(Design / 2, flight) + new Vector2(0, -90 * MathF.Sin(flight * Mathf.Pi)),
             Mathf.Lerp(120, 380, flight) / (1 - 0.95f * approach),
             Mathf.Pi / 2 + 0.24f * MathF.Sin(flight * Mathf.Tau) - 0.16f * MathF.Sin(approach * Mathf.Pi),
-            new Vector2(0.12f + 0.88f * MathF.Abs(MathF.Cos(flight * Mathf.Pi)), 1));
+            new Vector2(MathF.Cos(flip * Mathf.Tau), 1));
     }
 
     private void DrawEntryCookie(Control canvas, float opacity)
@@ -240,10 +241,11 @@ public partial class DeniaExecutionOverlay : Control
         Vector2 perspective, float opacity, float whiteout)
     {
         if (opacity <= 0.001f || size < 1) return;
+        bool front = perspective.X >= 0;
         var points = new Vector2[Cookie.Length];
         for (int i = 0; i < Cookie.Length; i++)
             points[i] = position + (Cookie[i] * perspective).Rotated(rotation) * size;
-        var fill = new Color(0.98f, 0.94f, 1f).Lerp(Colors.White, whiteout);
+        var fill = (front ? new Color(0.98f, 0.94f, 1f) : new Color(0.68f, 0.58f, 0.86f)).Lerp(Colors.White, whiteout);
         fill.A = opacity;
         canvas.DrawMesh(CookieMesh, null, new Transform2D(rotation, perspective * size, 0, position), fill);
         opacity *= 1 - whiteout;
@@ -263,6 +265,8 @@ public partial class DeniaExecutionOverlay : Control
             color.A = opacity * 0.95f;
             canvas.DrawLine(points[i], points[(i + 1) % points.Length], color, Mathf.Max(1, size * 0.007f), true);
         }
+        // 胸口星光只在正面可见，背面沿用被翻转的蓝粉边缘。
+        if (!front) return;
         var star = new Vector2[8];
         for (int i = 0; i < star.Length; i++)
         {
