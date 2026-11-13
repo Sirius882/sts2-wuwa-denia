@@ -13,6 +13,7 @@ using MegaCrit.Sts2.Core.Entities.Relics;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Relics;
+using MegaCrit.Sts2.Core.Runs;
 
 namespace Denia;
 
@@ -56,7 +57,7 @@ public sealed class DeniaFrequencyOfNothingness : CustomRelicModel
         if (combatState == null) return;
 
         Flash();
-        using (CardSelectCmd.PushSelector(new VakuuCardSelector()))
+        using (RunManager.Instance.CardSelectorStack.PushSelector(player, new VakuuCardSelector()))
         {
             int cardsPlayed = 0;
             int startTurn = player.PlayerCombatState.TurnNumber;

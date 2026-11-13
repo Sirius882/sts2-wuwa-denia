@@ -32,10 +32,8 @@ public static class DeniaCardRewardRarityFallbackPatch
             "RollForRarity",
             new[] {
                 typeof(Player),
-                typeof(CardRarityOddsType),
-                typeof(CardCreationSource),
-                typeof(HashSet<CardRarity>),
-                typeof(bool)
+                typeof(CardCreationOptions),
+                typeof(HashSet<CardRarity>)
             });
     }
 

@@ -141,14 +141,25 @@ public sealed class DeniaEtchedIridescent : DeniaCard
     /// 进阶（ToughEnemies）不影响：本体的进阶血量由各怪物类写进 Min/MaxInitialHp，木桩未启用。
     /// 战斗外预览（牌组查看等）无 Encounter，第3幕按非 Boss 的 1.2 计。
     /// </summary>
-    private sealed class StakeHpVar(string name, bool assumeUpgraded) : DynamicVar(name, 0m)
+    private sealed class StakeHpVar(string name, bool assumeUpgraded) : DynamicVar(name, assumeUpgraded ? 150m : 200m)
     {
-        protected override decimal GetBaseValueForIConvertible()
+        public override void SetOwner(AbstractModel owner)
+        {
+            base.SetOwner(owner);
+            BaseValue = CalculateHp();
+        }
+
+        public override void UpdateCardPreview(CardModel card, CardPreviewMode previewMode, Creature? target, bool runGlobalHooks)
+        {
+            BaseValue = CalculateHp();
+        }
+
+        private decimal CalculateHp()
         {
             var card = _owner as DeniaEtchedIridescent;
             decimal hp = 200m;
 
-            var run = card?.Owner?.RunState;
+            var run = card?.RunState;
             if (run != null && run.Players.Count > 1)
             {
                 bool boss = card!.Owner.Creature.CombatState?.Encounter?.RoomType == RoomType.Boss;

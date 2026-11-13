@@ -55,7 +55,7 @@ public sealed class DeniaSummerBeachEvent : DeniaExclusiveEvent
 
     private async Task ObtainCard<T>(string pageKey) where T : CardModel
     {
-        await CreatureCmd.LoseMaxHp(new ThrowingPlayerChoiceContext(), Owner!.Creature, 12m, isFromCard: false);
+        await CreatureCmd.LoseMaxHp(new ThrowingPlayerChoiceContext(), Owner!.Creature, 12m, cardSource: null);
         CardModel card = Owner.RunState.CreateCard<T>(Owner);
         CardCmd.PreviewCardPileAdd(await CardPileCmd.Add(card, PileType.Deck), 1.2f, CardPreviewStyle.EventLayout);
         SetEventFinished(PageDescription(pageKey));
