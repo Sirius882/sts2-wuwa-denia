@@ -23,7 +23,7 @@ namespace TuneStrain.Powers;
 /// 干涉本身不随回合衰减（层数恒定，便于 tsBias 稳定参与倍率计算）。
 /// 重复处决时层数取原干涉与本次偏移的较大值，持续时间重置为 3 回合。
 /// 集谐易伤在力量/虚弱/易伤等原版效果结算完成后最后结算（与原版易伤在同一 Multiplicative 链中相乘）。
-/// 集谐易伤只作用于直接伤害；聚爆引爆、熔解、谐度破坏、中毒和失去生命值都不受影响。
+/// 本管线只放大直接伤害；至少3层偏移的谐度破坏例外由偏移power的公开百分比接口处理，其他间接伤害不受影响。
 /// </summary>
 public sealed class TuneStrainInterferencePower : CustomPowerModel
 {
@@ -41,12 +41,12 @@ public sealed class TuneStrainInterferencePower : CustomPowerModel
         {
             "zhs" => new PowerLoc(
                 Title: "集谐·干涉",
-                Description: "增加玩家对怪物的直接伤害，不影响谐度破坏、聚爆引爆和熔解。集谐·干涉和集谐响应的层数越高，增伤幅度越大。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。",
-                SmartDescription: "增加玩家对怪物的直接伤害，不影响谐度破坏、聚爆引爆和熔解。集谐·干涉和集谐响应的层数越高，增伤幅度越大。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。"),
+                Description: "增加玩家对怪物的直接伤害。仅以至少3层集谐·偏移触发的谐度破坏，其自身伤害也获得集谐增伤；其余谐度破坏、聚爆引爆和熔解不受影响。集谐·干涉和集谐响应的层数越高，增伤幅度越大。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。",
+                SmartDescription: "增加玩家对怪物的直接伤害。仅以至少3层集谐·偏移触发的谐度破坏，其自身伤害也获得集谐增伤；其余谐度破坏、聚爆引爆和熔解不受影响。集谐·干涉和集谐响应的层数越高，增伤幅度越大。持续3回合；再次触发集谐处决时，层数取新旧较高值，持续时间重置为3回合。"),
             _ => new PowerLoc(
                 Title: "Tune Strain · Interference",
-                Description: "Increases direct damage players deal to this monster. Does not affect Resonance Break, Fusion Burst detonations or Melt. The higher the Tune Strain · Interference and Tune Strain Response stacks are, the larger the damage bonus. Lasts 3 turns; when Tune Strain Resonance Break triggers again, the stacks become the higher of the old and new values and the duration resets to 3 turns.",
-                SmartDescription: "Increases direct damage players deal to this monster. Does not affect Resonance Break, Fusion Burst detonations or Melt. The higher the Tune Strain · Interference and Tune Strain Response stacks are, the larger the damage bonus. Lasts 3 turns; when Tune Strain Resonance Break triggers again, the stacks become the higher of the old and new values and the duration resets to 3 turns.")
+                Description: "Increases direct damage players deal to this monster. Only Resonance Break triggered with at least 3 Tune Strain · Bias stacks also gains the Tune Strain bonus to its own damage. Other Resonance Breaks, Fusion Burst detonations and Melt are unaffected. The higher the Tune Strain · Interference and Tune Strain Response stacks are, the larger the damage bonus. Lasts 3 turns; when Tune Strain Resonance Break triggers again, the stacks become the higher of the old and new values and the duration resets to 3 turns.",
+                SmartDescription: "Increases direct damage players deal to this monster. Only Resonance Break triggered with at least 3 Tune Strain · Bias stacks also gains the Tune Strain bonus to its own damage. Other Resonance Breaks, Fusion Burst detonations and Melt are unaffected. The higher the Tune Strain · Interference and Tune Strain Response stacks are, the larger the damage bonus. Lasts 3 turns; when Tune Strain Resonance Break triggers again, the stacks become the higher of the old and new values and the duration resets to 3 turns.")
         };
 
     /// <summary>
