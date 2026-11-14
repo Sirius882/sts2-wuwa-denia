@@ -116,6 +116,9 @@ public partial class Preview : Control
                     throw new IOException("frame capture failed");
                 if (!handoffSeen && video.Visible)
                 {
+                    var texture = video.GetVideoTexture();
+                    Check(texture.GetWidth() == 3840 && texture.GetHeight() == 1772,
+                        "native video texture retains the full 3840x1772 upscaled resolution");
                     Check(Math.Abs(clock - DeniaExecutionTimeline.Enter) < 1f / 30 + 0.0001f && video.StreamPosition <= 0.10,
                         "direct video handoff preserves the close-up instead of pre-rolling past it");
                     Color body = image.GetPixel(image.GetWidth() / 2, image.GetHeight() / 2);
