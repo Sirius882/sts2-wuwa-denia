@@ -29,6 +29,12 @@ the RitsuLib timeline and cleanup. GPU checks require an early video position an
 video frame at the direct cut. Neutral-backdrop captures test uneven opacity, spatially different
 growth rates and the final pink-white veil. These captures are `dream_*.png`.
 
+The room-owned overlay uses CanvasLayer 1025, above the HUD, debug console and embedded windows.
+Its filter, video, impact and opaque cinematic bars use the full viewport independently of the room's
+offset, scale or clipping. GPU fixtures exercise a top bar, relic, later UI layer and actual embedded
+Window across entrance/video/return, then resize to tall and wide windows. These captures are
+`coverage_*.png`; removing the room must still release the canvas and soundtrack.
+
 `--render` uses a hidden D3D12 window and captures actual GPU output at 30 FPS; this is a visual check,
 not a performance benchmark. The backdrop is a schematic standalone scene, not an actual combat.
 Generated projects, logs, captures and MP4 are under the workspace `.cache/denia-execution-preview/`.

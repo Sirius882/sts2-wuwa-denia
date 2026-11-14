@@ -7,10 +7,12 @@ using STS2RitsuLib.Scaffolding.Visuals.StateMachine.Backends;
 namespace Denia;
 
 /// <summary>房间拥有的全屏演出：粉白滤镜入场 + 原片姜饼人／人物 + 代码冲击。</summary>
-public partial class DeniaExecutionOverlay : Control
+public partial class DeniaExecutionOverlay : CanvasLayer
 {
     private static readonly Vector2 Design = new(1920, 886);
     private readonly CancellationTokenSource _exit = new();
+    private Control _inputBlocker = null!;
+    private Vector2 _size;
     private AnimationPlayer _player = null!;
     private VideoStreamPlayer _video = null!;
     private AudioStreamPlayer _audio = null!;
@@ -37,18 +39,20 @@ public partial class DeniaExecutionOverlay : Control
     {
         try
         {
-            MouseFilter = MouseFilterEnum.Stop;
-            SetAnchorsAndOffsetsPreset(LayoutPreset.TopLeft);
+            // 独立于房间的变换／裁切，覆盖HUD、控制台和嵌入式浮窗（1024层）。
+            Layer = 1025;
+            _inputBlocker = new Control { Name = "InputBlocker", MouseFilter = Control.MouseFilterEnum.Stop };
+            AddChild(_inputBlocker);
             AddChild(new BackBufferCopy { CopyMode = BackBufferCopy.CopyModeEnum.Viewport });
             _screenMaterial = new ShaderMaterial {
                 Shader = GD.Load<Shader>("res://shaders/denia_execution_screen.gdshader") };
-            _screen = new ColorRect { Material = _screenMaterial, MouseFilter = MouseFilterEnum.Ignore };
+            _screen = new ColorRect { Material = _screenMaterial, MouseFilter = Control.MouseFilterEnum.Ignore };
             AddChild(_screen);
             _video = new VideoStreamPlayer {
                 Name = "VideoStreamPlayer",
                 ProcessPriority = 100,
                 Stream = GD.Load<VideoStream>(DeniaExecutionTimeline.VideoPath),
-                Expand = true, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+                Expand = true, Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
             if (_video.Stream == null) throw new InvalidOperationException("Execution video is missing");
             AddChild(_video);
             // 提前解码少量首帧，始终藏在代码转场后；进入人物段时从暂停处继续。
@@ -56,9 +60,9 @@ public partial class DeniaExecutionOverlay : Control
             _impactMaterial = new ShaderMaterial {
                 Shader = GD.Load<Shader>("res://shaders/denia_execution_impact.gdshader") };
             _poster = new TextureRect { Material = _impactMaterial, Visible = false,
-                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, MouseFilter = MouseFilterEnum.Ignore };
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize, MouseFilter = Control.MouseFilterEnum.Ignore };
             AddChild(_poster);
-            _ink = new DeniaExecutionInk { Director = this, MouseFilter = MouseFilterEnum.Ignore };
+            _ink = new DeniaExecutionInk { Director = this, MouseFilter = Control.MouseFilterEnum.Ignore };
             AddChild(_ink);
             _player = new AnimationPlayer { Name = "AnimationPlayer", ProcessPriority = -100 };
             AddChild(_player);
@@ -71,7 +75,7 @@ public partial class DeniaExecutionOverlay : Control
                 if (id != "Return") return;
                 _visualFinished = true;
                 Hide();
-                MouseFilter = MouseFilterEnum.Ignore;
+                _inputBlocker.MouseFilter = Control.MouseFilterEnum.Ignore;
                 _video.Stop();
             };
             var builder = ModAnimStateMachineBuilder.Create();
@@ -159,13 +163,14 @@ public partial class DeniaExecutionOverlay : Control
 
     private void UpdateFrame()
     {
-        Size = GetViewportRect().Size;
-        float scale = Mathf.Min(Size.X / Design.X, Size.Y / Design.Y);
-        _frame = new Rect2((Size - Design * scale) / 2, Design * scale);
-        _screen.Size = Size;
+        _size = GetViewport().GetVisibleRect().Size;
+        _inputBlocker.Size = _size;
+        float scale = Mathf.Min(_size.X / Design.X, _size.Y / Design.Y);
+        _frame = new Rect2((_size - Design * scale) / 2, Design * scale);
+        _screen.Size = _size;
         _video.Position = _poster.Position = _frame.Position;
         _video.Size = _poster.Size = _frame.Size;
-        _ink.Size = Size;
+        _ink.Size = _size;
     }
 
     private void Abort(Exception exception)
@@ -207,13 +212,13 @@ public partial class DeniaExecutionOverlay : Control
             : _returning ? 1 - Smooth((_frameClock - DeniaExecutionTimeline.Release) / DeniaExecutionTimeline.Return) : 1;
         if (_frame.Position.Y > 0)
         {
-            canvas.DrawRect(new Rect2(0, 0, Size.X, _frame.Position.Y * bars), Colors.Black);
-            canvas.DrawRect(new Rect2(0, Size.Y - _frame.Position.Y * bars, Size.X, _frame.Position.Y * bars), Colors.Black);
+            canvas.DrawRect(new Rect2(0, 0, _size.X, _frame.Position.Y * bars), Colors.Black);
+            canvas.DrawRect(new Rect2(0, _size.Y - _frame.Position.Y * bars, _size.X, _frame.Position.Y * bars), Colors.Black);
         }
         if (_frame.Position.X > 0)
         {
-            canvas.DrawRect(new Rect2(0, 0, _frame.Position.X * bars, Size.Y), Colors.Black);
-            canvas.DrawRect(new Rect2(Size.X - _frame.Position.X * bars, 0, _frame.Position.X * bars, Size.Y), Colors.Black);
+            canvas.DrawRect(new Rect2(0, 0, _frame.Position.X * bars, _size.Y), Colors.Black);
+            canvas.DrawRect(new Rect2(_size.X - _frame.Position.X * bars, 0, _frame.Position.X * bars, _size.Y), Colors.Black);
         }
     }
 

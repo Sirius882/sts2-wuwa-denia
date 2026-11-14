@@ -37,6 +37,7 @@ public partial class Preview : Control
             Check(Math.Abs(DeniaExecutionTimeline.Video - 137f / 30) < 0.0001, "video frame timing includes original gingerbread");
             Check(Math.Abs(DeniaExecutionTimeline.Release - 169f / 30) < 0.0001, "damage release timing is unchanged");
             await Play();
+            if (_render) await CheckFullScreenCoverage();
             var interrupted = new DeniaExecutionOverlay();
             AddChild(interrupted);
             var exit = interrupted.ExitToken;
@@ -99,7 +100,8 @@ public partial class Preview : Control
             var video = overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer");
             if (!overlay.Visible && !tailSeen)
             {
-                Check(overlay.MouseFilter == MouseFilterEnum.Ignore && (!_audioCheck || audio.Playing) && !video.IsPlaying(),
+                Check(overlay.GetNode<Control>("InputBlocker").MouseFilter == MouseFilterEnum.Ignore
+                    && (!_audioCheck || audio.Playing) && !video.IsPlaying(),
                     "audio tail survives the visual return without blocking input or decoding video");
                 tailSeen = true;
             }
@@ -177,6 +179,86 @@ public partial class Preview : Control
         backdrop.QueueFree(); copy.QueueFree(); screen.QueueFree();
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
     }
+
+    private async Task CheckFullScreenCoverage()
+    {
+        var room = new Control { Position = new Vector2(133, 79), Size = new Vector2(640, 360),
+            Scale = new Vector2(0.65f, 0.8f), ClipContents = true };
+        AddChild(room);
+        var hud = new CanvasLayer { Layer = 1 };
+        var tips = new CanvasLayer { Layer = 10 };
+        AddChild(hud); AddChild(tips);
+        hud.AddChild(new ColorRect { Size = new Vector2(1280, 80), Color = Colors.Red });
+        hud.AddChild(new ColorRect { Position = new Vector2(20, 96), Size = new Vector2(60, 60), Color = Colors.Magenta });
+        tips.AddChild(new ColorRect { Position = new Vector2(1000, 140), Size = new Vector2(120, 100), Color = Colors.Cyan });
+        var window = GetWindow();
+        bool embedded = window.GuiEmbedSubwindows;
+        window.GuiEmbedSubwindows = true;
+        var popup = new Window { Position = new Vector2I(930, 280), Size = new Vector2I(180, 120),
+            Borderless = true, Unfocusable = true };
+        AddChild(popup);
+        popup.AddChild(new ColorRect { Size = new Vector2(180, 120), Color = Colors.Lime });
+        popup.Show();
+        await DrawFrame();
+        var baseline = GetViewport().GetTexture().GetImage();
+        Vector2I[] points = [new(220, 40), new(40, 120), new(1040, 180), new(1010, 330)];
+        Color[] markers = [Colors.Red, Colors.Magenta, Colors.Cyan, Colors.Lime];
+        for (int i = 0; i < points.Length; i++)
+            Check(Difference(baseline.GetPixelv(points[i]), markers[i]) < 0.01f, $"HUD/popup fixture {i} is visible before presentation");
+        var overlay = new DeniaExecutionOverlay();
+        room.AddChild(overlay);
+        var exit = overlay.ExitToken;
+        overlay.GetNode<AnimationPlayer>("AnimationPlayer").Pause();
+        Check(overlay.Layer > 1024, "room-owned presentation renders above embedded windows and HUD canvases");
+        var blocker = overlay.GetNode<Control>("InputBlocker");
+        var video = overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer");
+        foreach (float clock in new[] { 0.65f, 1.0f, DeniaExecutionTimeline.Release + 0.15f })
+        {
+            if (clock > DeniaExecutionTimeline.Release)
+            {
+                overlay.RevealGame();
+                overlay.GetNode<AnimationPlayer>("AnimationPlayer").Pause();
+            }
+            overlay.Clock = clock;
+            await DrawFrame();
+            var image = GetViewport().GetTexture().GetImage();
+            image.SavePng(Path.Combine(_output, $"coverage_{clock:F2}.png"));
+            for (int i = 0; i < points.Length; i++)
+                Check(Difference(image.GetPixelv(points[i]), baseline.GetPixelv(points[i])) > 0.1f,
+                    $"filter/video/return covers HUD and embedded popup {i} at {clock:F2}s");
+            Check(blocker.GetGlobalTransformWithCanvas().Origin.IsEqualApprox(Vector2.Zero)
+                && blocker.Size.IsEqualApprox(GetViewportRect().Size),
+                "presentation ignores room offset, scale and clipping and blocks the full viewport");
+            if (clock == 1)
+                Check(Brightness(image, new Vector2(0.5f, 0.03f)) < 0.01f,
+                    "opaque cinematic bars also cover the top HUD");
+        }
+        Vector2I oldSize = window.Size;
+        foreach (var size in new[] { new Vector2I(1000, 800), new Vector2I(1600, 720) })
+        {
+            window.Size = size;
+            await DrawFrame();
+            var viewport = GetViewportRect().Size;
+            Check(blocker.Size.IsEqualApprox(viewport) && blocker.GetGlobalTransformWithCanvas().Origin.IsEqualApprox(Vector2.Zero),
+                "full-window coverage follows viewport resizing");
+            Check(video.Position.DistanceTo((viewport - video.Size) / 2) < 0.001f
+                && Math.Abs(video.Size.X / video.Size.Y - 1920f / 886) < 0.001f,
+                $"resized video stays centered and preserves the source aspect ratio: viewport={viewport}, position={video.Position}, size={video.Size}");
+        }
+        window.Size = oldSize;
+        room.QueueFree(); hud.QueueFree(); tips.QueueFree(); popup.QueueFree();
+        await DrawFrame();
+        window.GuiEmbedSubwindows = embedded;
+        Check(exit.IsCancellationRequested, "room removal releases the high canvas and its audio");
+    }
+
+    private async Task DrawFrame()
+    {
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+    }
+
+    private static float Difference(Color a, Color b) => Math.Abs(a.R - b.R) + Math.Abs(a.G - b.G) + Math.Abs(a.B - b.B);
 
     private static float Brightness(Image image, Vector2 uv)
     {
