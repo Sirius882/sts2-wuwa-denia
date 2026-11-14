@@ -17,8 +17,13 @@ internal static class DeniaSingleHitAttackPatch
         ref Func<Task>? ____beforeDamage, ref Func<Task>? ____afterAttackerAnim, out WaitState? __state)
     {
         __state = null;
-        if (NonInteractiveMode.IsActive || !DeniaPinkAttackRule.TryStart(
-            __instance.ModelSource as CardModel, __instance.Attacker, ____hitCount)) return;
+        if (NonInteractiveMode.IsActive) return;
+        if (!DeniaPinkAttackRule.TryStart(__instance.ModelSource as CardModel, __instance.Attacker,
+            ____hitCount, out bool useLegacy))
+        {
+            if (useLegacy) DeniaFormPatch.PlayAttack(__instance.Attacker!, false);
+            return;
+        }
         var visual = DeniaFormPatch.PlayPinkSingleHit(__instance.Attacker!);
         if (visual == null) return;
         var previous = ____beforeDamage;
