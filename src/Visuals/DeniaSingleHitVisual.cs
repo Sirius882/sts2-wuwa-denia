@@ -4,24 +4,30 @@ using Godot;
 
 namespace Denia;
 
-/// <summary>单段攻击共用的播放、命中等待与中断恢复，素材各自定义时间和身体标定。</summary>
+/// <summary>单段攻击共用的播放、命中等待与中断恢复，素材各自定义时间和身体标定；多段可声明多个命中点。</summary>
 public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
 {
     public const string NodeName = "RealtimeSingleHit";
     protected override bool Loop => false;
     public abstract double DamageTime { get; }
+    public virtual int ImpactCount => 1;
+    public virtual double GetImpactTime(int index) => DamageTime;
     public bool Playing { get; private set; }
     private float _speed = 1;
     private bool _holdAtImpact;
-    private TaskCompletionSource? _impact;
-    public Task Impact => _impact?.Task ?? Task.CompletedTask;
+    private TaskCompletionSource[] _impacts = [];
+    private int _heldImpact;
+    public Task Impact => ImpactAt(0);
+    public Task ImpactAt(int index) => index >= 0 && index < _impacts.Length ? _impacts[index].Task : Task.CompletedTask;
     public event Action? Finished;
 
     public void Play(float speed, bool holdAtImpact = false)
     {
         if (!float.IsFinite(speed) || speed <= 0) throw new ArgumentOutOfRangeException(nameof(speed));
-        _impact?.TrySetResult();
-        _impact = new TaskCompletionSource();
+        foreach (var impact in _impacts) impact.TrySetResult();
+        _impacts = new TaskCompletionSource[ImpactCount];
+        for (int i = 0; i < _impacts.Length; i++) _impacts[i] = new TaskCompletionSource();
+        _heldImpact = 0;
         _holdAtImpact = holdAtImpact;
         _speed = speed;
         Seek(0);
@@ -32,13 +38,19 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
 
     public void ReleaseImpact(Task? expected = null)
     {
-        if (expected == null || ReferenceEquals(expected, _impact?.Task)) _holdAtImpact = false;
+        if (_heldImpact < _impacts.Length && (expected == null || ReferenceEquals(expected, _impacts[_heldImpact].Task)))
+            _heldImpact++;
+    }
+
+    public void ReleaseRemainingImpacts(Task expectedFirst)
+    {
+        if (ReferenceEquals(expectedFirst, Impact)) _holdAtImpact = false;
     }
 
     public void Stop()
     {
         _holdAtImpact = false;
-        _impact?.TrySetResult();
+        foreach (var impact in _impacts) impact.TrySetResult();
         Playing = false;
         Hide();
         SetProcess(false);
@@ -48,8 +60,9 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
     {
         if (!Playing || !IsVisibleInTree()) return;
         double next = Clock + delta * _speed;
-        Seek(_holdAtImpact ? Math.Min(next, DamageTime) : next);
-        if (Clock >= DamageTime) _impact?.TrySetResult();
+        Seek(_holdAtImpact && _heldImpact < _impacts.Length ? Math.Min(next, GetImpactTime(_heldImpact)) : next);
+        for (int i = 0; i < _impacts.Length; i++)
+            if (Clock >= GetImpactTime(i)) _impacts[i].TrySetResult();
         if (Clock < DurationSeconds) return;
         Stop();
         Finished?.Invoke();

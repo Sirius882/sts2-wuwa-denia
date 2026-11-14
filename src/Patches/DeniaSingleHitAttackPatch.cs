@@ -30,11 +30,14 @@ internal static class DeniaSingleHitAttackPatch
             }
             return;
         }
-        var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!);
+        var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!, ____hitCount >= 2);
         if (visual == null) return;
         var previous = ____beforeDamage;
         var afterAnimation = ____afterAttackerAnim;
         var impact = visual.Impact;
+        var impacts = new Task[visual.ImpactCount];
+        for (int i = 0; i < impacts.Length; i++) impacts[i] = visual.ImpactAt(i);
+        int damageIndex = 0;
         __state = new WaitState(previous, afterAnimation, visual, impact);
         // 等到身体命中时点再生成目标命中特效；原伤害前回调仍按原顺序执行。
         ____afterAttackerAnim = async () => {
@@ -42,12 +45,14 @@ internal static class DeniaSingleHitAttackPatch
             await impact;
         };
         ____beforeDamage = async () => {
+            int index = damageIndex++;
+            var hit = index < impacts.Length ? impacts[index] : null;
             try
             {
                 if (previous != null) await previous();
-                await impact;
+                if (hit != null) await hit;
             }
-            finally { if (Godot.GodotObject.IsInstanceValid(visual)) visual.ReleaseImpact(impact); }
+            finally { if (hit != null && Godot.GodotObject.IsInstanceValid(visual)) visual.ReleaseImpact(hit); }
         };
     }
 
@@ -61,7 +66,7 @@ internal static class DeniaSingleHitAttackPatch
         try { return await task; }
         finally
         {
-            if (Godot.GodotObject.IsInstanceValid(state.Visual)) state.Visual.ReleaseImpact(state.Impact);
+            if (Godot.GodotObject.IsInstanceValid(state.Visual)) state.Visual.ReleaseRemainingImpacts(state.Impact);
             command.BeforeDamage(state.Original!);
             command.AfterAttackerAnim(state.AfterAnimation!);
         }

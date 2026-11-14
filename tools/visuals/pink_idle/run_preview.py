@@ -25,7 +25,7 @@ def run(command, cwd, log, timeout=180):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit'), default='pink')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-pink-idle')
     args = parser.parse_args()
     output = args.output.resolve()
@@ -34,11 +34,11 @@ def main():
     runtime = output / args.form / ('render' if args.render else 'checks')
     runtime.mkdir(parents=True, exist_ok=True)
     scene = MOD / 'scenes/creature_visuals/denia_pink.tscn'
-    paths = [scene, MOD / 'shaders/denia_pink_idle.gdshader', MOD / 'shaders/denia_black_idle.gdshader', MOD / 'shaders/denia_black_rise.gdshader', MOD / 'shaders/denia_pink_1hit.gdshader', MOD / 'shaders/denia_dark_1hit.gdshader']
+    paths = [scene, MOD / 'shaders/denia_pink_idle.gdshader', MOD / 'shaders/denia_black_idle.gdshader', MOD / 'shaders/denia_black_rise.gdshader', MOD / 'shaders/denia_pink_1hit.gdshader', MOD / 'shaders/denia_dark_1hit.gdshader', MOD / 'shaders/denia_pink_2hit.gdshader']
     # Include the actual action textures referenced by the production scene.
     import re
     paths += [MOD / p for p in re.findall(r'path="res://([^"]+)"', scene.read_text())]
-    for form in ('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit'):
+    for form in ('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit'):
         paths += list((MOD / f'images/characters/denia/realtime_{form}').glob('*'))
     for source in set(paths):
         target = runtime / source.relative_to(MOD)
@@ -71,7 +71,7 @@ script=ExtResource("1")
 ''', encoding='utf-8')
     links = ''.join(f'<Compile Include="{MOD / "src/Visuals" / (name + ".cs")}" Link="{name}.cs" />'
                     for name in ('DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
-                                 'DeniaBubbleBurst', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual'))
+                                 'DeniaBubbleBurst', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual', 'DeniaPinkMultiAttackVisual'))
     (runtime / 'PinkIdlePreview.csproj').write_text(f'''<Project Sdk="Godot.NET.Sdk/4.5.1">
 <PropertyGroup><TargetFramework>net9.0</TargetFramework><Nullable>enable</Nullable>
 <EnableDynamicLoading>true</EnableDynamicLoading></PropertyGroup>
@@ -87,6 +87,17 @@ script=ExtResource("1")
     command += ['--', args.form]
     run(command, ROOT, runtime / 'process.log')
     report = json.loads((runtime / 'captures/checks.json').read_text())
+    if args.form == 'pink_2hit':
+        if args.render:
+            from check_pink_multi import check_pink_multi, make_preview
+            report['original_glsl_mean_error'] = check_pink_multi(runtime / 'captures', MOD)
+            (runtime / 'captures/checks.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
+            make_preview(runtime / 'captures')
+            run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-framerate', '60',
+                 '-i', str(runtime / 'captures/multi_%04d.png'), '-vf', 'format=yuv420p',
+                 '-c:v', 'libx264', '-crf', '18', str(output / 'pink_2hit.mp4')], ROOT, runtime / 'encode.log')
+        print(json.dumps(report, ensure_ascii=False))
+        return
     if args.form == 'dark_1hit':
         if args.render:
             from check_dark_attack import check_dark_attack, make_preview
