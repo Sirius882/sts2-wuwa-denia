@@ -732,7 +732,10 @@ public partial class DeniaFormOverlaySync : Node
             }
             EnsureParentAllowsOverflow();
             DeniaFormPatch.SyncOverlayLayout(_creatureNode);
-            _singleHit.Play(DeniaFormPatch.IsFastMode() ? 3 : 1, holdAtImpact: true);
+            float speed = DeniaFormPatch.IsFastMode() ? 3 : 1;
+            if (isBlack) _singleHit.Play(speed, holdAtImpact: true);
+            else _singleHit.PlayWithPinkStandup(speed,
+                overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Clock ?? 0, holdAtImpact: true);
             SetBodyVisible(overlay, false);
             return _singleHit;
         }

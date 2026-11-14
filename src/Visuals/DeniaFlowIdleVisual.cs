@@ -74,7 +74,7 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
         if (idle) _actions.Pause();
     }
 
-    public void SetFacing(bool flip)
+    public virtual void SetFacing(bool flip)
     {
         Flip = flip;
         FlowMaterial.SetShaderParameter("flip_h", flip);
@@ -82,6 +82,8 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
         _body.Position = flip ? new Vector2(DesignOrigin.X - CanvasSize.X, -DesignOrigin.Y) : -DesignOrigin;
         QueueRedraw();
     }
+
+    protected void SetBodyOpacity(float alpha) => _body.Modulate = new Color(1, 1, 1, alpha);
 
     public void Seek(double seconds)
     {
