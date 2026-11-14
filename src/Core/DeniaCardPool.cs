@@ -18,7 +18,10 @@ public sealed class DeniaCardPool : CustomCardPoolModel
     public override string EnergyColorName => "denia";
     public override string? TextEnergyIconPath => "res://images/packed/sprite_fonts/denia_energy_icon.png";
     public override string CardFrameMaterialPath => "card_frame_red";
-    public override Color ShaderColor => Colors.White;
+    // 已绘制好颜色的卡框使用中性HSV乘数；白色的S=0会在Reload时把整张卡框去色。
+    public override float H => 1f;
+    public override float S => 1f;
+    public override float V => 1f;
     public override Color DeckEntryCardColor => new Color("FF69B4");
     public override bool IsColorless => false;
 
