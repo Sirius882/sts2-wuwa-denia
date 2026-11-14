@@ -222,18 +222,22 @@ public partial class Preview : Node
             int before = completions;attack._Process(10);
             Check(completions == before, "completion cannot fire twice");
         }
+        Check(Math.Abs(DeniaPinkAttackVisual.ImpactTime - 2.083) < 1e-8,
+            "damage advances half a second from the original 2.583-second midpoint");
         foreach (int fps in new[] { 30, 60, 144 })
         foreach (int speed in new[] { 1, 3 })
         {
             attack.Play(speed, holdAtImpact: true);attack.SetProcess(false);
-            Check(!attack.Impact.IsCompleted, "damage cannot happen before midpoint");
-            for (int f = 0; f < Math.Ceiling(DeniaPinkAttackVisual.Midpoint / speed * fps); f++) attack._Process(1.0 / fps);
-            Check(attack.Impact.IsCompleted && attack.Clock == DeniaPinkAttackVisual.Midpoint,
-                "damage gate lands at exact midpoint at " + fps + " FPS speed " + speed);
+            int frames = (int)Math.Ceiling(DeniaPinkAttackVisual.ImpactTime / speed * fps);
+            for (int f = 0; f < frames - 1; f++) attack._Process(1.0 / fps);
+            Check(!attack.Impact.IsCompleted, "damage waits until impact time at " + fps + " FPS speed " + speed);
+            attack._Process(1.0 / fps);
+            Check(attack.Impact.IsCompleted && attack.Clock == DeniaPinkAttackVisual.ImpactTime,
+                "damage gate lands at exact impact time at " + fps + " FPS speed " + speed);
             attack._Process(1);
-            Check(attack.Clock == DeniaPinkAttackVisual.Midpoint, "midpoint holds until damage callback is ready");
+            Check(attack.Clock == DeniaPinkAttackVisual.ImpactTime, "impact pose holds until damage callback is ready");
             attack.ReleaseImpact();attack._Process(1.0 / fps);
-            Check(attack.Clock > DeniaPinkAttackVisual.Midpoint, "recovery resumes after damage");
+            Check(attack.Clock > DeniaPinkAttackVisual.ImpactTime, "recovery resumes after damage");
         }
         attack.Play(1, holdAtImpact: true);var canceledImpact = attack.Impact;attack.Stop();
         Check(canceledImpact.IsCompleted, "death or interruption releases pending damage wait");

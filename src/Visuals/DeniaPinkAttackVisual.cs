@@ -23,7 +23,7 @@ public partial class DeniaPinkAttackVisual : DeniaFlowIdleVisual
     private bool _holdAtImpact;
     private TaskCompletionSource? _impact;
     public Task Impact => _impact?.Task ?? Task.CompletedTask;
-    public const double Midpoint = Duration / 2;
+    public const double ImpactTime = Duration / 2 - 0.5;
     public event Action? Finished;
     private static readonly Vector2[] StarShape = [new(0, -1.6f), new(0.32f, -0.32f), new(1.6f, 0), new(0.32f, 0.32f),
         new(0, 1.6f), new(-0.32f, 0.32f), new(-1.6f, 0), new(-0.32f, -0.32f)];
@@ -63,8 +63,8 @@ public partial class DeniaPinkAttackVisual : DeniaFlowIdleVisual
     {
         if (!Playing || !IsVisibleInTree()) return;
         double next = Clock + delta * _speed;
-        Seek(_holdAtImpact ? Math.Min(next, Midpoint) : next);
-        if (Clock >= Midpoint) _impact?.TrySetResult();
+        Seek(_holdAtImpact ? Math.Min(next, ImpactTime) : next);
+        if (Clock >= ImpactTime) _impact?.TrySetResult();
         if (Clock < Duration) return;
         Stop();
         Finished?.Invoke();
