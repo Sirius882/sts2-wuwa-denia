@@ -36,9 +36,6 @@ public static class DeniaCardFrameMaterialPatch
     private static readonly AccessTools.FieldRef<NCard, TextureRect> AncientPortraitRef =
         AccessTools.FieldRefAccess<NCard, TextureRect>("_ancientPortrait");
 
-    private static readonly AccessTools.FieldRef<NCard, TextureRect> AncientBorderGlassOverlayRef =
-        AccessTools.FieldRefAccess<NCard, TextureRect>("_ancientBorderGlassOverlay");
-
     private static readonly AccessTools.FieldRef<NCard, TextureRect> AncientBorderRef =
         AccessTools.FieldRefAccess<NCard, TextureRect>("_ancientBorder");
 
@@ -58,11 +55,11 @@ public static class DeniaCardFrameMaterialPatch
         AccessTools.FieldRefAccess<NCard, MegaRichTextLabel>("_descriptionLabel");
 
     private static readonly List<WeakReference<NCard>> ActiveCards = [];
-    private static readonly ConditionalWeakTable<NCard, object> BlackDescriptionNodes = new();
+    private static readonly ConditionalWeakTable<NCard, object> StyledDescriptionNodes = new();
 
     private static void RestoreTrackedDescriptionAppearance(NCard node)
     {
-        if (!BlackDescriptionNodes.TryGetValue(node, out _))
+        if (!StyledDescriptionNodes.TryGetValue(node, out _))
             return;
 
         try
@@ -80,7 +77,7 @@ public static class DeniaCardFrameMaterialPatch
         }
         finally
         {
-            BlackDescriptionNodes.Remove(node);
+            StyledDescriptionNodes.Remove(node);
         }
     }
 
@@ -100,21 +97,14 @@ public static class DeniaCardFrameMaterialPatch
                 useBlackText ? Colors.Black : StsColors.cream);
             descriptionLabel.AddThemeColorOverride(
                 ThemeConstants.RichTextLabel.FontShadowColor,
-                useBlackText ? StsColors.transparentBlack : DefaultDescriptionShadowColor);
+                StsColors.transparentBlack);
 
-            if (useBlackText)
-            {
-                if (!BlackDescriptionNodes.TryGetValue(node, out _))
-                    BlackDescriptionNodes.Add(node, new object());
-            }
-            else
-            {
-                RestoreTrackedDescriptionAppearance(node);
-            }
+            if (!StyledDescriptionNodes.TryGetValue(node, out _))
+                StyledDescriptionNodes.Add(node, new object());
         }
         else
         {
-            BlackDescriptionNodes.Remove(node);
+            StyledDescriptionNodes.Remove(node);
         }
     }
 
@@ -208,7 +198,8 @@ public static class DeniaCardFrameMaterialPatch
                 TextureRect portraitBorder = PortraitBorderRef(__instance);
                 TextureRect eventFrame = FrameRef(__instance);
                 TextureRect ancientPortrait = AncientPortraitRef(__instance);
-                TextureRect ancientBorderGlassOverlay = AncientBorderGlassOverlayRef(__instance);
+                // 0.113已移除玻璃叠层；旧版有此节点时仍沿用原视觉。
+                TextureRect? ancientBorderGlassOverlay = __instance.GetNodeOrNull<TextureRect>("%AncientBorderGlassOverlay");
                 TextureRect ancientBorder = AncientBorderRef(__instance);
                 TextureRect ancientTextBg = AncientTextBgRef(__instance);
                 Control ancientBanner = AncientBannerRef(__instance);
@@ -219,7 +210,6 @@ public static class DeniaCardFrameMaterialPatch
                     || !GodotObject.IsInstanceValid(portraitBorder)
                     || !GodotObject.IsInstanceValid(eventFrame)
                     || !GodotObject.IsInstanceValid(ancientPortrait)
-                    || !GodotObject.IsInstanceValid(ancientBorderGlassOverlay)
                     || !GodotObject.IsInstanceValid(ancientBorder)
                     || !GodotObject.IsInstanceValid(ancientTextBg)
                     || !GodotObject.IsInstanceValid(ancientBanner)
@@ -232,7 +222,8 @@ public static class DeniaCardFrameMaterialPatch
                 eventFrame.Visible = false;
                 banner.Visible = false;
                 ancientPortrait.Visible = true;
-                ancientBorderGlassOverlay.Visible = true;
+                if (GodotObject.IsInstanceValid(ancientBorderGlassOverlay))
+                    ancientBorderGlassOverlay!.Visible = true;
                 ancientBorder.Visible = true;
                 ancientTextBg.Visible = true;
                 ancientBanner.Visible = true;
