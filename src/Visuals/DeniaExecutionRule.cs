@@ -45,8 +45,6 @@ internal sealed class DeniaExecutionRule : IAemeathResonanceBreakRule
                 TargetUv = targetNode == null ? new Vector2(0.7f, 0.5f)
                     : targetNode.GetGlobalTransformWithCanvas().Origin / size };
             room.AddChild(overlay);
-            var waiting = room.GetNodeOrNull("WaitingForOtherPlayers");
-            if (waiting != null) room.MoveChild(overlay, waiting.GetIndex());
             // 所有模式原速演出；Cmd.Wait 会在 Instant 下跳过，因此使用同样的 Godot timer 等待。
             var timer = room.GetTree().CreateTimer(DeniaExecutionTimeline.Release);
             await timer.ToSignal(timer, SceneTreeTimer.SignalName.Timeout).ToTask().WaitAsync(overlay.ExitToken);
