@@ -1,4 +1,4 @@
-"""Rebuild the execution's gingerbread-and-character Theora clip from the original video."""
+"""Rebuild the execution's 3840px gingerbread-and-character Theora clip from the upscaled video."""
 import json
 from pathlib import Path
 import subprocess
@@ -21,7 +21,7 @@ def main():
         'ffprobe', '-v', 'error', '-count_frames', '-show_streams', '-of', 'json', str(destination)
     ]))['streams'][0]
     assert probe['codec_name'] == 'theora'
-    assert (probe['width'], probe['height']) == (1920, 886)
+    assert (probe['width'], probe['height']) == (3840, 1772)
     # Theora可用空包表示重复帧，按固定30 FPS的时间格检查完整时长。
     assert probe['time_base'] == '1/30' and int(probe['duration_ts']) == 137, probe
     print(f'{destination.name}: 137 frame intervals, {probe["nb_read_frames"]} decoded pictures, {probe["duration"]} seconds')

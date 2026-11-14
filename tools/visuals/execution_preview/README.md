@@ -12,7 +12,9 @@ python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --
 
 The first command regenerates the tracked OGV from source frames 54–190: the extreme-close-up
 gingerbread transition and the character segment. The legacy resource filename remains
-`denia_execution_middle.ogv`. It has 137 frame intervals at 30 FPS (4.566667 seconds).
+`denia_execution_middle.ogv`. It has 137 frame intervals at 30 FPS (4.566667 seconds), at
+3840×1772 from the ComfyUI-upscaled slice, retaining the original aspect ratio. GPU checks also
+verify the native video texture's resolution. The separate soundtrack and cut points are unchanged.
 Theora may represent repeated frames with empty packets, so the preparation check uses its timeline
 length rather than requiring a decoded picture for every interval.
 
@@ -37,7 +39,9 @@ All game speed modes, including Instant, use the same 1x execution animation and
 
 The separate stereo WAV starts at filter time zero, independently of the hidden video pre-roll.
 `execution_audio_alignment.json` records the preserved sound source, hashes, frame offset and exact
-sample range. Slice frame 54 matches sound-source frame 204 at PTS 6.906s; the 0.8s entrance
+sample range. The current source is `三级集谐处决_有声完整源.mp4`; its original AAC and video PTS
+were preserved during upscaling. The original frame comparison still supplies the mapping:
+slice frame 54 matches sound-source frame 204 at PTS 6.906s; the 0.8s entrance
 therefore starts at source audio 6.106s (sample 293088 at 48 kHz). The WAV contains 401600 samples
 (8.366667s): a smooth 0.8s fade-in, unchanged aligned middle, then a 3s fade-out from the end of the
 video at presentation time 5.366667s. The source ends before this tail finishes, so decaying echoes
