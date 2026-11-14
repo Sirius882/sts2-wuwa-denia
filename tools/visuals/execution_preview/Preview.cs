@@ -212,7 +212,7 @@ public partial class Preview : Control
         Check(overlay.Layer > 1024, "room-owned presentation renders above embedded windows and HUD canvases");
         var blocker = overlay.GetNode<Control>("InputBlocker");
         var video = overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer");
-        foreach (float clock in new[] { 0.65f, 1.0f, DeniaExecutionTimeline.Release + 0.15f })
+        foreach (float clock in new[] { 0.65f, DeniaExecutionTimeline.Enter - 1f / 30, 1.0f, DeniaExecutionTimeline.Release + 0.15f })
         {
             if (clock > DeniaExecutionTimeline.Release)
             {
@@ -229,6 +229,19 @@ public partial class Preview : Control
             Check(blocker.GetGlobalTransformWithCanvas().Origin.IsEqualApprox(Vector2.Zero)
                 && blocker.Size.IsEqualApprox(GetViewportRect().Size),
                 "presentation ignores room offset, scale and clipping and blocks the full viewport");
+            if (clock < DeniaExecutionTimeline.Enter)
+            {
+                foreach (var corner in new[] { Vector2I.Zero, new Vector2I(image.GetWidth() - 1, 0),
+                    new Vector2I(0, image.GetHeight() - 1), new Vector2I(image.GetWidth() - 1, image.GetHeight() - 1) })
+                    Check(Difference(image.GetPixelv(corner), Colors.Black) > 0.1f,
+                        "entrance filter reaches every corner without cinematic bars");
+                if (clock > 0.7f)
+                {
+                    image.Convert(Image.Format.Rgb8);
+                    Check(Array.TrueForAll(image.GetData(), channel => channel >= 250),
+                        "last code-animation frame is white across the entire viewport before the video cut");
+                }
+            }
             if (clock == 1)
                 Check(Brightness(image, new Vector2(0.5f, 0.03f)) < 0.01f,
                     "opaque cinematic bars also cover the top HUD");
