@@ -20,6 +20,10 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "pink_standup")
+            {
+                await CheckPinkStandup();GetTree().Quit();return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "dark_2hit")
             {
                 await CheckPinkMulti(true);GetTree().Quit();return;
@@ -320,7 +324,7 @@ public partial class Preview : Node
             Check(current.Playing && legacy.Animation == "idle" && !legacy.IsPlaying(), "single hit never starts old attack");
             for (int frame = 0; frame <= 310; frame++)
             {
-                current.Seek(frame / 60.0);
+                current.SeekTimeline(current.LeadInDuration + frame / 60.0);
                 // Reproduce late animation signals/direct shows that used to reveal an old body.
                 if (frame % 31 == 0) { legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
                 node.Sync._Process(1.0 / 60);
@@ -328,7 +332,7 @@ public partial class Preview : Node
                     "single hit owns body through attack and recovery " + fast + ":" + frame);
             }
             legacy.Play("attack");
-            current.Seek(0);current.ReleaseImpact();current._Process(10);
+            current.SeekTimeline(current.LeadInDuration);current.ReleaseImpact();current._Process(10);
             Check(!current.Playing && !current.IsVisibleInTree() && idle.IsVisibleInTree() && !legacy.IsVisibleInTree()
                 && legacy.Animation == "idle" && !legacy.IsPlaying(),
                 "controller restores only realtime idle after recovery");
@@ -346,7 +350,7 @@ public partial class Preview : Node
             foreach (double seconds in new[] { 0, 1.873, 2.4 })
             {
                 node.Hide();isolated.Show();isolated.Seek(seconds);await Capture($"isolated_{seconds:F3}");isolated.Hide();node.Show();
-                var current = node.Sync.PlayPinkSingleHit()!;current.SetProcess(false);current.Seek(seconds);
+                var current = node.Sync.PlayPinkSingleHit()!;current.SetProcess(false);current.SeekTimeline(current.LeadInDuration + seconds);
                 legacy.Show();idle.Show();node.Sync._Process(0);
                 await Capture($"controller_{seconds:F3}");
             }
@@ -423,7 +427,7 @@ public partial class Preview : Node
             Check((dark?current is DeniaDarkMultiAttackVisual:current is DeniaPinkMultiAttackVisual),"pink multi uses new combo");
             for(int frame=0;frame<=lastFrame;frame++)
             {
-                current.Seek(frame/60.0);
+                current.SeekTimeline(current.LeadInDuration + frame/60.0);
                 if(frame%31==0){legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished);}
                 node.Sync._Process(1.0/60);
                 Check(current.IsVisibleInTree()&&!idle.IsVisibleInTree()&&!legacy.IsVisibleInTree(),"combo body exclusive "+fast+":"+frame);
@@ -442,7 +446,7 @@ public partial class Preview : Node
             node.Sync.SetForm(dark);idle.Seek(0);await Capture(prefix+"_idle_alignment");
             foreach(double t in new[]{0.0,firstTime,secondTime})
             {
-                var current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);current.Seek(t);node.Sync._Process(0);await Capture($"{prefix}_controller_{t:F3}");
+                var current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);current.SeekTimeline(current.LeadInDuration + t);node.Sync._Process(0);await Capture($"{prefix}_controller_{t:F3}");
                 node.Hide();attack.Position=new Vector2(960,800);attack.Scale=Vector2.One*(350/attack.LayoutHeight);attack.Show();attack.Seek(t);await Capture($"{prefix}_isolated_{t:F3}");attack.Hide();node.Show();
             }
         }
@@ -524,7 +528,7 @@ public partial class Preview : Node
                 "dark body matches idle size independently of effect canvas");
             for (int frame = 0; frame <= 476; frame++)
             {
-                current.Seek(frame / 60.0);
+                current.SeekTimeline(current.LeadInDuration + frame / 60.0);
                 if (frame % 31 == 0) { legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
                 node.Sync._Process(1.0 / 60);
                 Check(!legacy.IsVisibleInTree() && !idle.IsVisibleInTree() && current.IsVisibleInTree(), "dark owns body " + fast + ":" + frame);
@@ -544,7 +548,7 @@ public partial class Preview : Node
         {
             foreach (double t in new[] { 0.0, 0.8263541667, 6.9 })
             {
-                var current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);current.Seek(t);node.Sync._Process(0);
+                var current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);current.SeekTimeline(current.LeadInDuration + t);node.Sync._Process(0);
                 await Capture($"dark_controller_{t:F3}");
                 node.Hide();attack.Position = new Vector2(960, 800);attack.Scale = Vector2.One * (350 / attack.LayoutHeight);
                 attack.Show();attack.Seek(t);await Capture($"dark_isolated_{t:F3}");attack.Hide();node.Show();

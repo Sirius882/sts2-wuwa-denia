@@ -15,6 +15,8 @@ public partial class DeniaPinkMultiAttackVisual : DeniaSingleHitVisual
     public override int FrameCount => 132;
     public override float LayoutHeight => 227;
     public override Vector2 DesignOrigin => new(418, 416);
+    // 两次挥击首姿的身体比单段首姿靠右；起身过程中平滑移到对应位置，脚底与头部一起对齐。
+    protected override Vector2 PinkStandupEndOrigin => new(151.5f, 744.5f);
     protected override Vector2 CanvasSize => new(896, 504);
     protected override bool UsesTracking => false;
     protected override bool WrapFrames => true;

@@ -17,7 +17,7 @@ MOD = HERE.parents[2]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup'), default='pink')
     args = parser.parse_args()
     if args.form in ('pink_2hit', 'dark_2hit'):
         source = HERE / f'source/{args.form}_animator.js'
@@ -44,7 +44,8 @@ def main():
         (output / 'tracking.tres').write_text('[gd_resource type="Resource" format=3]\n\n[resource]\nmetadata/source_sha256 = "' + hashlib.sha256(source.read_bytes()).hexdigest() + '"\n', encoding='utf-8')
         print(f'Extracted {count} original WebP frames and bidirectional RGBA flow fields to {output}')
         return
-    attack = args.form in ('pink_1hit', 'dark_1hit')
+    standup = args.form == 'pink_standup'
+    attack = args.form in ('pink_1hit', 'dark_1hit', 'pink_standup')
     dark_attack = args.form == 'dark_1hit'
     rise = args.form == 'black_rise'
     black = args.form in ('black', 'black_rise', 'dark_1hit')
@@ -55,9 +56,12 @@ def main():
 
     def constant(name):
         if attack and not dark_attack:
-            name = {'SYNC_F0_DATA': 'SYNC_ATK_F0_DATA', 'HD_CROP_CFG': 'ATK_CROP_CFG',
+            name = ({'SYNC_F0_DATA': 'SYNC_TRANS_F0_DATA', 'HD_CROP_CFG': 'TRANS_CROP_CFG',
+                    'HD_WEBP_SIZES': 'TRANS_WEBP_SIZES', 'HD_WEBP_PACK_B64': 'TRANS_WEBP_PACK_B64',
+                    'F0_WEBP_B64': 'TRANS_F0_WEBP_B64', 'FLOW48_GZ_B64': 'TRANS_FLOW74_GZ_B64'} if standup else
+                    {'SYNC_F0_DATA': 'SYNC_ATK_F0_DATA', 'HD_CROP_CFG': 'ATK_CROP_CFG',
                     'HD_WEBP_SIZES': 'ATK_WEBP_SIZES', 'HD_WEBP_PACK_B64': 'ATK_WEBP_PACK_B64',
-                    'F0_WEBP_B64': 'ATK_F0_WEBP_B64', 'FLOW48_GZ_B64': 'ATK_FLOW48_GZ_B64'}[name]
+                    'F0_WEBP_B64': 'ATK_F0_WEBP_B64', 'FLOW48_GZ_B64': 'ATK_FLOW48_GZ_B64'})[name]
         match = re.search(r'^const ' + prefix + name + r' = (.+);\s*$', text, re.MULTILINE)
         if not match:
             raise ValueError(f'Missing animator constant: {name}')
@@ -71,8 +75,8 @@ def main():
     flow = gzip.decompress(base64.b64decode(constant('FLOW48_GZ_B64' if black or attack else 'FLOW56_GZ_B64'), validate=True))
     count, w, h = meta['frames'], meta['w'], meta['h']
     fw, fh = crop['flowW'], crop['flowH']
-    assert count == (96 if dark_attack else 48 if black or attack else 56)
-    assert (w, h) == ((960, 480) if dark_attack else (744, 540) if attack else (592, 600))
+    assert count == (74 if standup else 96 if dark_attack else 48 if black or attack else 56)
+    assert (w, h) == ((504, 768) if standup else (960, 480) if dark_attack else (744, 540) if attack else (592, 600))
     assert len(sizes) == count and sum(sizes[1:]) == len(pack)
     assert len(flow) == count * fw * fh * 2
     rows = (count + 7) // 8

@@ -34,6 +34,8 @@ python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form bla
 
 ## 粉态单段攻击（2026-11-14）
 
+2026-11-15起，游戏内的粉态单段／多段攻击统一先播下方的3.083秒起身，本文的攻击时间均为起身之后的局部时间。单段出伤现为总时间5.166秒，多段前两段为4.638202／5.304717秒；Fast均除以3。
+
 `--form pink_1hit` 从原JS／HTML提取48幅逐帧独立裁剪的WebP与光流，放入744×540画布；保留完整5.166秒攻击和收招。生产类 `DeniaPinkAttackVisual` 共用原生光流基类，实时绘制法阵、虹彩泡和星光，小泡／法阵渐变用原生分层绘制近似。正常速度1倍、Fast为3倍。
 
 ```powershell
@@ -72,3 +74,16 @@ python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form pin
 粉态不在出牌前启动旧攻击；首次攻击指令按声明段数选择新单段或旧多段动作。旧`Idle`和`RealtimeIdle`置于各形态覆盖层的`Body`父节点内，新单段作为该父节点的同级节点，播放时隐藏整个`Body`。旧动画结束信号、延迟动作切换或直接Show子节点都无法让旧身体穿透显示；收招完成先把旧sprite切回idle，再恢复`Body`。Bounds、朝向、后撤和死亡取节点路径一并更新。
 
 `run_preview.py`直接提取当前生产`DeniaFormOverlaySync`类到缓存工程，`ControllerFixture.cs`仅替代游戏接口。测试普通／Fast各311个姿态，主动触发旧动画结束信号和子节点Show，验证旧身体全程不可见、结束只恢复待机，并覆盖后撤、死亡和切形态。D3D12下三个时刻的控制器合成画面与孤立新动画逐像素对照。Fixture从生产csproj排除，不随模组运行。
+
+## 粉态坐姿至攻击站姿（2026-11-15）
+
+`pink_standup_animator.js`／HTML原件保存在`source/`。导入器提取74幅504×768透明WebP、逐帧裁剪位置及63×93光流，保持原3.083秒时长；Godot原生GPU实时补间、Bicubic/CAS和泡泡薄膜着色，不用HTML或视频播放。
+
+```powershell
+python -B myModresources/denia/tools/visuals/pink_idle/import_animator.py --form pink_standup
+python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form pink_standup --render
+```
+
+生产控制器在两种粉态攻击前调用`PlayWithPinkStandup`，共用一条时间轴和同一组命中等待。起身期间攻击局部时钟为零，跨帧余量在起身结束后继续传给攻击；黑态沿用原时序。起身开头保留当前待机相位，0.14秒交接坐姿；最后0.16秒交接原攻击首姿，均包含在3.083秒内。身体身高／锚点连续标定，多段首姿比单段靠右，使用单独的结束锚点。两个透明视口按最终屏幕像素渲染，以预乘色混合后一次合成背景，避免直接淡入淡出两个人物造成变暗；非交接阶段只更新起身视口，结束／中断禁用所有视口。
+
+`PinkStandupChecks.cs`直接链接生产类和控制器，检查30／60／144 FPS、普通／Fast、两次出伤、跨帧、重播／后撤／切态／死亡以及黑态原时序；原生捕获两条完整30Hz序列、交接两端与镜像。`check_standup.py`独立核对原GLSL四个时刻、待机／攻击交接端点及镜像。输出`pink_standup_single.mp4`、`pink_standup_combo.mp4`及`pink_standup_joins.jpg`，这是生产类的独立预览，不是实际战斗录像。
