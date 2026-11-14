@@ -16,16 +16,21 @@ MOD = HERE.parents[2]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit'), default='pink')
     args = parser.parse_args()
+    attack = args.form == 'pink_1hit'
     rise = args.form == 'black_rise'
-    black = args.form != 'pink'
+    black = args.form in ('black', 'black_rise')
     output = MOD / f'images/characters/denia/realtime_{args.form}'
     prefix = 'RISE_' if rise else 'BLACK_' if black else ''
-    source = HERE / ('source/black_rise_animator.js' if rise else f'source/{args.form}_idle_animator.js')
+    source = HERE / (f'source/{args.form}_animator.js' if rise or attack else f'source/{args.form}_idle_animator.js')
     text = source.read_text(encoding='utf-8-sig')
 
     def constant(name):
+        if attack:
+            name = {'SYNC_F0_DATA': 'SYNC_ATK_F0_DATA', 'HD_CROP_CFG': 'ATK_CROP_CFG',
+                    'HD_WEBP_SIZES': 'ATK_WEBP_SIZES', 'HD_WEBP_PACK_B64': 'ATK_WEBP_PACK_B64',
+                    'F0_WEBP_B64': 'ATK_F0_WEBP_B64', 'FLOW48_GZ_B64': 'ATK_FLOW48_GZ_B64'}[name]
         match = re.search(r'^const ' + prefix + name + r' = (.+);\s*$', text, re.MULTILINE)
         if not match:
             raise ValueError(f'Missing animator constant: {name}')
@@ -36,10 +41,10 @@ def main():
     crop = constant('HD_CROP_CFG')
     sizes = constant('HD_WEBP_SIZES')
     pack = base64.b64decode(constant('HD_WEBP_PACK_B64'), validate=True)
-    flow = gzip.decompress(base64.b64decode(constant('FLOW48_GZ_B64' if black else 'FLOW56_GZ_B64'), validate=True))
+    flow = gzip.decompress(base64.b64decode(constant('FLOW48_GZ_B64' if black or attack else 'FLOW56_GZ_B64'), validate=True))
     count, w, h = meta['frames'], meta['w'], meta['h']
     fw, fh = crop['flowW'], crop['flowH']
-    assert count == (48 if black else 56) and (w, h) == (592, 600)
+    assert count == (48 if black or attack else 56) and (w, h) == ((744, 540) if attack else (592, 600))
     assert len(sizes) == count and sum(sizes[1:]) == len(pack)
     assert len(flow) == count * fw * fh * 2
     rows = (count + 7) // 8
@@ -53,8 +58,9 @@ def main():
             encoded = pack[offset:offset + sizes[index]]
             offset += sizes[index]
         frame = Image.open(io.BytesIO(encoded)).convert('RGBA')
-        assert frame.size == (crop['cw'], crop['ch'])
-        atlas.paste(frame, (index % 8 * w + crop['xOff'], index // 8 * h + crop['yOff']))
+        x, y, cw, ch = meta['frameRects'][index] if attack else (crop['xOff'], crop['yOff'], crop['cw'], crop['ch'])
+        assert frame.size == (cw, ch) and 0 <= x <= w - cw and 0 <= y <= h - ch
+        atlas.paste(frame, (index % 8 * w + x, index // 8 * h + y))
         raw = flow[index * fw * fh * 2:(index + 1) * fw * fh * 2]
         pixels = bytearray(fw * fh * 3)
         for i in range(fw * fh):
@@ -66,7 +72,7 @@ def main():
     atlas.save(output / 'frames.webp', lossless=True, exact=True, method=6)
     flow_atlas.save(output / 'flow.png')
     # Existing attacks/dodges use the old idle's first pose as their endpoint.
-    if not rise:
+    if not rise and not attack:
         legacy_name = 'dark' if black else 'pink'
         legacy = Image.open(MOD / f'images/characters/denia/sprite_sheets/denia_{legacy_name}_idle.png')
         legacy.crop((0, 0, 264, 528)).save(output / 'action_rest.png')
@@ -75,7 +81,7 @@ def main():
     tracking = dict(meta)
     if rise:
         tracking.update(orb_x=meta['halo_x'], orb_y=meta['halo_y'])
-    keys = ('bubble_cy', 'orb_x', 'orb_y') + (('bubble_cx', 'bubble_rx', 'bubble_ry') if rise else ())
+    keys = () if attack else ('bubble_cy', 'orb_x', 'orb_y') + (('bubble_cx', 'bubble_rx', 'bubble_ry') if rise else ())
     for key in keys:
         assert len(tracking[key]) == count
         lines.append(f'metadata/{key} = PackedFloat32Array({", ".join(map(str, tracking[key]))})')

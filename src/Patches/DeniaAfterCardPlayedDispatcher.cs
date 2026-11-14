@@ -38,6 +38,7 @@ public static class DeniaAfterCardPlayedDispatcher
         }
         finally
         {
+            DeniaPinkAttackRule.End(cardPlay.Card);
             // clear attack-card flag for black FX if/elif on next card
             try
             {
