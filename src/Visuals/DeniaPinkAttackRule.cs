@@ -27,7 +27,7 @@ internal static class DeniaPinkAttackRule
         if (card == null || actor == null || !Pending.TryGetValue(card, out var state)
             || !ReferenceEquals(state.Actor, actor) || state.Started) return false;
         state.Started = true;
-        useLegacy = declaredHits != 1;
+        useLegacy = declaredHits != 1 && (declaredHits < 2 || DeniaFormHelper.IsBlack(actor));
         return !useLegacy;
     }
 

@@ -20,6 +20,10 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "pink_2hit")
+            {
+                await CheckPinkMulti();GetTree().Quit();return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "dark_1hit")
             {
                 await CheckDarkAttack();
@@ -347,6 +351,96 @@ public partial class Preview : Node
         Check(!node.Pink.GetNode<DeniaPinkAttackVisual>(DeniaPinkAttackVisual.NodeName).Playing
             && legacy.Animation == "death" && legacy.IsVisibleInTree(), "death replaces single hit without overlap");
         node.Free();
+    }
+
+    private async Task CheckPinkMulti()
+    {
+        _viewport = new SubViewport { Size = new Vector2I(896, 504), TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
+        AddChild(_viewport);
+        var attack = new DeniaPinkMultiAttackVisual();_viewport.AddChild(attack);
+        attack.Position = attack.DesignOrigin;attack.SetProcess(false);
+        Check(attack.Initialized && attack.ImpactCount == 2, "132-frame combo initializes with exactly two impact gates");
+        var body = attack.GetNode<ColorRect>("FlowBody");var material = (ShaderMaterial)body.Material;
+        Check(material.GetShaderParameter("frames").As<Texture2D>().GetSize() == new Vector2(7168,8568), "all 132 original combo frames");
+        Check(material.GetShaderParameter("flow_fields").As<Texture2D>().GetSize() == new Vector2(1792,2142), "RGBA forward and reverse flow preserved");
+        int completions=0;attack.Finished+=()=>completions++;
+        foreach (int fps in new[] {30,60,144})
+        foreach (int speed in new[] {1,3})
+        {
+            attack.Play(speed,true);attack.SetProcess(false);
+            var first=attack.ImpactAt(0);var second=attack.ImpactAt(1);
+            for(int hit=0;hit<2;hit++)
+            {
+                double due=attack.GetImpactTime(hit);
+                while(attack.Clock+1.0/fps*speed < due) attack._Process(1.0/fps);
+                Check(!attack.ImpactAt(hit).IsCompleted,"combo number cannot precede swing "+fps+"/"+speed+"/"+hit);
+                attack._Process(1.0/fps);
+                Check(attack.ImpactAt(hit).IsCompleted&&attack.Clock==due,"combo exact swing timing "+hit);
+                attack._Process(0.8);Check(attack.Clock==due,"holds each swing for original damage callback");
+                if(hit==0)Check(!second.IsCompleted,"first swing cannot release second number");
+                attack.ReleaseImpact(attack.ImpactAt(hit));
+            }
+            Check(attack.ImpactAt(2).IsCompleted,"round three adds no wait");
+            int before=completions;attack._Process(30);attack._Process(30);
+            Check(completions==before+1&&!attack.Playing,"combo plays once including recovery");
+        }
+        attack.Play(1,true);var oldFirst=attack.Impact;var oldSecond=attack.ImpactAt(1);
+        attack.Play(1,true);attack.SetProcess(false);attack.ReleaseImpact(oldFirst);
+        attack._Process(30);Check(oldFirst.IsCompleted&&oldSecond.IsCompleted&&attack.Clock==attack.DamageTime,"replay releases old waits without stale callback releasing new pose");
+        attack.ReleaseRemainingImpacts(attack.Impact);attack._Process(30);
+        Check(!attack.Playing,"early command end releases unused second pose");
+        if(_render)
+        {
+            attack.Show();
+            foreach(double t in new[]{0.0,DeniaPinkMultiAttackVisual.FirstImpact,DeniaPinkMultiAttackVisual.SecondImpact,10.2})
+            {
+                attack.Seek(t);await Capture($"multi_composite_{t:F3}");
+                body.Reparent(_viewport,false);body.Position=Vector2.Zero;attack.Hide();await Capture($"multi_glsl_{t:F3}");
+                body.Reparent(attack,false);body.Position=-attack.DesignOrigin;attack.Show();
+            }
+            for(int frame=0;frame<=880;frame++){attack.Seek(frame/60.0);await Capture($"multi_{frame:D4}");}
+            attack.Seek(DeniaPinkMultiAttackVisual.SecondImpact);await Capture("multi_right");
+            attack.SetFacing(true);attack.Position=new Vector2(896-attack.DesignOrigin.X,attack.DesignOrigin.Y);await Capture("multi_left");
+            attack.SetFacing(false);attack.Position=attack.DesignOrigin;attack.Modulate=new Color(1,1,1,0.5f);await Capture("multi_half_alpha");attack.Modulate=Colors.White;
+        }
+        attack.Hide();_viewport.Size=new Vector2I(1920,1080);
+        var node=ControllerFixture.Create(_viewport);node.LayoutPosition=new Vector2(847,450);DeniaFormPatch.SyncOverlayLayout(node);
+        var legacy=node.Pink.GetNode<AnimatedSprite2D>("Body/Idle");var idle=node.Pink.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle");
+        foreach(bool fast in new[]{false,true})
+        {
+            DeniaFormPatch.Fast=fast;var current=node.Sync.PlaySingleHit(false,true)!;current.SetProcess(false);
+            Check(current is DeniaPinkMultiAttackVisual,"pink multi uses new combo");
+            for(int frame=0;frame<=880;frame++)
+            {
+                current.Seek(frame/60.0);
+                if(frame%31==0){legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished);}
+                node.Sync._Process(1.0/60);
+                Check(current.IsVisibleInTree()&&!idle.IsVisibleInTree()&&!legacy.IsVisibleInTree(),"combo body exclusive "+fast+":"+frame);
+            }
+            current.ReleaseRemainingImpacts(current.Impact);current._Process(30);
+            Check(!current.Playing&&idle.IsVisibleInTree()&&!legacy.IsVisibleInTree(),"combo returns only realtime idle");
+            current=node.Sync.PlaySingleHit(false,true)!;current.SetProcess(false);var a=current.Impact;var b=current.ImpactAt(1);node.Sync.PlayDodge(false);
+            Check(!current.Playing&&a.IsCompleted&&b.IsCompleted&&legacy.Animation=="dodge","dodge cancels both waits");
+            current=node.Sync.PlaySingleHit(false,true)!;current.SetProcess(false);node.Entity.Black=true;node.Sync.SetForm(true);
+            Check(!current.Playing&&current.ImpactAt(1).IsCompleted&&!node.Pink.IsVisibleInTree(),"form switch cancels combo");
+            node.Entity.Black=false;node.Sync.SetForm(false);
+        }
+        DeniaFormPatch.Fast=false;
+        if(_render)
+        {
+            node.Sync.SetForm(false);idle.Seek(0);await Capture("multi_idle_alignment");
+            foreach(double t in new[]{0.0,DeniaPinkMultiAttackVisual.FirstImpact,DeniaPinkMultiAttackVisual.SecondImpact})
+            {
+                var current=node.Sync.PlaySingleHit(false,true)!;current.SetProcess(false);current.Seek(t);node.Sync._Process(0);await Capture($"multi_controller_{t:F3}");
+                node.Hide();attack.Position=new Vector2(960,800);attack.Scale=Vector2.One*(350/attack.LayoutHeight);attack.Show();attack.Seek(t);await Capture($"multi_isolated_{t:F3}");attack.Hide();node.Show();
+            }
+        }
+        var dying=node.Sync.PlaySingleHit(false,true)!;dying.SetProcess(false);node.Sync.PlayDeath();
+        Check(!dying.Playing&&dying.ImpactAt(1).IsCompleted&&legacy.Animation=="death","death replaces combo");
+        node.Free();attack.Play(1,true);var leaving=attack.ImpactAt(1);attack.Free();Check(leaving.IsCompleted,"leaving scene releases both waits");
+        File.WriteAllText(Path.Combine(_output,"checks.json"),$"{{\"checks\":{_checks},\"form\":\"pink_2hit\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
+        GD.Print($"PASS: {_checks} pink combo checks, render={_render}");
     }
 
     private async Task CheckDarkAttack()

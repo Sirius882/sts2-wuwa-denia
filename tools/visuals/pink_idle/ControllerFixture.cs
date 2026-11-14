@@ -30,6 +30,7 @@ public static class DeniaFormPatch
             overlay.GetNode<AnimatedSprite2D>("Body/Idle").FlipH = flip;
             overlay.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle").SetFacing(flip);
             overlay.GetNodeOrNull<DeniaSingleHitVisual>(DeniaSingleHitVisual.NodeName)?.SetFacing(flip);
+            overlay.GetNodeOrNull<DeniaSingleHitVisual>(DeniaPinkMultiAttackVisual.MultiNodeName)?.SetFacing(flip);
         }
     }
     public static void SyncOverlayLayout(NCreature node)
@@ -40,7 +41,7 @@ public static class DeniaFormPatch
             var actions = overlay.GetNode<AnimatedSprite2D>("Body/Idle");
             actions.Position = size * 0.5f;
             actions.Scale = Vector2.One * (size.Y / 512);
-            foreach (string name in new[] { "Body/RealtimeIdle", DeniaPinkAttackVisual.NodeName })
+            foreach (string name in new[] { "Body/RealtimeIdle", DeniaPinkAttackVisual.NodeName, DeniaPinkMultiAttackVisual.MultiNodeName })
             {
                 var visual = overlay.GetNodeOrNull<DeniaFlowIdleVisual>(name);
                 if (visual == null) continue;
