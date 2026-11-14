@@ -20,6 +20,12 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "dark_1hit")
+            {
+                await CheckDarkAttack();
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "pink_1hit")
             {
                 await CheckPinkAttack();
@@ -341,6 +347,114 @@ public partial class Preview : Node
         Check(!node.Pink.GetNode<DeniaPinkAttackVisual>(DeniaPinkAttackVisual.NodeName).Playing
             && legacy.Animation == "death" && legacy.IsVisibleInTree(), "death replaces single hit without overlap");
         node.Free();
+    }
+
+    private async Task CheckDarkAttack()
+    {
+        _viewport = new SubViewport { Size = new Vector2I(960, 480), TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
+        AddChild(_viewport);
+        var attack = new DeniaDarkAttackVisual();_viewport.AddChild(attack);
+        attack.Position = attack.DesignOrigin;attack.SetProcess(false);
+        var body = attack.GetNode<ColorRect>("FlowBody");
+        var material = (ShaderMaterial)body.Material;
+        Check(attack.Initialized && body.Size == new Vector2(960, 480), "full giant claw canvas initializes");
+        Check(material.GetShaderParameter("frames").As<Texture2D>().GetSize() == new Vector2(7680, 5760), "all 96 original full-canvas frames");
+        Check(material.GetShaderParameter("flow_fields").As<Texture2D>().GetSize() == new Vector2(960, 720), "all 96 signed flow fields");
+        Check(Math.Abs(attack.LayoutHeight - 245.22f) < 0.001 && attack.DesignOrigin.DistanceTo(new Vector2(468.45f, 446.1125f)) < 0.001,
+            "body scale and anchor derive from the supplied idle_box transform");
+        foreach (int fps in new[] { 30, 60, 144 })
+        foreach (int speed in new[] { 1, 3 })
+        {
+            attack.Play(speed, true);attack.SetProcess(false);
+            int frames = (int)Math.Ceiling(attack.DamageTime / speed * fps);
+            for (int f = 0; f < frames - 1; f++) attack._Process(1.0 / fps);
+            Check(!attack.Impact.IsCompleted, "dark damage waits for strike at " + fps + "/" + speed);
+            attack._Process(1.0 / fps);
+            Check(attack.Impact.IsCompleted && attack.Clock == attack.DamageTime, "dark damage matches claw peak");
+            attack._Process(1);Check(attack.Clock == attack.DamageTime, "dark holds pose for original callback");
+            attack.ReleaseImpact();attack._Process(1.0 / fps);
+            Check(attack.Clock > attack.DamageTime, "dark recovery resumes");
+            attack._Process(10);Check(!attack.Playing && attack.Clock == DeniaDarkAttackVisual.Duration, "dark completes full recovery once");
+        }
+        attack.Show();attack.Seek(0);
+        Check(material.GetShaderParameter("uBubble").AsVector4().W > 0.99f, "start matches seated dark idle");
+        attack.Seek(DeniaDarkAttackVisual.ImpactTime);
+        Check(material.GetShaderParameter("uSlashAlpha").AsSingle() > 0.99f, "damage at original peak slash sample");
+        attack.Seek(DeniaDarkAttackVisual.Duration);
+        Check(material.GetShaderParameter("frame_index").AsInt32() == 95 && material.GetShaderParameter("fraction").AsSingle() == 1,
+            "last interval returns to seated start while one-shot clock stops");
+        if (_render)
+        {
+            foreach (double t in new[] { 0.0, 0.8263541667, 6.9 })
+            {
+                attack.Seek(t);await Capture($"dark_composite_{t:F3}");
+                body.Reparent(_viewport, false);body.Position = Vector2.Zero;attack.Hide();
+                await Capture($"dark_glsl_{t:F3}");
+                body.Reparent(attack, false);body.Position = -attack.DesignOrigin;attack.Show();
+            }
+            for (int i = 0; i <= (int)Math.Ceiling(DeniaDarkAttackVisual.Duration * 60); i++)
+            {
+                attack.Seek(i / 60.0);await Capture($"dark_{i:D4}");
+            }
+            attack.Seek(0.8263541667);attack.SetFacing(true);
+            attack.Position = new Vector2(960 - attack.DesignOrigin.X, attack.DesignOrigin.Y);await Capture("dark_left");
+            attack.SetFacing(false);attack.Position = attack.DesignOrigin;await Capture("dark_right");
+            attack.Modulate = new Color(1, 1, 1, 0.5f);await Capture("dark_half_alpha");attack.Modulate = Colors.White;
+        }
+        attack.Hide();
+        _viewport.Size = new Vector2I(1920, 1080);
+        var node = ControllerFixture.Create(_viewport);
+        node.LayoutPosition = new Vector2(847, 450);node.Entity.Black = true;node.Sync.SetForm(true);
+        DeniaFormPatch.SyncOverlayLayout(node);
+        var legacy = node.Black.GetNode<AnimatedSprite2D>("Body/Idle");
+        var idle = node.Black.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle");
+        foreach (bool fast in new[] { false, true })
+        {
+            DeniaFormPatch.Fast = fast;
+            node.Black.ClipContents = true;
+            var current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);
+            Check(!node.Black.ClipContents, "giant claw can overflow the body overlay");
+            Check(current is DeniaDarkAttackVisual && current.Playing && legacy.Animation == "idle", "black selects only dark single hit");
+            Check(Math.Abs(current.Scale.Y * DeniaDarkAttackVisual.IdleScale - idle.Scale.Y) < 0.0001,
+                "dark body matches idle size independently of effect canvas");
+            for (int frame = 0; frame <= 476; frame++)
+            {
+                current.Seek(frame / 60.0);
+                if (frame % 31 == 0) { legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
+                node.Sync._Process(1.0 / 60);
+                Check(!legacy.IsVisibleInTree() && !idle.IsVisibleInTree() && current.IsVisibleInTree(), "dark owns body " + fast + ":" + frame);
+            }
+            current.ReleaseImpact();current._Process(10);
+            Check(!current.Playing && idle.IsVisibleInTree() && !legacy.IsVisibleInTree(), "dark recovery restores realtime idle");
+            current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);var pending = current.Impact;
+            node.Sync.PlayDodge(true);
+            Check(!current.Playing && pending.IsCompleted && legacy.Animation == "dodge" && legacy.IsVisibleInTree(), "dark dodge releases hit wait");
+            current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);pending = current.Impact;
+            node.Entity.Black = false;node.Sync.SetForm(false);
+            Check(!current.Playing && pending.IsCompleted && node.Pink.IsVisibleInTree() && !node.Black.IsVisibleInTree(), "dark to pink cancels hit");
+            node.Entity.Black = true;node.Sync.SetForm(true);
+        }
+        DeniaFormPatch.Fast = false;
+        if (_render)
+        {
+            foreach (double t in new[] { 0.0, 0.8263541667, 6.9 })
+            {
+                var current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);current.Seek(t);node.Sync._Process(0);
+                await Capture($"dark_controller_{t:F3}");
+                node.Hide();attack.Position = new Vector2(960, 800);attack.Scale = Vector2.One * (350 / attack.LayoutHeight);
+                attack.Show();attack.Seek(t);await Capture($"dark_isolated_{t:F3}");attack.Hide();node.Show();
+            }
+            node.Sync.SetForm(true);idle.Seek(0);await Capture("dark_idle_body_alignment");
+        }
+        var dying = node.Sync.PlaySingleHit(true)!;dying.SetProcess(false);var deathWait = dying.Impact;
+        node.Sync.PlayDeath();
+        Check(!dying.Playing && deathWait.IsCompleted && !node.Black.IsVisibleInTree(), "dark death replaces hit and releases wait");
+        node.Free();
+        attack.Play(1, true);var exiting = attack.Impact;attack.Free();Check(exiting.IsCompleted, "leaving tree releases hit wait");
+        File.WriteAllText(Path.Combine(_output, "checks.json"),
+            $"{{\"checks\":{_checks},\"form\":\"dark_1hit\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
+        GD.Print($"PASS: {_checks} dark single-hit checks, render={_render}");
     }
 
     private async Task CheckRise()

@@ -29,7 +29,7 @@ public static class DeniaFormPatch
             bool flip = node.Body.Scale.X < 0;
             overlay.GetNode<AnimatedSprite2D>("Body/Idle").FlipH = flip;
             overlay.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle").SetFacing(flip);
-            overlay.GetNodeOrNull<DeniaPinkAttackVisual>(DeniaPinkAttackVisual.NodeName)?.SetFacing(flip);
+            overlay.GetNodeOrNull<DeniaSingleHitVisual>(DeniaSingleHitVisual.NodeName)?.SetFacing(flip);
         }
     }
     public static void SyncOverlayLayout(NCreature node)

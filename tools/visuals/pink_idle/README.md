@@ -45,6 +45,14 @@ python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form pin
 
 预览检查30/60/144 FPS与1/3倍速、命中时点等待与恢复、旧身体独占显隐、停止／重播；捕获完整311帧、朝向、父级透明度及3个时间的独立原GLSL公式对照。输出`pink_1hit.mp4`与`pink_1hit/render/keyframes.jpg`。这不是实际战斗录像。
 
+## 黑态单段巨爪
+
+`import_animator.py --form dark_1hit`提取原96幅960×480 WebP及120×60光流，不烘焙中间帧。`run_preview.py --form dark_1hit --render --output E:/STS2_mod/.cache/dark-attack-preview`检查并生成完整7.933秒MP4、关键帧和人物对齐图；原HTML／JS保存在`source/dark_1hit_animator.*`。
+
+黑态使用与粉态相同的首个攻击指令声明段数判定，不限卡牌来源，不计算联动段数。共用`DeniaSingleHitVisual`时钟与命中门控，黑态命中设为原第10帧的巨爪峰值（约0.826秒，Fast约0.275秒），粉态继续2.083秒。单段期间隐藏当前形态整个Body并关闭旧黑色挥砍；多段继续旧动作与挥砍。
+
+素材`idle_box.scale=0.4575`直接对应现有592×600黑态待机：人物参考高度536×0.4575=245.22，锚点(358.65,171.6125)+(240,600)×0.4575=(468.45,446.1125)。按此身体标定缩放，960×480画布及巨爪等比保留，允许超出角色Bounds。原GLSL保留运动置信门控、抗重影混合、Bicubic/CAS、暗泡／星眸与巨爪边缘光；CPU绘制原种子泡泡、星芒、冲击圈和重凝漩涡，径向渐变仍以原生分层近似。
+
 ### 新旧攻击叠播修复（2026-11-14）
 
 粉态不在出牌前启动旧攻击；首次攻击指令按声明段数选择新单段或旧多段动作。旧`Idle`和`RealtimeIdle`置于各形态覆盖层的`Body`父节点内，新单段作为该父节点的同级节点，播放时隐藏整个`Body`。旧动画结束信号、延迟动作切换或直接Show子节点都无法让旧身体穿透显示；收招完成先把旧sprite切回idle，再恢复`Body`。Bounds、朝向、后撤和死亡取节点路径一并更新。
