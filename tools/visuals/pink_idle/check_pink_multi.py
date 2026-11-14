@@ -43,6 +43,11 @@ def check_pink_multi(folder: Path, mod: Path):
         assert error.mean()<.004,(t,error.mean())
         assert np.quantile(error,.99)<.018,(t,np.quantile(error,.99))
         errors[str(round(t,6))]=round(float(error.mean()),6)
+        # No canvas-wide ambient overlay: composite must contain only the original body/attack layer.
+        pure=np.array(Image.open(folder/f'multi_glsl_{t:.3f}.png'),dtype=float)
+        composite=np.array(Image.open(folder/f'multi_composite_{t:.3f}.png'),dtype=float)
+        assert abs(pure-composite).max()==0, ('background overlay remains',t)
+
         if t < 3:
             isolated=np.array(Image.open(folder/f'multi_isolated_{t:.3f}.png'),dtype=float)
             controlled=np.array(Image.open(folder/f'multi_controller_{t:.3f}.png'),dtype=float)
