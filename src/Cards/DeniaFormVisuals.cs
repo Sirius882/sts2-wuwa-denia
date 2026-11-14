@@ -290,7 +290,9 @@ public static class DeniaFormPatch
             return;
 
         // 帧动画继承现有覆盖层的显隐、变形与死亡状态，避免两套驱动互相覆盖。
-        sprite.Reparent(overlay, false);
+        var body = new Node2D { Name = "Body" };
+        overlay.AddChild(body);
+        sprite.Reparent(body, false);
         sprite.Name = "Idle";
         sprite.Visible = true;
         sprite.Play("idle");
@@ -308,7 +310,7 @@ public static class DeniaFormPatch
             DeniaFlowIdleVisual realtime = nodeName == "PinkVisuals"
                 ? new DeniaPinkIdleVisual() : new DeniaBlackIdleVisual();
             realtime.Name = "RealtimeIdle";
-            overlay.AddChild(realtime);
+            body.AddChild(realtime);
             if (realtime.Initialized) realtime.BindActions(sprite);
             else realtime.QueueFree();
         }
@@ -473,7 +475,7 @@ public static class DeniaFormPatch
         rect.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
         rect.MouseFilter = Control.MouseFilterEnum.Ignore;
         if (GetSyncNode(nc) == null) rect.Position = localPos;
-        var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
         if (idle != null && GodotObject.IsInstanceValid(idle))
         {
             idle.Position = size * 0.5f;
@@ -481,7 +483,7 @@ public static class DeniaFormPatch
         }
         foreach (var name in new[] { "RealtimeIdle", DeniaPinkAttackVisual.NodeName })
         {
-            var realtime = rect.GetNodeOrNull<DeniaFlowIdleVisual>(name);
+            var realtime = rect.GetNodeOrNull<DeniaFlowIdleVisual>(name == "RealtimeIdle" ? "Body/RealtimeIdle" : name);
             if (realtime != null && GodotObject.IsInstanceValid(realtime))
             {
                 realtime.Position = new Vector2(size.X * 0.5f, size.Y);
@@ -515,9 +517,9 @@ public static class DeniaFormPatch
     {
         if (!map.TryGetValue(nc, out var rect) || rect == null || !GodotObject.IsInstanceValid(rect)) return;
         rect.FlipH = flip;
-        var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
         if (idle != null && GodotObject.IsInstanceValid(idle)) idle.FlipH = flip;
-        rect.GetNodeOrNull<DeniaFlowIdleVisual>("RealtimeIdle")?.SetFacing(flip);
+        rect.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.SetFacing(flip);
         rect.GetNodeOrNull<DeniaPinkAttackVisual>(DeniaPinkAttackVisual.NodeName)?.SetFacing(flip);
     }
 
@@ -681,8 +683,8 @@ public partial class DeniaFormOverlaySync : Node
         _black = black;
         _corpse = corpse;
         _blackFx = blackFx;
-        _hasIdleFrames = pink.GetNodeOrNull<AnimatedSprite2D>("Idle") != null
-                         || black.GetNodeOrNull<AnimatedSprite2D>("Idle") != null;
+        _hasIdleFrames = pink.GetNodeOrNull<AnimatedSprite2D>("Body/Idle") != null
+                         || black.GetNodeOrNull<AnimatedSprite2D>("Body/Idle") != null;
         _layoutTimer = 0;
         SetProcess(true);
     }
@@ -705,7 +707,10 @@ public partial class DeniaFormOverlaySync : Node
             {
                 _pinkAttack = new DeniaPinkAttackVisual { Name = DeniaPinkAttackVisual.NodeName, Visible = false };
                 _pink.AddChild(_pinkAttack);
-                _pinkAttack.Finished += StopPinkAttack;
+                _pinkAttack.Finished += () => {
+                    ResetBodyAnimation();
+                    StopPinkAttack();
+                };
             }
             DeniaFormPatch.SyncOverlayLayout(_creatureNode);
             _pinkAttack.Play(DeniaFormPatch.IsFastMode() ? 3 : 1, holdAtImpact: true);
@@ -724,10 +729,9 @@ public partial class DeniaFormOverlaySync : Node
     private void SetPinkBodyVisible(bool visible)
     {
         if (!GodotObject.IsInstanceValid(_pink)) return;
-        var idle = _pink!.GetNodeOrNull<DeniaFlowIdleVisual>("RealtimeIdle");
-        var actions = _pink.GetNodeOrNull<AnimatedSprite2D>("Idle");
-        if (idle != null) idle.SetSuppressed(!visible);
-        else if (actions != null) actions.Visible = visible;
+        // 隐藏共同父节点，旧动作／待机的信号不能重新显露身体。
+        var body = _pink!.GetNodeOrNull<Node2D>("Body");
+        if (body != null) body.Visible = visible;
     }
 
     private void StopPinkAttack()
@@ -778,7 +782,7 @@ public partial class DeniaFormOverlaySync : Node
     private bool PlayBodyAnimation(bool isBlack, StringName animation)
     {
         if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return true;
-        var sprite = (isBlack ? _black : _pink)?.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        var sprite = (isBlack ? _black : _pink)?.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
         if (sprite == null || !GodotObject.IsInstanceValid(sprite)
             || !sprite.SpriteFrames.HasAnimation(animation)) return false;
         StopPinkAttack();
@@ -794,7 +798,7 @@ public partial class DeniaFormOverlaySync : Node
         foreach (var overlay in new[] { _pink, _black })
         {
             if (overlay == null || !GodotObject.IsInstanceValid(overlay)) continue;
-            var sprite = overlay.GetNodeOrNull<AnimatedSprite2D>("Idle");
+            var sprite = overlay.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
             if (sprite != null && GodotObject.IsInstanceValid(sprite)
                 && (sprite.Animation == "attack" || sprite.Animation == "dodge" || sprite.Animation == "death"))
             {
@@ -883,7 +887,7 @@ public partial class DeniaFormOverlaySync : Node
         SetRectVisual(_corpse, _deathWasBlack, 1f, 1f, 0f);
         if (!_deathWasBlack)
         {
-            var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Idle");
+            var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
             if (sprite != null && sprite.SpriteFrames.HasAnimation("death"))
             {
                 // 死亡动画不受加速模式影响，结束后保留伏地末帧。
@@ -1075,7 +1079,7 @@ public partial class DeniaFormOverlaySync : Node
         _animTime += delta;
         ResetMotion();
         if (_animTime < DeniaFormPatch.PinkDeathDuration) return;
-        var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Idle");
+        var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
         if (sprite != null && sprite.SpriteFrames.HasAnimation("death"))
         {
             sprite.Pause();
@@ -1235,9 +1239,9 @@ public static class DeniaBeforeCardPlayedAnimPatch
             DeniaFormPatch.BeginBlackFormCardPlay(creature, isAttack);
 
             bool isBlack = DeniaFormHelper.IsBlack(creature);
-            // 只读取牌自身声明的段数；单段指令稍后覆盖粉态旧动作并对齐命中中点。
+            // 粉态等攻击指令确定段数后只启动一种动作；黑态保持原入口。
             DeniaPinkAttackRule.Begin(card, creature, !isBlack);
-            if (isAttack) DeniaFormPatch.PlayAttack(creature, isBlack);
+            if (isAttack && isBlack) DeniaFormPatch.PlayAttack(creature, true);
             if (isBlack)
             {
                 if (isAttack)

@@ -21,12 +21,14 @@ internal static class DeniaPinkAttackRule
         if (isPinkDenia && card.Type == CardType.Attack) Pending.Add(card, new PlayState(actor));
     }
 
-    internal static bool TryStart(CardModel? card, Creature? actor, int declaredHits)
+    internal static bool TryStart(CardModel? card, Creature? actor, int declaredHits, out bool useLegacy)
     {
+        useLegacy = false;
         if (card == null || actor == null || !Pending.TryGetValue(card, out var state)
             || !ReferenceEquals(state.Actor, actor) || state.Started) return false;
         state.Started = true;
-        return declaredHits == 1;
+        useLegacy = declaredHits != 1;
+        return !useLegacy;
     }
 
     internal static void End(CardModel card) => Pending.Remove(card);

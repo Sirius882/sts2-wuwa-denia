@@ -45,6 +45,14 @@ def main():
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
     shutil.copyfile(HERE / 'Preview.cs', runtime / 'Preview.cs')
+    shutil.copyfile(HERE / 'ControllerFixture.cs', runtime / 'ControllerFixture.cs')
+    # Link the exact production controller body; no copied controller implementation in fixtures.
+    controller = (MOD / 'src/Cards/DeniaFormVisuals.cs').read_text(encoding='utf-8-sig')
+    start = controller.index('public partial class DeniaFormOverlaySync')
+    end = controller.index('\n/// <summary>\n/// Death/revive', start)
+    (runtime / 'DeniaFormOverlaySync.cs').write_text(
+        'using System;\nusing System.Threading.Tasks;\nusing Godot;\nnamespace Denia;\n' + controller[start:end], encoding='utf-8')
+
     (runtime / 'project.godot').write_text('''config_version=5
 [application]
 config/name="Denia Pink Idle Preview"

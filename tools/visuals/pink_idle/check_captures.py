@@ -206,6 +206,11 @@ def check_attack(folder: Path, assets: Path):
     mask = normal[:, :, 3] > 240
     assert np.quantile(abs(half[:, :, 3][mask] - normal[:, :, 3][mask] * .5), .90) < 2
     assert len(list(folder.glob('attack_[0-9][0-9][0-9][0-9].png'))) == 311
+    for seconds in (0, 1.873, 2.4):
+        standalone = np.array(Image.open(folder / f'isolated_{seconds:.3f}.png'), dtype=float)
+        controlled = np.array(Image.open(folder / f'controller_{seconds:.3f}.png'), dtype=float)
+        assert abs(standalone - controlled).mean() < .05, ('controller shows an extra body', seconds)
+    print('PASS: production controller composite matches the isolated single-hit image at three timestamps')
     print(f'PASS: pink attack original GLSL at three timestamps, 311 frames, mirror and inherited alpha: {errors}')
     return errors
 

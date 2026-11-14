@@ -255,13 +255,14 @@ public partial class Preview : Node
         actions.SpriteFrames.AddAnimation("idle");actions.SpriteFrames.AddAnimation("attack");
         var rest = GD.Load<Texture2D>("res://images/characters/denia/realtime_pink/action_rest.png");
         actions.SpriteFrames.AddFrame("idle", rest);actions.SpriteFrames.AddFrame("attack", rest);
-        _viewport.AddChild(actions);actions.Play("idle");
-        var idle = new DeniaPinkIdleVisual();_viewport.AddChild(idle);idle.SetProcess(false);idle.BindActions(actions);
-        idle.SetSuppressed(true);actions.Play("attack");actions.Play("idle");
+        var legacyBody = new Node2D();_viewport.AddChild(legacyBody);
+        legacyBody.AddChild(actions);actions.Play("idle");
+        var idle = new DeniaPinkIdleVisual();legacyBody.AddChild(idle);idle.SetProcess(false);idle.BindActions(actions);
+        legacyBody.Hide();actions.Play("attack");actions.Play("idle");
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-        Check(!idle.Visible && !actions.Visible, "deferred action signals cannot reveal old body over new attack");
-        idle.SetSuppressed(false);Check(idle.Visible && !actions.Visible, "idle restored after attack override");
-        idle.Free();actions.Free();
+        Check(!idle.IsVisibleInTree() && !actions.IsVisibleInTree(), "legacy parent blocks deferred action signals");
+        legacyBody.Show();Check(idle.IsVisibleInTree() && !actions.IsVisibleInTree(), "idle restored after attack override");
+        legacyBody.Free();
         if (_render)
         {
             for (int i = 0; i <= 310; i++)
@@ -280,9 +281,62 @@ public partial class Preview : Node
                 attack.Seek(seconds);await Capture($"pure_{seconds:F3}");
             }
         }
+        if (body.GetParent() != attack) body.Reparent(attack);
+        body.Position = -attack.DesignOrigin;attack.Show();
+        await CheckAttackController(attack);
         File.WriteAllText(Path.Combine(_output, "checks.json"),
             $"{{\"checks\":{_checks},\"form\":\"pink_1hit\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
         GD.Print($"PASS: {_checks} pink single-hit checks, render={_render}");
+    }
+
+    private async Task CheckAttackController(DeniaPinkAttackVisual isolated)
+    {
+        isolated.Hide();
+        var node = ControllerFixture.Create(_viewport);
+        var legacy = node.Pink.GetNode<AnimatedSprite2D>("Body/Idle");
+        var idle = node.Pink.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle");
+        foreach (bool fast in new[] { false, true })
+        {
+            DeniaFormPatch.Fast = fast;
+            var current = node.Sync.PlayPinkSingleHit()!;current.SetProcess(false);
+            Check(current.Playing && legacy.Animation == "idle" && !legacy.IsPlaying(), "single hit never starts old attack");
+            for (int frame = 0; frame <= 310; frame++)
+            {
+                current.Seek(frame / 60.0);
+                // Reproduce late animation signals/direct shows that used to reveal an old body.
+                if (frame % 31 == 0) { legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
+                node.Sync._Process(1.0 / 60);
+                Check(!legacy.IsVisibleInTree() && !idle.IsVisibleInTree() && current.IsVisibleInTree(),
+                    "single hit owns body through attack and recovery " + fast + ":" + frame);
+            }
+            legacy.Play("attack");
+            current.Seek(0);current.ReleaseImpact();current._Process(10);
+            Check(!current.Playing && !current.IsVisibleInTree() && idle.IsVisibleInTree() && !legacy.IsVisibleInTree()
+                && legacy.Animation == "idle" && !legacy.IsPlaying(),
+                "controller restores only realtime idle after recovery");
+            current = node.Sync.PlayPinkSingleHit()!;current.SetProcess(false);var pending = current.Impact;
+            node.Sync.PlayDodge(false);
+            Check(!current.Playing && pending.IsCompleted && legacy.IsVisibleInTree() && legacy.Animation == "dodge",
+                "dodge interrupts single hit and releases damage wait");
+            node.Sync.PlayPinkSingleHit()!.SetProcess(false);node.Entity.Black = true;node.Sync.SetForm(true);
+            Check(!current.Playing && !node.Pink.IsVisibleInTree() && node.Black.IsVisibleInTree(), "form switch keeps black body exclusive");
+            node.Entity.Black = false;node.Sync.SetForm(false);
+        }
+        DeniaFormPatch.Fast = false;
+        if (_render)
+        {
+            foreach (double seconds in new[] { 0, 1.873, 2.4 })
+            {
+                node.Hide();isolated.Show();isolated.Seek(seconds);await Capture($"isolated_{seconds:F3}");isolated.Hide();node.Show();
+                var current = node.Sync.PlayPinkSingleHit()!;current.SetProcess(false);current.Seek(seconds);
+                legacy.Show();idle.Show();node.Sync._Process(0);
+                await Capture($"controller_{seconds:F3}");
+            }
+        }
+        node.Sync.PlayPinkSingleHit()!.SetProcess(false);node.Sync.PlayDeath();
+        Check(!node.Pink.GetNode<DeniaPinkAttackVisual>(DeniaPinkAttackVisual.NodeName).Playing
+            && legacy.Animation == "death" && legacy.IsVisibleInTree(), "death replaces single hit without overlap");
+        node.Free();
     }
 
     private async Task CheckRise()
