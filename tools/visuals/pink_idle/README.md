@@ -31,3 +31,16 @@ python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form bla
 ```
 
 该分支检查末帧不回绕、30/60/144 FPS计时、凝泡前后椭圆跟踪、隐藏暂停和移除释放等待者；捕获181张60Hz帧、两张镜像对照和 `black_rise.mp4`。普通粉黑待机的检查入口不变。游戏调用仅通过内部动画测试牌第二选项，经 `DeniaFormPatch.PlayBlackRise` 在持有者身上播放并恢复当前形态；没有接到正式的切态或复活触发器。
+
+## 粉态单段攻击（2026-11-14）
+
+`--form pink_1hit` 从原JS／HTML提取48幅逐帧独立裁剪的WebP与光流，放入744×540画布；保留完整5.166秒攻击和收招。生产类 `DeniaPinkAttackVisual` 共用原生光流基类，实时绘制法阵、虹彩泡和星光，小泡／法阵渐变用原生分层绘制近似。正常速度1倍、Fast为3倍。
+
+```powershell
+python -B myModresources/denia/tools/visuals/pink_idle/import_animator.py --form pink_1hit
+python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form pink_1hit --render
+```
+
+只按达妮娅角色、粉态、攻击牌及牌自身首个攻击指令声明的段数选择；不检查卡牌来源，不统计联动伤害。读取原`_hitCount`而非经过额外效果修改后的次数，1段使用新动画，群攻目标循环共用一次身体动作。`AttackCommand.Execute`保留原前置回调，在动画2.583秒中点才继续目标命中特效与伤害；Fast对应0.861秒。若原伤害前置回调仍在等待，身体保持中点直到回调准备完成，再恢复收招。死亡、后撤、切态或离场释放等待，非交互仿真跳过。
+
+预览检查30/60/144 FPS与1/3倍速、中点等待与恢复、旧身体独占显隐、停止／重播；捕获完整311帧、朝向、父级透明度及3个时间的独立原GLSL公式对照。输出`pink_1hit.mp4`与`pink_1hit/render/keyframes.jpg`。这不是实际战斗录像。

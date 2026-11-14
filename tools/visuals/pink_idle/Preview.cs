@@ -20,6 +20,12 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "pink_1hit")
+            {
+                await CheckPinkAttack();
+                GetTree().Quit();
+                return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black_rise")
             {
                 await CheckRise();
@@ -188,6 +194,97 @@ public partial class Preview : Node
         catch (Exception ex) { GD.PrintErr(ex); GetTree().Quit(1); }
     }
 
+    private async Task CheckPinkAttack()
+    {
+        _viewport = new SubViewport { Size = new Vector2I(744, 540), TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
+        AddChild(_viewport);
+        var attack = new DeniaPinkAttackVisual();
+        attack.Position = attack.DesignOrigin;
+        _viewport.AddChild(attack);
+        attack.SetProcess(false);
+        Check(attack.Initialized, "attack resources initialize");
+        var body = attack.GetNode<ColorRect>("FlowBody");
+        var material = (ShaderMaterial)body.Material;
+        Check(body.Size == new Vector2(744, 540), "larger attack canvas remains unclipped");
+        Check(material.GetShaderParameter("frames").As<Texture2D>().GetSize() == new Vector2(5952, 3240), "48 cropped attack tiles");
+        Check(material.GetShaderParameter("flow_fields").As<Texture2D>().GetSize() == new Vector2(712, 348), "48 attack flow tiles");
+        int completions = 0;
+        attack.Finished += () => completions++;
+        foreach (int fps in new[] { 30, 60, 144 })
+        foreach (int speed in new[] { 1, 3 })
+        {
+            attack.Play(speed);attack.SetProcess(false);
+            for (int f = 0; f < fps; f++) attack._Process(1.0 / fps);
+            Check(Math.Abs(attack.Clock - speed) < 1e-8, "attack elapsed time " + fps + " FPS speed " + speed);
+            attack._Process(10);
+            Check(!attack.Playing && !attack.Visible && attack.Clock == DeniaPinkAttackVisual.Duration, "attack completes once and hides");
+            int before = completions;attack._Process(10);
+            Check(completions == before, "completion cannot fire twice");
+        }
+        foreach (int fps in new[] { 30, 60, 144 })
+        foreach (int speed in new[] { 1, 3 })
+        {
+            attack.Play(speed, holdAtImpact: true);attack.SetProcess(false);
+            Check(!attack.Impact.IsCompleted, "damage cannot happen before midpoint");
+            for (int f = 0; f < Math.Ceiling(DeniaPinkAttackVisual.Midpoint / speed * fps); f++) attack._Process(1.0 / fps);
+            Check(attack.Impact.IsCompleted && attack.Clock == DeniaPinkAttackVisual.Midpoint,
+                "damage gate lands at exact midpoint at " + fps + " FPS speed " + speed);
+            attack._Process(1);
+            Check(attack.Clock == DeniaPinkAttackVisual.Midpoint, "midpoint holds until damage callback is ready");
+            attack.ReleaseImpact();attack._Process(1.0 / fps);
+            Check(attack.Clock > DeniaPinkAttackVisual.Midpoint, "recovery resumes after damage");
+        }
+        attack.Play(1, holdAtImpact: true);var canceledImpact = attack.Impact;attack.Stop();
+        Check(canceledImpact.IsCompleted, "death or interruption releases pending damage wait");
+        attack.Play(1);attack.SetProcess(false);attack._Process(2);attack.Stop();
+        int stopped = completions;attack._Process(10);
+        Check(completions == stopped && attack.Clock == 2, "interrupted attack stops without completing");
+        attack.Play(1);attack.SetProcess(false);
+        Check(attack.Clock == 0 && attack.Playing, "next attack restarts from beginning");
+        attack.Hide();attack._Process(1);Check(attack.Clock == 0, "hidden form pauses attack");attack.Show();
+        foreach (float invalid in new[] { 0f, -1f, float.NaN })
+        {
+            try { attack.Play(invalid);Check(false, "invalid speed rejected"); }
+            catch (ArgumentOutOfRangeException) { Check(true, "invalid speed rejected"); }
+        }
+        attack.Seek(10);
+        Check(attack.Clock == DeniaPinkAttackVisual.Duration && material.GetShaderParameter("frame_index").AsInt32() == 47
+            && material.GetShaderParameter("fraction").AsSingle() == 0, "attack final pose clamps without loop");
+        var actions = new AnimatedSprite2D { SpriteFrames = new SpriteFrames() };
+        actions.SpriteFrames.AddAnimation("idle");actions.SpriteFrames.AddAnimation("attack");
+        var rest = GD.Load<Texture2D>("res://images/characters/denia/realtime_pink/action_rest.png");
+        actions.SpriteFrames.AddFrame("idle", rest);actions.SpriteFrames.AddFrame("attack", rest);
+        _viewport.AddChild(actions);actions.Play("idle");
+        var idle = new DeniaPinkIdleVisual();_viewport.AddChild(idle);idle.SetProcess(false);idle.BindActions(actions);
+        idle.SetSuppressed(true);actions.Play("attack");actions.Play("idle");
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        Check(!idle.Visible && !actions.Visible, "deferred action signals cannot reveal old body over new attack");
+        idle.SetSuppressed(false);Check(idle.Visible && !actions.Visible, "idle restored after attack override");
+        idle.Free();actions.Free();
+        if (_render)
+        {
+            for (int i = 0; i <= 310; i++)
+            {
+                attack.Seek(Math.Min(i / 60.0, DeniaPinkAttackVisual.Duration));
+                await Capture($"attack_{i:D4}");
+            }
+            attack.Seek(2.4);await Capture("attack_right");
+            attack.Position = new Vector2(744 - attack.DesignOrigin.X, attack.DesignOrigin.Y);
+            attack.SetFacing(true);await Capture("attack_left");
+            attack.SetFacing(false);attack.Position = attack.DesignOrigin;
+            attack.Modulate = new Color(1, 1, 1, 0.5f);await Capture("attack_half_alpha");attack.Modulate = Colors.White;
+            body.Reparent(_viewport);body.Position = Vector2.Zero;attack.Hide();
+            foreach (double seconds in new[] { 0, 1.873, 5.165 })
+            {
+                attack.Seek(seconds);await Capture($"pure_{seconds:F3}");
+            }
+        }
+        File.WriteAllText(Path.Combine(_output, "checks.json"),
+            $"{{\"checks\":{_checks},\"form\":\"pink_1hit\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
+        GD.Print($"PASS: {_checks} pink single-hit checks, render={_render}");
+    }
+
     private async Task CheckRise()
     {
         _viewport = new SubViewport { Size = new Vector2I(592, 600), TransparentBg = true,
@@ -251,7 +348,7 @@ public partial class Preview : Node
         await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
         using var image = _viewport.GetTexture().GetImage();
         Check(image.SavePng(Path.Combine(_output, name + ".png")) == Error.Ok, "GPU capture " + name);
-        Check(image.GetPixel(0, 0).A < 0.01f && image.GetPixel(591, 599).A < 0.01f,
+        Check(image.GetPixel(0, 0).A < 0.01f && image.GetPixel(image.GetWidth() - 1, image.GetHeight() - 1).A < 0.01f,
             "transparent corners " + name);
     }
 
