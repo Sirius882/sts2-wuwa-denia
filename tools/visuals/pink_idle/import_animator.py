@@ -17,30 +17,32 @@ MOD = HERE.parents[2]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit'), default='pink')
     args = parser.parse_args()
-    if args.form == 'pink_2hit':
-        source = HERE / 'source/pink_2hit_animator.js'
+    if args.form in ('pink_2hit', 'dark_2hit'):
+        source = HERE / f'source/{args.form}_animator.js'
         text = source.read_text(encoding='utf-8-sig')
         def value(name):
             return json.loads(re.search(r'^  const ' + name + r' = (.+);', text, re.MULTILINE)[1])
         encoded = value('WEBP_B64')
         flow = zlib.decompress(base64.b64decode(value('FLOW_B64'), validate=True))
-        assert len(encoded) == 132 and len(flow) == 132 * 224 * 126 * 4
-        atlas = Image.new('RGBA', (896 * 8, 504 * 17))
-        fields = Image.new('RGBA', (224 * 8, 126 * 17), (128, 128, 128, 128))
+        count = 108 if args.form == 'dark_2hit' else 132
+        rows = (count + 7) // 8
+        assert len(encoded) == count and len(flow) == count * 224 * 126 * 4
+        atlas = Image.new('RGBA', (896 * 8, 504 * rows))
+        fields = Image.new('RGBA', (224 * 8, 126 * rows), (128, 128, 128, 128))
         for i, frame in enumerate(encoded):
             image = Image.open(io.BytesIO(base64.b64decode(frame))).convert('RGBA')
             assert image.size == (896, 504)
             atlas.paste(image, (i % 8 * 896, i // 8 * 504))
             stride = 224 * 126 * 4
             fields.paste(Image.frombytes('RGBA', (224, 126), flow[i * stride:(i + 1) * stride]), (i % 8 * 224, i // 8 * 126))
-        output = MOD / 'images/characters/denia/realtime_pink_2hit'
+        output = MOD / f'images/characters/denia/realtime_{args.form}'
         output.mkdir(parents=True, exist_ok=True)
         atlas.save(output / 'frames.webp', lossless=True, exact=True, method=6)
         fields.save(output / 'flow.png')
         (output / 'tracking.tres').write_text('[gd_resource type="Resource" format=3]\n\n[resource]\nmetadata/source_sha256 = "' + hashlib.sha256(source.read_bytes()).hexdigest() + '"\n', encoding='utf-8')
-        print(f'Extracted 132 original WebP frames and bidirectional RGBA flow fields to {output}')
+        print(f'Extracted {count} original WebP frames and bidirectional RGBA flow fields to {output}')
         return
     attack = args.form in ('pink_1hit', 'dark_1hit')
     dark_attack = args.form == 'dark_1hit'

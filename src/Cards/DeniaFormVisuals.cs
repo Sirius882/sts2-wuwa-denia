@@ -715,11 +715,13 @@ public partial class DeniaFormOverlaySync : Node
             ResetMotion();
             _blackFxAlpha = _blackFxRot = 0;
             _attackWasBlack = isBlack;
-            var nodeName = multiHit && !isBlack ? DeniaPinkMultiAttackVisual.MultiNodeName : DeniaSingleHitVisual.NodeName;
+            var nodeName = multiHit ? DeniaPinkMultiAttackVisual.MultiNodeName : DeniaSingleHitVisual.NodeName;
             _singleHit = overlay.GetNodeOrNull<DeniaSingleHitVisual>(nodeName);
             if (!GodotObject.IsInstanceValid(_singleHit))
             {
-                _singleHit = isBlack ? new DeniaDarkAttackVisual() : multiHit ? new DeniaPinkMultiAttackVisual() : new DeniaPinkAttackVisual();
+                _singleHit = isBlack
+                    ? multiHit ? new DeniaDarkMultiAttackVisual() : new DeniaDarkAttackVisual()
+                    : multiHit ? new DeniaPinkMultiAttackVisual() : new DeniaPinkAttackVisual();
                 _singleHit.Name = nodeName;
                 _singleHit.Visible = false;
                 overlay.AddChild(_singleHit);
