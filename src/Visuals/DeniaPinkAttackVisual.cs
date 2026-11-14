@@ -5,9 +5,8 @@ using Godot;
 namespace Denia;
 
 /// <summary>粉态单段攻击与收招：原48幅素材的实时光流、法阵、虹彩泡与星光。</summary>
-public partial class DeniaPinkAttackVisual : DeniaFlowIdleVisual
+public partial class DeniaPinkAttackVisual : DeniaSingleHitVisual
 {
-    public const string NodeName = "RealtimeSingleHit";
     public const double Duration = 5.166;
     protected override string Assets => "res://images/characters/denia/realtime_pink_1hit/";
     protected override string ShaderPath => "res://shaders/denia_pink_1hit.gdshader";
@@ -17,60 +16,14 @@ public partial class DeniaPinkAttackVisual : DeniaFlowIdleVisual
     public override Vector2 DesignOrigin => new(375, 467);
     protected override Vector2 CanvasSize => new(744, 540);
     protected override bool UsesTracking => false;
-    protected override bool Loop => false;
-    public bool Playing { get; private set; }
-    private float _speed = 1;
-    private bool _holdAtImpact;
-    private TaskCompletionSource? _impact;
-    public Task Impact => _impact?.Task ?? Task.CompletedTask;
     public const double ImpactTime = Duration / 2 - 0.5;
-    public event Action? Finished;
+    public override double DamageTime => ImpactTime;
     private static readonly Vector2[] StarShape = [new(0, -1.6f), new(0.32f, -0.32f), new(1.6f, 0), new(0.32f, 0.32f),
         new(0, 1.6f), new(-0.32f, 0.32f), new(-1.6f, 0), new(-0.32f, -0.32f)];
     private static readonly Vector2[] Orbs = [new(520, 185), new(556, 242), new(542, 318), new(575, 288), new(515, 372), new(482, 215)];
     private static readonly float[] Radii = [9.5f, 11.2f, 8.4f, 6.5f, 8.8f, 7.2f];
     private static readonly float[] Hues = [325, 310, 285, 165, 330, 340];
     private static readonly float[] Phases = [0.2f, 1.1f, 2, 3.1f, 4, 5.2f];
-
-    public void Play(float speed, bool holdAtImpact = false)
-    {
-        if (!float.IsFinite(speed) || speed <= 0) throw new ArgumentOutOfRangeException(nameof(speed));
-        _impact?.TrySetResult();
-        _impact = new TaskCompletionSource();
-        _holdAtImpact = holdAtImpact;
-        _speed = speed;
-        Seek(0);
-        Playing = true;
-        Show();
-        SetProcess(true);
-    }
-
-    public void ReleaseImpact(Task? expected = null)
-    {
-        if (expected == null || ReferenceEquals(expected, _impact?.Task)) _holdAtImpact = false;
-    }
-
-    public void Stop()
-    {
-        _holdAtImpact = false;
-        _impact?.TrySetResult();
-        Playing = false;
-        Hide();
-        SetProcess(false);
-    }
-
-    public override void _Process(double delta)
-    {
-        if (!Playing || !IsVisibleInTree()) return;
-        double next = Clock + delta * _speed;
-        Seek(_holdAtImpact ? Math.Min(next, ImpactTime) : next);
-        if (Clock >= ImpactTime) _impact?.TrySetResult();
-        if (Clock < Duration) return;
-        Stop();
-        Finished?.Invoke();
-    }
-
-    public override void _ExitTree() => Stop();
 
     private static float SmoothRange(float start, float end, float value)
     {

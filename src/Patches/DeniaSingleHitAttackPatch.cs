@@ -11,7 +11,7 @@ namespace Denia;
 [HarmonyPatch(typeof(AttackCommand), nameof(AttackCommand.Execute))]
 internal static class DeniaSingleHitAttackPatch
 {
-    internal sealed record WaitState(Func<Task>? Original, Func<Task>? AfterAnimation, DeniaPinkAttackVisual Visual, Task Impact);
+    internal sealed record WaitState(Func<Task>? Original, Func<Task>? AfterAnimation, DeniaSingleHitVisual Visual, Task Impact);
 
     internal static void Prefix(AttackCommand __instance, int ____hitCount,
         ref Func<Task>? ____beforeDamage, ref Func<Task>? ____afterAttackerAnim, out WaitState? __state)
@@ -21,10 +21,16 @@ internal static class DeniaSingleHitAttackPatch
         if (!DeniaPinkAttackRule.TryStart(__instance.ModelSource as CardModel, __instance.Attacker,
             ____hitCount, out bool useLegacy))
         {
-            if (useLegacy) DeniaFormPatch.PlayAttack(__instance.Attacker!, false);
+            if (useLegacy)
+            {
+                var actor = __instance.Attacker!;
+                bool black = DeniaFormHelper.IsBlack(actor);
+                DeniaFormPatch.PlayAttack(actor, black);
+                if (black) DeniaFormPatch.PlayBlackAttackFxSlash(actor);
+            }
             return;
         }
-        var visual = DeniaFormPatch.PlayPinkSingleHit(__instance.Attacker!);
+        var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!);
         if (visual == null) return;
         var previous = ____beforeDamage;
         var afterAnimation = ____afterAttackerAnim;

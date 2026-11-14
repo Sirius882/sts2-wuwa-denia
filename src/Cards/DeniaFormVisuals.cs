@@ -145,12 +145,12 @@ public static class DeniaFormPatch
         catch { }
     }
 
-    internal static DeniaPinkAttackVisual? PlayPinkSingleHit(Creature creature)
+    internal static DeniaSingleHitVisual? PlaySingleHit(Creature creature)
     {
         var node = GetCreatureNode(creature);
-        if (node == null || IsDying(node) || creature.IsDead || DeniaFormHelper.IsBlack(creature)) return null;
+        if (node == null || IsDying(node) || creature.IsDead) return null;
         EnsureOverlays(node);
-        return GetSyncNode(node)?.PlayPinkSingleHit();
+        return GetSyncNode(node)?.PlaySingleHit(DeniaFormHelper.IsBlack(creature));
     }
 
     internal static Task PlayBlackRise(Creature creature)
@@ -520,7 +520,7 @@ public static class DeniaFormPatch
         var idle = rect.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
         if (idle != null && GodotObject.IsInstanceValid(idle)) idle.FlipH = flip;
         rect.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.SetFacing(flip);
-        rect.GetNodeOrNull<DeniaPinkAttackVisual>(DeniaPinkAttackVisual.NodeName)?.SetFacing(flip);
+        rect.GetNodeOrNull<DeniaSingleHitVisual>(DeniaSingleHitVisual.NodeName)?.SetFacing(flip);
     }
 
     private static TextureRect MakeOverlay(string name, Texture2D tex)
@@ -650,7 +650,8 @@ public partial class DeniaFormOverlaySync : Node
     private bool _hasBaseLayout;
     private bool _hasIdleFrames;
     private DeniaBlackRiseVisual? _risePreview;
-    private DeniaPinkAttackVisual? _pinkAttack;
+    private DeniaSingleHitVisual? _singleHit;
+    private bool _attackWasBlack;
 
     private Vector2 _lastBodyScale = Vector2.One;
     private Vector2 _lastVisualsScale = Vector2.One;
@@ -697,54 +698,69 @@ public partial class DeniaFormOverlaySync : Node
         ApplyTransforms();
     }
 
-    internal DeniaPinkAttackVisual? PlayPinkSingleHit()
+    internal DeniaPinkAttackVisual? PlayPinkSingleHit() => PlaySingleHit(false) as DeniaPinkAttackVisual;
+
+    internal DeniaSingleHitVisual? PlaySingleHit(bool isBlack)
     {
-        if (_pink == null || _creatureNode == null || DeniaFormPatch.IsDying(_creatureNode) || IsCurrentlyBlack()) return null;
+        var overlay = isBlack ? _black : _pink;
+        if (overlay == null || _creatureNode == null || DeniaFormPatch.IsDying(_creatureNode)
+            || isBlack != IsCurrentlyBlack() || _state is AnimState.DeathTransition or AnimState.Dead) return null;
         try
         {
+            StopSingleHit();
             ResetBodyAnimation();
-            if (!GodotObject.IsInstanceValid(_pinkAttack))
+            _state = AnimState.Idle;
+            _animTime = 0;
+            ResetMotion();
+            _blackFxAlpha = _blackFxRot = 0;
+            _attackWasBlack = isBlack;
+            _singleHit = overlay.GetNodeOrNull<DeniaSingleHitVisual>(DeniaSingleHitVisual.NodeName);
+            if (!GodotObject.IsInstanceValid(_singleHit))
             {
-                _pinkAttack = new DeniaPinkAttackVisual { Name = DeniaPinkAttackVisual.NodeName, Visible = false };
-                _pink.AddChild(_pinkAttack);
-                _pinkAttack.Finished += () => {
+                _singleHit = isBlack ? new DeniaDarkAttackVisual() : new DeniaPinkAttackVisual();
+                _singleHit.Name = DeniaSingleHitVisual.NodeName;
+                _singleHit.Visible = false;
+                overlay.AddChild(_singleHit);
+                _singleHit.Finished += () => {
                     ResetBodyAnimation();
-                    StopPinkAttack();
+                    StopSingleHit();
                 };
             }
+            EnsureParentAllowsOverflow();
             DeniaFormPatch.SyncOverlayLayout(_creatureNode);
-            _pinkAttack.Play(DeniaFormPatch.IsFastMode() ? 3 : 1, holdAtImpact: true);
-            SetPinkBodyVisible(false);
-            return _pinkAttack;
+            _singleHit.Play(DeniaFormPatch.IsFastMode() ? 3 : 1, holdAtImpact: true);
+            SetBodyVisible(overlay, false);
+            return _singleHit;
         }
         catch (Exception exception)
         {
-            GD.PrintErr($"[DeniaPinkAttack] Animation skipped: {exception.Message}");
-            StopPinkAttack();
-            PlayBodyAnimation(false, "attack");
+            GD.PrintErr($"[DeniaSingleHit] Animation skipped: {exception.Message}");
+            StopSingleHit();
+            PlayBodyAnimation(isBlack, "attack");
             return null;
         }
     }
 
-    private void SetPinkBodyVisible(bool visible)
+    private static void SetBodyVisible(TextureRect? overlay, bool visible)
     {
-        if (!GodotObject.IsInstanceValid(_pink)) return;
+        if (!GodotObject.IsInstanceValid(overlay)) return;
         // 隐藏共同父节点，旧动作／待机的信号不能重新显露身体。
-        var body = _pink!.GetNodeOrNull<Node2D>("Body");
+        var body = overlay!.GetNodeOrNull<Node2D>("Body");
         if (body != null) body.Visible = visible;
     }
 
-    private void StopPinkAttack()
+    private void StopSingleHit()
     {
-        if (GodotObject.IsInstanceValid(_pinkAttack)) _pinkAttack!.Stop();
-        SetPinkBodyVisible(true);
+        if (GodotObject.IsInstanceValid(_singleHit)) _singleHit!.Stop();
+        SetBodyVisible(_pink, true);
+        SetBodyVisible(_black, true);
     }
 
     internal async Task PlayBlackRise()
     {
         if (_risePreview != null || !_hasBaseLayout || _creatureNode == null
             || DeniaFormPatch.IsDying(_creatureNode)) return;
-        StopPinkAttack();
+        StopSingleHit();
         var preview = new DeniaBlackRiseVisual { Name = "BlackRisePreview" };
         try
         {
@@ -785,7 +801,7 @@ public partial class DeniaFormOverlaySync : Node
         var sprite = (isBlack ? _black : _pink)?.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
         if (sprite == null || !GodotObject.IsInstanceValid(sprite)
             || !sprite.SpriteFrames.HasAnimation(animation)) return false;
-        StopPinkAttack();
+        StopSingleHit();
         ResetBodyAnimation();
         sprite.SpeedScale = DeniaFormPatch.IsFastMode() ? 3f : 1f;
         sprite.Play(animation);
@@ -810,7 +826,7 @@ public partial class DeniaFormOverlaySync : Node
 
     public void ClearDeadState()
     {
-        StopPinkAttack();
+        StopSingleHit();
         ResetBodyAnimation();
         _state = AnimState.Idle;
         _animTime = 0;
@@ -857,7 +873,7 @@ public partial class DeniaFormOverlaySync : Node
 
     public void SetForm(bool isBlack)
     {
-        StopPinkAttack();
+        StopSingleHit();
         if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
         ResetBodyAnimation();
         _state = AnimState.Idle;
@@ -872,7 +888,7 @@ public partial class DeniaFormOverlaySync : Node
     public void PlayDeath()
     {
         if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
-        StopPinkAttack();
+        StopSingleHit();
         _deathWasBlack = IsCurrentlyBlack(); // 在死亡清除形态 Power 之前记住形态。
         ResetBodyAnimation();
         if (_creatureNode != null && GodotObject.IsInstanceValid(_creatureNode))
@@ -1114,10 +1130,10 @@ public partial class DeniaFormOverlaySync : Node
         Vector2 center = _baseLocalPos + _baseSize * 0.5f;
         Vector2 pos = _baseLocalPos + _motionOffset;
 
-        if (_pinkAttack?.Playing == true)
+        if (_singleHit?.Playing == true)
         {
-            if (IsCurrentlyBlack() || _state is AnimState.DeathTransition or AnimState.Dead) StopPinkAttack();
-            else SetPinkBodyVisible(false);
+            if (IsCurrentlyBlack() != _attackWasBlack || _state is AnimState.DeathTransition or AnimState.Dead) StopSingleHit();
+            else SetBodyVisible(_attackWasBlack ? _black : _pink, false);
         }
         ApplyBody(_pink, pos, centerPivot: true);
         ApplyBody(_black, pos, centerPivot: true);
@@ -1238,18 +1254,8 @@ public static class DeniaBeforeCardPlayedAnimPatch
             bool isAttack = card.Type == CardType.Attack;
             DeniaFormPatch.BeginBlackFormCardPlay(creature, isAttack);
 
-            bool isBlack = DeniaFormHelper.IsBlack(creature);
-            // 粉态等攻击指令确定段数后只启动一种动作；黑态保持原入口。
-            DeniaPinkAttackRule.Begin(card, creature, !isBlack);
-            if (isAttack && isBlack) DeniaFormPatch.PlayAttack(creature, true);
-            if (isBlack)
-            {
-                if (isAttack)
-                {
-                    DeniaFormPatch.PlayBlackAttackFxSlash(creature);
-                    await DeniaFormPatch.AwaitBlackFx(creature);
-                }
-            }
+            // 粉态等攻击指令确定段数后只启动一种动作；黑态现在共用此入口。
+            DeniaPinkAttackRule.Begin(card, creature, true);
         }
         catch { }
     }

@@ -15,10 +15,10 @@ internal static class DeniaPinkAttackRule
     }
     private static readonly ConditionalWeakTable<CardModel, PlayState> Pending = new();
 
-    internal static void Begin(CardModel card, Creature actor, bool isPinkDenia)
+    internal static void Begin(CardModel card, Creature actor, bool isDenia)
     {
         Pending.Remove(card);
-        if (isPinkDenia && card.Type == CardType.Attack) Pending.Add(card, new PlayState(actor));
+        if (isDenia && card.Type == CardType.Attack) Pending.Add(card, new PlayState(actor));
     }
 
     internal static bool TryStart(CardModel? card, Creature? actor, int declaredHits, out bool useLegacy)
