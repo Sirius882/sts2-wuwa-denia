@@ -7,7 +7,7 @@ using MegaCrit.Sts2.Core.Models;
 
 namespace Denia;
 
-/// <summary>忽略联动追加段数；直接在原伤害回调之前等待身体动画中点。</summary>
+/// <summary>忽略联动追加段数；直接在原伤害回调之前等待身体动画命中时点。</summary>
 [HarmonyPatch(typeof(AttackCommand), nameof(AttackCommand.Execute))]
 internal static class DeniaSingleHitAttackPatch
 {
@@ -30,7 +30,7 @@ internal static class DeniaSingleHitAttackPatch
         var afterAnimation = ____afterAttackerAnim;
         var impact = visual.Impact;
         __state = new WaitState(previous, afterAnimation, visual, impact);
-        // 等到身体中点再生成目标命中特效；原伤害前回调仍按原顺序执行。
+        // 等到身体命中时点再生成目标命中特效；原伤害前回调仍按原顺序执行。
         ____afterAttackerAnim = async () => {
             if (afterAnimation != null) await afterAnimation();
             await impact;
