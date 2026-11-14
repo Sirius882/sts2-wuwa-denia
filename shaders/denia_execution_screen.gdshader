@@ -88,11 +88,9 @@ void fragment() {
             float bloom = exp(-dot(q, q) / (radius * radius));
             c += bloom * vec3(0.26, 0.18, 0.27) * smoothstep(0.15 + id * 0.07, 1.35, t);
         }
-        // 最后由不均匀的粉白雾接住原片极近景，不生成代码姜饼人或额外白幕。
-        float whitening = smoothstep(1.0 + cloud * 0.12, 1.4, t);
-        float soft_light = exp(-length((SCREEN_UV - vec2(0.30, 0.84)) * vec2(1.4, 1.0)) * 3.0);
-        vec3 pale = vec3(0.76, 0.72, 0.79) + vec3(0.12, 0.12, 0.12) * soft_light;
-        c = mix(c, pale, whitening * 0.97);
+        // 最后由不均匀的粉白雾铺满全屏至纯白，再接原片极近景，不生成代码姜饼人或额外白幕。
+        float whitening = smoothstep(1.0 + cloud * 0.12, 1.32, t);
+        c = mix(c, vec3(1.0), whitening);
     }
     COLOR = vec4(c, 1.0);
 }

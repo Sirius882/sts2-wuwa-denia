@@ -202,14 +202,14 @@ public partial class DeniaExecutionOverlay : CanvasLayer
             if (flash > 0) canvas.DrawRect(new Rect2(Vector2.Zero, Design), new Color(1, 1, 1, flash));
         }
         canvas.DrawSetTransform(Vector2.Zero);
-        // 始终保持电影画幅，入场滤镜在切点直接交给原视频。
+        // 入场滤镜铺满视口至白；切入原视频时才出现电影画幅。
         DrawBars(canvas);
     }
 
     private void DrawBars(Control canvas)
     {
-        float bars = _frameClock < 0.8f ? Smooth(_frameClock / 0.8f)
-            : _returning ? 1 - Smooth((_frameClock - DeniaExecutionTimeline.Release) / DeniaExecutionTimeline.Return) : 1;
+        if (_frameClock < DeniaExecutionTimeline.Enter) return;
+        float bars = _returning ? 1 - Smooth((_frameClock - DeniaExecutionTimeline.Release) / DeniaExecutionTimeline.Return) : 1;
         if (_frame.Position.Y > 0)
         {
             canvas.DrawRect(new Rect2(0, 0, _size.X, _frame.Position.Y * bars), Colors.Black);

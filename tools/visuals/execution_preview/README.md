@@ -18,7 +18,10 @@ verify the native video texture's resolution. The separate soundtrack and cut po
 Theora may represent repeated frames with empty packets, so the preparation check uses its timeline
 length rather than requiring a decoded picture for every interval.
 
-The overlay applies a growing, uneven pink-white filter for 0.8 seconds, then cuts directly to the clip.
+The overlay applies a growing, uneven pink-white filter across the entire viewport for 0.8 seconds,
+without cinematic bars. The final code-animation frame is fully white, then the clip and its opaque
+cinematic bars appear together at the cut. GPU checks cover all entrance corners and every pixel of
+the final white frame.
 It does not draw gingerbread geometry. It resumes the predecoded player one frame before the cut,
 without the old 0.2-second pre-roll that would skip the extreme close-up. Damage release stays at
 169/30 seconds, followed by the existing code-driven impact and return.
