@@ -1,0 +1,9 @@
+{
+  "source_sha256": "7a357a0fa27108453f802eef57216d0fa2a634f11860fe89d1f873e88e4c3dc5",
+  "binary_sha256": "b9a8762b0f52b98bf1e940058c61c3e241b68f49a490b72feed1d1ada143067c",
+  "binary_bytes": 121344,
+  "platform": "Windows x86_64",
+  "backend": "System Media Foundation / D3D11 NV12",
+  "runtime": "MSVC static CRT; system DLLs only",
+  "source_hash_format": "UTF-8 with LF newlines"
+}

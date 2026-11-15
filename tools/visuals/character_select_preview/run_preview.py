@@ -23,6 +23,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-character-select-video')
     parser.add_argument('--game', action='store_true', help='Probe installed DLL/PCK through real game mod initialization (no run started)')
+    parser.add_argument('--game-gpu', action='store_true', help='Use native offscreen D3D12 rendering for installed-game playback timing')
     args = parser.parse_args()
     runtime = args.output.resolve()
     if not runtime.is_relative_to((ROOT / '.cache').resolve()):
@@ -30,7 +31,9 @@ def main():
     runtime.mkdir(parents=True, exist_ok=True)
     if args.game:
         game = Path(os.environ.get('STS2_GAME_DIR', 'F:/SteamLibrary/steamapps/common/Slay the Spire 2'))
-        result = subprocess.run([str(game / 'SlayTheSpire2.exe'), '--headless', '--audio-driver', 'Dummy',
+        display = ['--display-driver', 'windows', '--position', '-16000,-16000', '--resolution', '1920x1080',
+            '--rendering-method', 'forward_plus', '--rendering-driver', 'd3d12'] if args.game_gpu else ['--headless']
+        result = subprocess.run([str(game / 'SlayTheSpire2.exe'), *display, '--audio-driver', 'Dummy',
             '--max-fps', '60', '--script', str(HERE / 'game_probe.gd'),
             '--log-file', str(runtime / 'game.log')], cwd=game, capture_output=True, text=True,
             encoding='utf-8', errors='replace', timeout=65,
@@ -42,7 +45,8 @@ def main():
             raise RuntimeError(f'Installed game probe failed: {runtime / "game.log"}')
         print(next(line for line in output.splitlines() if line.startswith('DENIA_BG_GAME PASS:')))
         return
-    for relative in ('src/Visuals/DeniaCharacterSelectBackground.cs', 'scenes/screens/char_select/denia_bg.tscn',
+    for relative in ('src/Visuals/DeniaCharacterSelectBackground.cs', 'src/Visuals/DeniaHardwareVideo.cs',
+                     'shaders/denia_video_nv12.gdshader', 'native/denia_video.bin', 'videos/denia_character_select_bg.mp4', 'scenes/screens/char_select/denia_bg.tscn',
                      'videos/denia_character_select_bg.ogv', 'images/char_select/denia_bg_poster.jpg'):
         target = runtime / relative;target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(MOD / relative, target)
@@ -70,7 +74,7 @@ script=ExtResource("1")
     run(['dotnet', 'build', '-c', 'Debug'], runtime, runtime / 'build.log')
     godot = ROOT / 'Godot_v4.5.1-stable_mono_win64/Godot_v4.5.1-stable_mono_win64_console.exe'
     run([str(godot), '--headless', '--path', str(runtime), '--editor', '--import'], ROOT, runtime / 'import.log')
-    run([str(godot), '--path', str(runtime), '--audio-driver', 'Dummy', '--fixed-fps', '60',
+    run([str(godot), '--path', str(runtime), '--audio-driver', 'Dummy', '--max-fps', '60',
         '--display-driver', 'windows', '--position', '-16000,-16000', '--rendering-method', 'forward_plus',
         '--rendering-driver', 'd3d12', '--log-file', str(runtime / 'godot.log')], ROOT, runtime / 'process.log')
     print(json.dumps(json.loads((runtime / 'captures/checks.json').read_text()), ensure_ascii=False))

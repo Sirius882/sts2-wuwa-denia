@@ -26,23 +26,52 @@ func probe():
     var script = background.get_script()
     if not require(script != null and script.can_instantiate(), "Denia C# script is registered by mod initialization"):
         return
-    var video = background.get_node("Video") as VideoStreamPlayer
     var poster = background.get_node("Poster") as TextureRect
+    var start = Time.get_ticks_usec()
+    while not background.call("GetPlaybackStats")["playing"] and Time.get_ticks_usec() - start < 5000000:
+        await process_frame
+    var stats = background.call("GetPlaybackStats")
     await create_timer(0.5).timeout
-    if not require(video.is_playing() and video.stream_position > 0 and video.visible and not poster.visible,
-            "Installed video decodes, advances and replaces the poster"):
+    stats = background.call("GetPlaybackStats")
+    if not require(stats["playing"] and stats["position"] > 0 and stats["visible"] and not poster.visible and stats["hardware"],
+            "Installed video uses hardware decoding, advances and replaces the poster"):
         return
     if not require(background.size.is_equal_approx(background.get_viewport_rect().size), "Driver sizes background to viewport"):
         return
+    if DisplayServer.get_name() != "headless":
+        var tick = Time.get_ticks_usec()
+        var begin = tick
+        var times: Array[float] = []
+        var wraps = 0
+        var previous = stats["position"]
+        while Time.get_ticks_usec() - begin < 14000000:
+            await process_frame
+            var now = Time.get_ticks_usec()
+            if now - begin > 1000000: times.append((now - tick) / 1000.0)
+            tick = now
+            stats = background.call("GetPlaybackStats")
+            if stats["position"] + .1 < previous: wraps += 1
+            previous = stats["position"]
+        times.sort()
+        var sum = 0.0
+        var over33 = 0
+        for t in times:
+            sum += t
+            if t > 33.4: over33 += 1
+        var report = {"frames":times.size(),"mean_ms":sum/times.size(),"p95_ms":times[int(times.size()*.95)],"p99_ms":times[int(times.size()*.99)],"over33":over33,"wraps":wraps,"playback":stats}
+        print("DENIA_BG_GAME_TIMING ",JSON.stringify(report))
+        if not require(wraps >= 2, "Installed GPU playback loops twice"):
+            return
     background.hide()
-    var stopped = video.stream_position
+    stats = background.call("GetPlaybackStats")
+    var stopped = stats["position"]
     await create_timer(0.2).timeout
-    if not require(video.paused and abs(video.stream_position - stopped) < 0.001, "Hidden background pauses decoding"):
+    if not require(abs(background.call("GetPlaybackStats")["position"] - stopped) < 0.001, "Hidden background pauses decoding"):
         return
     background.show()
     await create_timer(0.2).timeout
-    if not require(not video.paused and video.stream_position > stopped, "Visible background resumes decoding"):
+    if not require(background.call("GetPlaybackStats")["position"] > stopped, "Visible background resumes decoding"):
         return
-    print("DENIA_BG_GAME PASS: registered scene; native video visible and advancing; poster/layout/hide/resume")
+    print("DENIA_BG_GAME PASS: registered scene; hardware native video visible and advancing; poster/layout/hide/resume")
     background.free()
     quit()
