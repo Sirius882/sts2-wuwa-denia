@@ -1,0 +1,94 @@
+{
+  "pink_2hit": {
+    "size": [
+      1536,
+      864
+    ],
+    "frames": 132,
+    "flow": [
+      96,
+      54,
+      4
+    ],
+    "duration": 14.663333,
+    "impact_frames": [
+      14,
+      20
+    ],
+    "height": 428,
+    "origin": [
+      720,
+      750
+    ],
+    "standup": 3.083,
+    "source_sha256": "61ce535f35928bf1cf61d308ace5c516bcf6725e9d8502444de02f8f7623776b",
+    "impact_seconds": [
+      1.5552019848484848,
+      2.221717121212121
+    ],
+    "standup_end_origin": [
+      174,
+      735
+    ]
+  },
+  "dark_2hit": {
+    "size": [
+      1728,
+      972
+    ],
+    "frames": 72,
+    "flow": [
+      216,
+      122,
+      2
+    ],
+    "duration": 8.783,
+    "impact_frames": [
+      6,
+      12
+    ],
+    "height": 430,
+    "origin": [
+      852,
+      796
+    ],
+    "standup": 0,
+    "source_sha256": "03b16bfef6cf713fe8709fdabeb8916c72b33d239cb2b1d3079bc94d1dbc7d31",
+    "impact_seconds": [
+      0.7319166666666665,
+      1.463833333333333
+    ]
+  },
+  "dark_4hit": {
+    "size": [
+      1536,
+      864
+    ],
+    "frames": 116,
+    "flow": [
+      80,
+      45,
+      4
+    ],
+    "duration": 11.466,
+    "impact_frames": [
+      10,
+      19,
+      26,
+      33
+    ],
+    "height": 465,
+    "origin": [
+      718,
+      766
+    ],
+    "standup": 0,
+    "source_sha256": "1a98629ddafb9bbc7625a5a7081820fbf284b007e9074347ecc3c4b7ac9d198d",
+    "impact_seconds": [
+      0.988448275862069,
+      1.8780517241379309,
+      2.5699655172413793,
+      3.2618793103448276
+    ]
+  }
+}

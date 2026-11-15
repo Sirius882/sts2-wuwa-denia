@@ -4,7 +4,7 @@
 
 共用时钟／动作绑定在 `src/Visuals/DeniaFlowIdleVisual.cs`；粉／黑特效分别在 `DeniaPinkIdleVisual.cs`、`DeniaBlackIdleVisual.cs` 与对应 `shaders/denia_*_idle.gdshader`。资源在 `images/characters/denia/realtime_pink/` 和 `realtime_black/`。工具沿用原 `pink_idle/` 目录，`--form` 选择实际形态，省略时为 pink。
 
-2026-11-15按`规划.md`更新：全部旧帧图集／旧首姿／旧黑态挥砍贴图已删除，场景只保留新待机图集的一帧作加载占位。后撤／死亡不再播放动画，死亡直接显示静态能量图；黑态4段以上等待后续专用素材，正常结算且保持新待机。以下旧动作说明为历史记录。粉态完整序列已变为起身→攻击→倒放起身→坐姿待机，出伤时点保持起身后的既定位置。
+2026-11-15按`规划.md`更新：全部旧帧图集／旧首姿／旧黑态挥砍贴图已删除，场景只保留新待机图集的一帧作加载占位。后撤／死亡不再播放动画，死亡直接显示静态能量图；该轮黑态4段以上曾等待后续素材；现已接入下节专用四挥击动画。以下旧动作说明为历史记录。粉态完整序列已变为起身→攻击→倒放起身→坐姿待机，出伤时点保持起身后的既定位置。
 
 ```powershell
 python myModresources/denia/tools/visuals/pink_idle/import_animator.py
@@ -22,6 +22,30 @@ python myModresources/denia/tools/visuals/pink_idle/run_preview.py --form black 
 预览工具需要已有 Python Pillow／NumPy、dotnet、Godot 4.5.1 Mono 和 ffmpeg。输出默认为工作区根 `.cache/denia-pink-idle/`，工程与截图位于 `<form>/checks` 或 `<form>/render`；`--output` 只能指定根 `.cache` 内目录。所有工程／日志／截图均可删除重建。`--render` 在 RX 9070 XT 的 D3D12 / Forward+ 下运行隐藏窗口，生成完整 60 Hz 循环、关键帧、三个时刻与原 GLSL 的独立公式对比，以及 `pink_idle.mp4` 或 `black_idle.mp4`。黑态对比包含48→0的闭环、虹彩／水纹与眼部光环。透明 viewport 读回是预乘颜色，预览导出按预乘公式合成底色，避免再次乘 alpha 导致人物变暗。
 
 预览的动作检查使用生产场景 SpriteFrames 和同一实时视觉类；它不是游戏战斗录像，也不代表联机／性能验收。维护说明见工作区 `docs/ui/denia-pink-realtime-idle.md` 与 `docs/ui/denia-black-realtime-idle.md`。
+
+## 2026-11-15 多段重制与黑态四挥击（当前入口）
+
+三份新版JS／HTML原件在`source/`，参数和命中帧见`multi_attacks.json`；`multi_animator.py`读取图片、裁剪矩形与光流数据，`port_multi_shader.py`移植原GLSL，均不执行输入JS。以下原2hit章节保留首次移植记录，新版以本节为准。黑态4段以上现在有专用动作，首段仍dark_1hit，2／3段使用新版dark_2hit。
+
+| 素材 | 原始画布／帧 | 光流 | 时长 | 攻击局部命中时点 |
+| --- | --- | --- | --- | --- |
+| pink_2hit | 1536×864／132 | 96×54双向RGBA | 14.663333秒 | 1.555202／2.221717秒 |
+| dark_2hit | 1728×972／72 | 216×122有符号XY | 8.783秒 | 0.731917／1.463833秒 |
+| dark_4hit | 1536×864／116 | 80×45双向RGBA | 11.466秒 | 0.988448／1.878052／2.569966／3.261879秒 |
+
+粉态仍先起身3.083秒并完整倒放回坐，前两次数字从起身开始为4.638202／5.304717秒；Fast全部除以3。每张攻击牌只看自身首个AttackCommand声明段数，不限制来源，不统计联动；AoE一轮目标共用一次身体动作。黑态4段及以上前四次数字分别卡四次挥击，第五段起不附加等待；两款2hit仍只门控前两次，后续不等待。原伤害前／攻击后回调保持，若原回调仍在等待会钳制于命中姿态；提前结束、异常、死亡、切态、离场解除所有等待。
+
+人物参考高度／脚底锚点分别为粉428／(720,750)、黑二430／(852,796)、黑四465／(718,766)。以头部与靴尖对齐现有同形态，不用泡泡、裙尾或整幅攻击特效做缩放标准，宽画幅特效等比保留。粉态通过现有预乘混合与起身／回坐衔接，黑态四挥击的布局／朝向走相同生产控制器。移除HTML的全画幅环境星星／泡泡叠加，保留原图内角色和攻击特效。透明RGB和光流数据均禁止Godot透明边缘修补。
+
+```powershell
+python -B myModresources/denia/tools/visuals/pink_idle/import_animator.py --form pink_2hit
+python -B myModresources/denia/tools/visuals/pink_idle/import_animator.py --form dark_2hit
+python -B myModresources/denia/tools/visuals/pink_idle/import_animator.py --form dark_4hit
+python -B myModresources/denia/tools/visuals/pink_idle/port_multi_shader.py
+python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form dark_4hit --render
+```
+
+预览入口也接受pink_2hit／dark_2hit。检查链接生产控制器，覆盖30／60／144 FPS、普通／Fast、逐命中点钳制与释放、每牌一次、镜像、父透明度、旧身体独占、中断和恢复；独立CPU原GLSL对照包括新版光流／CAS、暗态16-tap Catmull-Rom和SDF轮廓。当前攻击预览生成881／528／689幅60Hz截图、关键命中图与人物对齐图；粉态完整起身／回坐另用pink_standup检查。它们是生产类原生预览，不是实际战斗录像；`--fixed-fps`用于逐时刻渲染，不能据此声称实战帧率。
 
 ## 备用黑态起身（2026-11-14）
 

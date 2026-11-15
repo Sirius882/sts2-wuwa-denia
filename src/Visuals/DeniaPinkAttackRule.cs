@@ -27,8 +27,8 @@ internal static class DeniaPinkAttackRule
         if (card == null || actor == null || !Pending.TryGetValue(card, out var state)
             || !ReferenceEquals(state.Actor, actor) || state.Started) return false;
         state.Started = true;
-        // 黑态四段以上等待专用新素材；没有对应动作时正常结算，不回退旧帧动画。
-        return declaredHits == 1 || declaredHits >= 2 && (!DeniaFormHelper.IsBlack(actor) || declaredHits <= 3);
+        // 任意来源攻击牌，只看本指令声明段数；黑态四段以上交给专用四挥击动画。
+        return declaredHits >= 1;
     }
 
     internal static void End(CardModel card) => Pending.Remove(card);

@@ -25,7 +25,7 @@ def run(command, cwd, log, timeout=180):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup', 'bubbles', 'map_brush'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'dark_4hit', 'pink_standup', 'bubbles', 'map_brush'), default='pink')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-pink-idle')
     args = parser.parse_args()
     output = args.output.resolve()
@@ -33,21 +33,25 @@ def main():
         parser.error('output must stay inside workspace .cache')
     runtime = output / args.form / ('render' if args.render else 'checks')
     runtime.mkdir(parents=True, exist_ok=True)
+    for name in ('captures', 'preview_frames'):
+        folder = runtime / name
+        folder.mkdir(exist_ok=True)
+        (folder / '.gdignore').touch()
     scene = MOD / 'scenes/creature_visuals/denia_pink.tscn'
-    paths = [scene, MOD / 'shaders/denia_pink_idle.gdshader', MOD / 'shaders/denia_black_idle.gdshader', MOD / 'shaders/denia_black_rise.gdshader', MOD / 'shaders/denia_pink_1hit.gdshader', MOD / 'shaders/denia_dark_1hit.gdshader', MOD / 'shaders/denia_pink_2hit.gdshader', MOD / 'shaders/denia_dark_2hit.gdshader']
+    paths = [scene, MOD / 'shaders/denia_pink_idle.gdshader', MOD / 'shaders/denia_black_idle.gdshader', MOD / 'shaders/denia_black_rise.gdshader', MOD / 'shaders/denia_pink_1hit.gdshader', MOD / 'shaders/denia_dark_1hit.gdshader', MOD / 'shaders/denia_pink_2hit.gdshader', MOD / 'shaders/denia_dark_2hit.gdshader', MOD / 'shaders/denia_dark_4hit.gdshader']
     paths += [MOD / 'shaders/denia_pink_standup.gdshader', MOD / 'shaders/denia_pink_handoff.gdshader']
     paths += [MOD / 'images/ui/combat/denia_energy_icon_big.png']
     # Include the actual action textures referenced by the production scene.
     import re
     paths += [MOD / p for p in re.findall(r'path="res://([^"]+)"', scene.read_text())]
-    for form in ('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup'):
+    for form in ('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'dark_4hit', 'pink_standup'):
         paths += list((MOD / f'images/characters/denia/realtime_{form}').glob('*'))
     if args.form in ('bubbles', 'map_brush'):
         paths = []  # The particle regression needs no character textures or scenes.
     for source in set(paths):
         target = runtime / source.relative_to(MOD)
         target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(source, target)
+        shutil.copy2(source, target)
     shutil.copyfile(HERE / 'Preview.cs', runtime / 'Preview.cs')
     shutil.copyfile(HERE / 'PinkStandupChecks.cs', runtime / 'PinkStandupChecks.cs')
     shutil.copyfile(HERE / 'MapBrushChecks.cs', runtime / 'MapBrushChecks.cs')
@@ -77,7 +81,7 @@ script=ExtResource("1")
 ''', encoding='utf-8')
     links = ''.join(f'<Compile Include="{MOD / "src/Visuals" / (name + ".cs")}" Link="{name}.cs" />'
                     for name in ('DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
-                                 'DeniaBubbleBurst', 'DeniaMapBrushVisual', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaPinkStandupVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual', 'DeniaPinkMultiAttackVisual', 'DeniaDarkMultiAttackVisual'))
+                                 'DeniaBubbleBurst', 'DeniaMapBrushVisual', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaPinkStandupVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual', 'DeniaPinkMultiAttackVisual', 'DeniaDarkMultiAttackVisual', 'DeniaDarkFourAttackVisual'))
     (runtime / 'PinkIdlePreview.csproj').write_text(f'''<Project Sdk="Godot.NET.Sdk/4.5.1">
 <PropertyGroup><TargetFramework>net9.0</TargetFramework><Nullable>enable</Nullable>
 <EnableDynamicLoading>true</EnableDynamicLoading></PropertyGroup>
@@ -91,7 +95,7 @@ script=ExtResource("1")
     command += ['--display-driver', 'windows', '--position', '-16000,-16000',
                 '--rendering-method', 'forward_plus', '--rendering-driver', 'd3d12'] if args.render else ['--headless']
     command += ['--', args.form]
-    run(command, ROOT, runtime / 'process.log')
+    run(command, ROOT, runtime / 'process.log', timeout=420)
     report = json.loads((runtime / 'captures/checks.json').read_text())
     if args.form == 'map_brush':
         if args.render:
@@ -110,14 +114,14 @@ script=ExtResource("1")
             make_preview(runtime / 'captures', output)
         print(json.dumps(report, ensure_ascii=False))
         return
-    if args.form in ('pink_2hit', 'dark_2hit'):
+    if args.form in ('pink_2hit', 'dark_2hit', 'dark_4hit'):
         if args.render:
             from check_pink_multi import check_pink_multi, make_preview
-            report['original_glsl_mean_error'] = check_pink_multi(runtime / 'captures', MOD, dark=args.form == 'dark_2hit')
+            report['original_glsl_mean_error'] = check_pink_multi(runtime / 'captures', MOD, form=args.form)
             (runtime / 'captures/checks.json').write_text(json.dumps(report, indent=2), encoding='utf-8')
-            make_preview(runtime / 'captures', dark=args.form == 'dark_2hit')
+            make_preview(runtime / 'captures', form=args.form)
             run(['ffmpeg', '-hide_banner', '-loglevel', 'error', '-y', '-framerate', '60',
-                 '-i', str(runtime / ('captures/dark_multi_%04d.png' if args.form == 'dark_2hit' else 'captures/multi_%04d.png')), '-vf', 'format=yuv420p',
+                 '-i', str(runtime / ('captures/dark_four_%04d.png' if args.form == 'dark_4hit' else 'captures/dark_multi_%04d.png' if args.form == 'dark_2hit' else 'captures/multi_%04d.png')), '-vf', 'format=yuv420p',
                  '-c:v', 'libx264', '-crf', '18', str(output / f'{args.form}.mp4')], ROOT, runtime / 'encode.log')
         print(json.dumps(report, ensure_ascii=False))
         return

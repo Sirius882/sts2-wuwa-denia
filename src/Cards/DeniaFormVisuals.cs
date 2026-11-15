@@ -145,12 +145,12 @@ public static class DeniaFormPatch
         catch { }
     }
 
-    internal static DeniaSingleHitVisual? PlaySingleHit(Creature creature, bool multiHit = false)
+    internal static DeniaSingleHitVisual? PlaySingleHit(Creature creature, bool multiHit = false, bool fourHit = false)
     {
         var node = GetCreatureNode(creature);
         if (node == null || IsDying(node) || creature.IsDead) return null;
         EnsureOverlays(node);
-        return GetSyncNode(node)?.PlaySingleHit(DeniaFormHelper.IsBlack(creature), multiHit);
+        return GetSyncNode(node)?.PlaySingleHit(DeniaFormHelper.IsBlack(creature), multiHit, fourHit);
     }
 
     internal static Task PlayBlackRise(Creature creature)
@@ -443,7 +443,7 @@ public static class DeniaFormPatch
             idle.Position = size * 0.5f;
             idle.Scale = Vector2.One * (size.Y / BodyReferenceHeight);
         }
-        foreach (var name in new[] { "RealtimeIdle", DeniaSingleHitVisual.NodeName, DeniaPinkMultiAttackVisual.MultiNodeName })
+        foreach (var name in new[] { "RealtimeIdle", DeniaSingleHitVisual.NodeName, DeniaPinkMultiAttackVisual.MultiNodeName, DeniaDarkFourAttackVisual.FourNodeName })
         {
             var realtime = rect.GetNodeOrNull<DeniaFlowIdleVisual>(name == "RealtimeIdle" ? "Body/RealtimeIdle" : name);
             if (realtime != null && GodotObject.IsInstanceValid(realtime))
@@ -484,6 +484,7 @@ public static class DeniaFormPatch
         rect.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.SetFacing(flip);
         rect.GetNodeOrNull<DeniaSingleHitVisual>(DeniaSingleHitVisual.NodeName)?.SetFacing(flip);
         rect.GetNodeOrNull<DeniaSingleHitVisual>(DeniaPinkMultiAttackVisual.MultiNodeName)?.SetFacing(flip);
+        rect.GetNodeOrNull<DeniaSingleHitVisual>(DeniaDarkFourAttackVisual.FourNodeName)?.SetFacing(flip);
     }
 
     private static TextureRect MakeOverlay(string name, Texture2D tex)
@@ -663,7 +664,7 @@ public partial class DeniaFormOverlaySync : Node
 
     internal DeniaPinkAttackVisual? PlayPinkSingleHit() => PlaySingleHit(false) as DeniaPinkAttackVisual;
 
-    internal DeniaSingleHitVisual? PlaySingleHit(bool isBlack, bool multiHit = false)
+    internal DeniaSingleHitVisual? PlaySingleHit(bool isBlack, bool multiHit = false, bool fourHit = false)
     {
         var overlay = isBlack ? _black : _pink;
         if (overlay == null || _creatureNode == null || DeniaFormPatch.IsDying(_creatureNode)
@@ -677,12 +678,13 @@ public partial class DeniaFormOverlaySync : Node
             ResetMotion();
             _blackFxAlpha = _blackFxRot = 0;
             _attackWasBlack = isBlack;
-            var nodeName = multiHit ? DeniaPinkMultiAttackVisual.MultiNodeName : DeniaSingleHitVisual.NodeName;
+            fourHit = isBlack && fourHit;
+            var nodeName = fourHit ? DeniaDarkFourAttackVisual.FourNodeName : multiHit ? DeniaPinkMultiAttackVisual.MultiNodeName : DeniaSingleHitVisual.NodeName;
             _singleHit = overlay.GetNodeOrNull<DeniaSingleHitVisual>(nodeName);
             if (!GodotObject.IsInstanceValid(_singleHit))
             {
                 _singleHit = isBlack
-                    ? multiHit ? new DeniaDarkMultiAttackVisual() : new DeniaDarkAttackVisual()
+                    ? fourHit ? new DeniaDarkFourAttackVisual() : multiHit ? new DeniaDarkMultiAttackVisual() : new DeniaDarkAttackVisual()
                     : multiHit ? new DeniaPinkMultiAttackVisual() : new DeniaPinkAttackVisual();
                 _singleHit.Name = nodeName;
                 _singleHit.Visible = false;
