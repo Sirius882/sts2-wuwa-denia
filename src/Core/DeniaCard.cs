@@ -233,24 +233,12 @@ public static class DeniaEnhancementEvents
     public static async Task NotifyVirtualMatterEnhanced(MegaCrit.Sts2.Core.Entities.Creatures.Creature creature)
     {
         await DeniaPhantomFoamPower.OnVirtualMatterEnhanced(creature);
-        // 黑色形态：非攻击牌强化播脉冲；Normal 等 0.2s，Fast 不等（视觉仍 0.2s）
-        if (DeniaFormHelper.IsBlack(creature)
-            && !DeniaFormPatch.IsBlackFormAttackCardActive(creature))
-        {
-            DeniaFormPatch.PlayBlackAttackFxPulse(creature);
-            await DeniaFormPatch.AwaitBlackFx(creature);
-        }
+        // 旧黑态强化脉冲及其等待已停用；仅保留强化成功通知。
     }
 
     public static async Task NotifyDarkCoreEnhanced(MegaCrit.Sts2.Core.Entities.Creatures.Creature creature)
     {
         await DeniaTowardVoidPower.OnDarkCoreEnhanced(creature);
-        if (DeniaFormHelper.IsBlack(creature)
-            && !DeniaFormPatch.IsBlackFormAttackCardActive(creature))
-        {
-            DeniaFormPatch.PlayBlackAttackFxPulse(creature);
-            await DeniaFormPatch.AwaitBlackFx(creature);
-        }
     }
 }
 

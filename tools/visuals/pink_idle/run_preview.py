@@ -25,7 +25,7 @@ def run(command, cwd, log, timeout=180):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'dark_4hit', 'pink_standup', 'bubbles', 'map_brush'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'dark_4hit', 'pink_standup', 'bubbles', 'map_brush', 'catalog'), default='pink')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-pink-idle')
     args = parser.parse_args()
     output = args.output.resolve()
@@ -55,6 +55,7 @@ def main():
     shutil.copyfile(HERE / 'Preview.cs', runtime / 'Preview.cs')
     shutil.copyfile(HERE / 'PinkStandupChecks.cs', runtime / 'PinkStandupChecks.cs')
     shutil.copyfile(HERE / 'MapBrushChecks.cs', runtime / 'MapBrushChecks.cs')
+    shutil.copyfile(HERE / 'AnimationPreviewChecks.cs', runtime / 'AnimationPreviewChecks.cs')
     shutil.copyfile(HERE / 'ControllerFixture.cs', runtime / 'ControllerFixture.cs')
     # Link the exact production controller body; no copied controller implementation in fixtures.
     controller = (MOD / 'src/Cards/DeniaFormVisuals.cs').read_text(encoding='utf-8-sig')
@@ -80,7 +81,7 @@ project/assembly_name="PinkIdlePreview"
 script=ExtResource("1")
 ''', encoding='utf-8')
     links = ''.join(f'<Compile Include="{MOD / "src/Visuals" / (name + ".cs")}" Link="{name}.cs" />'
-                    for name in ('DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
+                    for name in ('DeniaAnimationPreviewKind', 'DeniaAnimationPreview', 'DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
                                  'DeniaBubbleBurst', 'DeniaMapBrushVisual', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaPinkStandupVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual', 'DeniaPinkMultiAttackVisual', 'DeniaDarkMultiAttackVisual', 'DeniaDarkFourAttackVisual'))
     (runtime / 'PinkIdlePreview.csproj').write_text(f'''<Project Sdk="Godot.NET.Sdk/4.5.1">
 <PropertyGroup><TargetFramework>net9.0</TargetFramework><Nullable>enable</Nullable>
@@ -97,6 +98,9 @@ script=ExtResource("1")
     command += ['--', args.form]
     run(command, ROOT, runtime / 'process.log', timeout=420)
     report = json.loads((runtime / 'captures/checks.json').read_text())
+    if args.form == 'catalog':
+        print(json.dumps(report, ensure_ascii=False))
+        return
     if args.form == 'map_brush':
         if args.render:
             from check_brush import make_preview

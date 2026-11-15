@@ -70,9 +70,9 @@ public partial class Preview
             {
                 current = node.Sync.PlaySingleHit(false, multi)!;current.SetProcess(false);current.SeekTimeline(t);
                 var pending = current.Impact;var second = current.ImpactAt(1);
-                node.Sync.PlayDodge(false);
+                node.Sync.SetForm(false);
                 Check(!current.Playing && pending.IsCompleted && second.IsCompleted && legacy.Animation == "idle" && !legacy.IsVisibleInTree(),
-                    "dodge cancels intro/attack and every pending damage wait");
+                    "form refresh cancels intro/attack and every pending damage wait");
             }
             current = node.Sync.PlaySingleHit(false, multi)!;current.SetProcess(false);current.SeekTimeline(0.8);
             var old = current.Impact;

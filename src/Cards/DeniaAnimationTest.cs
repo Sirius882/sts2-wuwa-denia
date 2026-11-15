@@ -17,35 +17,185 @@ public sealed class DeniaAnimationTest : DeniaCard
     public override int MaxUpgradeLevel => 0;
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_sorrow.png";
     public override List<(string, string)>? Localization => new CardLoc(Title: "动画测试（内部）",
-        Description: "选择并播放一个待测试动画。仅播放演出，不触发伤害或集谐结算。");
+        Description: "按类别选择一个动画，按当前速度模式完整播放。仅测试演出，不改变形态、伤害或集谐结算。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        CardModel[] choices = { ModelDb.Card<DeniaExecutionAnimationChoice>().ToMutable(),
-            ModelDb.Card<DeniaBlackRiseAnimationChoice>().ToMutable() };
-        foreach (var choice in choices) choice.Owner = Owner;
-        var selected = await CardSelectCmd.FromChooseACardScreen(ctx, choices, Owner);
-        if (selected is DeniaExecutionAnimationChoice)
-            await DeniaExecutionRule.Play(Owner.Creature.CombatState?.Enemies.FirstOrDefault(enemy => !enemy.IsDead));
-        else if (selected is DeniaBlackRiseAnimationChoice)
-            await DeniaFormPatch.PlayBlackRise(Owner.Creature);
+        // 原生选牌界面每页最多三个选项，分类逐层选择，不向界面传入超量卡牌。
+        CardModel[] choices = [ModelDb.Card<DeniaPinkCategoryAnimationChoice>().ToMutable(),
+            ModelDb.Card<DeniaBlackCategoryAnimationChoice>().ToMutable(),
+            ModelDb.Card<DeniaEffectsCategoryAnimationChoice>().ToMutable()];
+        while (true)
+        {
+            foreach (var choice in choices) choice.Owner = Owner;
+            if (await CardSelectCmd.FromChooseACardScreen(ctx, choices, Owner) is not DeniaAnimationChoice selected) return;
+            choices = selected.Choices;
+            if (choices.Length > 0) continue;
+            if (selected.Preview is not { } kind) return;
+            if (kind == DeniaAnimationPreviewKind.Execution)
+                await DeniaExecutionRule.Play(Owner.Creature.CombatState?.Enemies.FirstOrDefault(enemy => !enemy.IsDead));
+            else
+                await DeniaFormPatch.PlayAnimationPreview(Owner.Creature, kind);
+            return;
+        }
     }
 
     protected override void OnUpgrade() { }
 }
 
-public sealed class DeniaExecutionAnimationChoice : DeniaTargetChoice
+public abstract class DeniaAnimationChoice : DeniaTargetChoice
 {
     public override int MaxUpgradeLevel => 0;
-    public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_sorrow.png";
-    public override List<(string, string)>? Localization => new CardLoc(Title: "三级集谐处决",
-        Description: "原速播放三级集谐处决的完整画面与音轨。仅测试演出，不触发伤害或集谐结算。");
+    public override string PortraitPath => "res://images/packed/character_select/denia_pink.png";
+    internal virtual CardModel[] Choices => [];
+    internal virtual DeniaAnimationPreviewKind? Preview => null;
 }
 
-public sealed class DeniaBlackRiseAnimationChoice : DeniaTargetChoice
+public sealed class DeniaPinkCategoryAnimationChoice : DeniaAnimationChoice
 {
-    public override int MaxUpgradeLevel => 0;
+    internal override CardModel[] Choices => [ModelDb.Card<DeniaPinkIdleAnimationChoice>().ToMutable(), ModelDb.Card<DeniaStandupCategoryAnimationChoice>().ToMutable(), ModelDb.Card<DeniaPinkAttackCategoryAnimationChoice>().ToMutable()];
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉色形态", Description: "选择要测试的动画。");
+}
+
+public sealed class DeniaBlackCategoryAnimationChoice : DeniaAnimationChoice
+{
     public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override CardModel[] Choices => [ModelDb.Card<DeniaBlackIdleAnimationChoice>().ToMutable(), ModelDb.Card<DeniaBlackRiseAnimationChoice>().ToMutable(), ModelDb.Card<DeniaBlackAttackCategoryAnimationChoice>().ToMutable()];
+    public override List<(string, string)>? Localization => new CardLoc(Title: "黑色形态", Description: "选择要测试的动画。");
+}
+
+public sealed class DeniaEffectsCategoryAnimationChoice : DeniaAnimationChoice
+{
+    internal override CardModel[] Choices => [ModelDb.Card<DeniaBubbleCategoryAnimationChoice>().ToMutable(), ModelDb.Card<DeniaExecutionAnimationChoice>().ToMutable()];
+    public override List<(string, string)>? Localization => new CardLoc(Title: "其他演出", Description: "选择要测试的动画。");
+}
+
+public sealed class DeniaStandupCategoryAnimationChoice : DeniaAnimationChoice
+{
+    internal override CardModel[] Choices => [ModelDb.Card<DeniaPinkStandupAnimationChoice>().ToMutable(), ModelDb.Card<DeniaPinkSitdownAnimationChoice>().ToMutable()];
+    public override List<(string, string)>? Localization => new CardLoc(Title: "起身／坐回", Description: "选择要测试的动画。");
+}
+
+public sealed class DeniaPinkAttackCategoryAnimationChoice : DeniaAnimationChoice
+{
+    internal override CardModel[] Choices => [ModelDb.Card<DeniaPinkSingleAnimationChoice>().ToMutable(), ModelDb.Card<DeniaPinkMultiAnimationChoice>().ToMutable()];
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉态攻击", Description: "选择要测试的动画。");
+}
+
+public sealed class DeniaBlackAttackCategoryAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override CardModel[] Choices => [ModelDb.Card<DeniaBlackSingleAnimationChoice>().ToMutable(), ModelDb.Card<DeniaBlackMultiAnimationChoice>().ToMutable(), ModelDb.Card<DeniaBlackFourAnimationChoice>().ToMutable()];
+    public override List<(string, string)>? Localization => new CardLoc(Title: "黑态攻击", Description: "选择要测试的动画。");
+}
+
+public sealed class DeniaBubbleCategoryAnimationChoice : DeniaAnimationChoice
+{
+    internal override CardModel[] Choices => [ModelDb.Card<DeniaPinkBubbleAnimationChoice>().ToMutable(), ModelDb.Card<DeniaBlackBubbleAnimationChoice>().ToMutable(), ModelDb.Card<DeniaMapBubbleAnimationChoice>().ToMutable()];
+    public override List<(string, string)>? Localization => new CardLoc(Title: "泡泡特效", Description: "选择要测试的动画。");
+}
+
+public sealed class DeniaPinkIdleAnimationChoice : DeniaAnimationChoice
+{
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.PinkIdle;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉态待机",
+        Description: "原速循环一轮：10.632秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaPinkStandupAnimationChoice : DeniaAnimationChoice
+{
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.PinkStandup;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉态起身",
+        Description: "正放起身：普通3.083秒，快速1.028秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaPinkSitdownAnimationChoice : DeniaAnimationChoice
+{
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.PinkSitdown;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉态坐回（倒放）",
+        Description: "倒放起身：普通3.083秒，快速1.028秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaPinkSingleAnimationChoice : DeniaAnimationChoice
+{
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.PinkSingle;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉态单段攻击",
+        Description: "含起身与坐回：普通11.332秒，快速3.777秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaPinkMultiAnimationChoice : DeniaAnimationChoice
+{
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.PinkMulti;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉态多段攻击",
+        Description: "含起身与坐回：普通20.829秒，快速6.943秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaBlackIdleAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.BlackIdle;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "黑态待机",
+        Description: "原速循环一轮：5.316秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaBlackRiseAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.BlackRise;
     public override List<(string, string)>? Localization => new CardLoc(Title: "黑态起身（备用）",
-        Description: "原速播放3秒黑态起身动画，结束后恢复当前形态。仅测试演出，不改变形态或战斗数值。");
+        Description: "备用演出，所有速度下均为3秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaBlackSingleAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.BlackSingle;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "黑态单段攻击",
+        Description: "普通7.933秒，快速2.644秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaBlackMultiAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.BlackMulti;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "黑态二／三段攻击",
+        Description: "普通8.783秒，快速2.928秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaBlackFourAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.BlackFour;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "黑态四段以上攻击",
+        Description: "普通11.466秒，快速3.822秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaPinkBubbleAnimationChoice : DeniaAnimationChoice
+{
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.PinkBubble;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "粉态点击泡泡",
+        Description: "原速播放一组点击泡泡，最多1.5秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaBlackBubbleAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/character_select/denia_black.png";
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.BlackBubble;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "黑态点击泡泡",
+        Description: "原速播放一组点击泡泡，最多1.5秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaMapBubbleAnimationChoice : DeniaAnimationChoice
+{
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.MapBubble;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "地图落笔泡泡",
+        Description: "地图落笔的慢速粉态泡泡，最多2.727秒。测试期间等待完整演出，不造成伤害、不改变形态。");
+}
+
+public sealed class DeniaExecutionAnimationChoice : DeniaAnimationChoice
+{
+    public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_sorrow.png";
+    internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.Execution;
+    public override List<(string, string)>? Localization => new CardLoc(Title: "三级集谐处决",
+        Description: "原速播放完整画面与音轨，5.633秒后放行，退场与尾音继续。不造成伤害、不改变形态。");
 }

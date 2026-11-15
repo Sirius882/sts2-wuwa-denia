@@ -20,7 +20,6 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
     protected float[] BubbleCy = null!, OrbX = null!, OrbY = null!;
     protected bool Flip;
     private ColorRect _body = null!;
-    private AnimatedSprite2D? _actions;
     private double _clock;
 
     public double Clock => _clock;
@@ -51,27 +50,6 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
         AddChild(_body);
         Seek(0);
         Initialized = true;
-    }
-
-    public void BindActions(AnimatedSprite2D actions)
-    {
-        _actions = actions;
-        actions.AnimationChanged += () => {
-            SyncAction();
-            // AnimatedSprite.Play 在信号返回后才恢复播放，下一轮再暂停旧idle占位。
-            Callable.From(SyncAction).CallDeferred();
-        };
-        SyncAction();
-    }
-
-    private void SyncAction()
-    {
-        if (_actions == null || !GodotObject.IsInstanceValid(_actions)) return;
-        bool idle = _actions.Animation == "idle";
-        _actions.Visible = !idle;
-        Visible = idle;
-        // 原 idle 只保留首帧作场景加载占位，不再运行旧待机帧图集。
-        if (idle) _actions.Pause();
     }
 
     public virtual void SetFacing(bool flip)
