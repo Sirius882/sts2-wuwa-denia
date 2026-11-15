@@ -132,6 +132,8 @@ public sealed class Denia : PlaceholderCharacterModel
         // 选人界面
         "res://images/char_select/denia_icon.jpg",
         "res://scenes/screens/char_select/denia_bg.tscn",
+        "res://videos/denia_character_select_bg.ogv",
+        "res://images/char_select/denia_bg_poster.jpg",
         // 双形态立绘
         "res://images/packed/character_select/denia_pink.png",
         "res://images/packed/character_select/denia_black.png",
