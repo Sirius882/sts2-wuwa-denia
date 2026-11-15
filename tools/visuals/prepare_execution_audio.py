@@ -1,4 +1,4 @@
-"""Extract the aligned soundtrack; keep source PTS, including the 106 ms video lead-in."""
+"""Extract the aligned soundtrack; retain the source's video/audio PTS offset."""
 import hashlib
 import json
 from pathlib import Path
@@ -21,7 +21,7 @@ def main():
     fade_out = alignment['fade_out_samples']
     delays = '|'.join(map(str, alignment['tail_echo_delays_ms']))
     gains = '|'.join(map(str, alignment['tail_echo_gains']))
-    # 源片尾部不足三秒；仅在视频结束后的原声上追加衰减尾响，不循环台词或改变音画段。
+    # 此前源片尾部不足三秒；保留相同处理，仅在视频结束后的原声上追加衰减尾响，不循环台词或改变音画段。
     filters = (
         f'[0:a:0]atrim=start_sample={start},asetpts=PTS-STARTPTS,asplit=2[body][tail];'
         f'[body]atrim=end_sample={video_end}[head];'

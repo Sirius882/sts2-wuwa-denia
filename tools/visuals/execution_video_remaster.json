@@ -1,0 +1,20 @@
+{
+  "source": "artResources/Denia/人物形象与动画/环三层集谐处决动画原视频.mp4",
+  "source_sha256": "4db20631ea8bda78e0191b3d5ff90a31b0fd88b2bdae051c54f5c103707d13e3",
+  "first_source_frame": 54,
+  "last_source_frame_inclusive": 190,
+  "frame_count": 137,
+  "fps": 30,
+  "source_video_first_pts": 0.114,
+  "source_clip_start_seconds": 1.914,
+  "source_audio_start_seconds": 1.114,
+  "output_width": 3840,
+  "output_height": 1772,
+  "frames_directory": "artResources/Denia/人物形象与动画/处决视频4K_Animagine_20261115/frames_4k",
+  "checkpoint": "F:/ComfyUI/ComfyUI/models/checkpoints/animagine-xl-4.0-opt.safetensors",
+  "alignment_reference_ogv_sha256": "8252dbd64aa37a16800f9ad50aede9e9d313142b7b9fa84cd2af9de7b9787e2d",
+  "alignment_mean_rgb_mse_192x88": 0.00031268972088582814,
+  "audio_core_match_start_sample": 91872,
+  "audio_core_correlation": 1.0000000815265448,
+  "theora_quality": 10
+}

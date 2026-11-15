@@ -9,7 +9,6 @@ import sys
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[3]
 MOD = ROOT / 'myModresources/denia'
-EXECUTION_HASH = '8252dbd64aa37a16800f9ad50aede9e9d313142b7b9fa84cd2af9de7b9787e2d'
 
 
 def sha(path):
@@ -33,12 +32,14 @@ def main():
     if hashlib.sha256((HERE / 'native_video/denia_video.cpp').read_text(encoding='utf-8').encode('utf-8')).hexdigest() != native_manifest['source_sha256']:
         raise RuntimeError('Native video source changed: run native_video/build_native.py before packing')
     print('Character-select MP4: original bytes verified, native decoder available')
+    manifest = json.loads((HERE / 'execution_video.json').read_text(encoding='utf-8'))
+    expected_hash = manifest['video_sha256']
     destination = MOD / 'videos/denia_execution_middle.ogv'
-    if destination.is_file() and sha(destination) == EXECUTION_HASH:
+    if destination.is_file() and sha(destination) == expected_hash:
         print(f'{destination.name}: verified local video')
         return
-    master = ROOT / 'artResources/Denia/游戏视频/denia_execution_middle.ogv'
-    if not master.is_file() or sha(master) != EXECUTION_HASH:
+    master = ROOT / manifest['local_master']
+    if not master.is_file() or sha(master) != expected_hash:
         raise RuntimeError(f'Missing or changed execution video master: {master}')
     destination.parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(master, destination)
