@@ -13,6 +13,9 @@ obj/
 *.user
 *.suo
 
+# Large runtime videos are prepared locally from artResources before packing.
+/videos/*.ogv
+
 # Local caches, logs and editor state
 .cache/
 __pycache__/
