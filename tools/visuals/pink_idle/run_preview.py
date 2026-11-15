@@ -25,7 +25,7 @@ def run(command, cwd, log, timeout=180):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup', 'bubbles'), default='pink')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-pink-idle')
     args = parser.parse_args()
     output = args.output.resolve()
@@ -41,6 +41,8 @@ def main():
     paths += [MOD / p for p in re.findall(r'path="res://([^"]+)"', scene.read_text())]
     for form in ('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup'):
         paths += list((MOD / f'images/characters/denia/realtime_{form}').glob('*'))
+    if args.form == 'bubbles':
+        paths = []  # The particle regression needs no character textures or scenes.
     for source in set(paths):
         target = runtime / source.relative_to(MOD)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -89,6 +91,9 @@ script=ExtResource("1")
     command += ['--', args.form]
     run(command, ROOT, runtime / 'process.log')
     report = json.loads((runtime / 'captures/checks.json').read_text())
+    if args.form == 'bubbles':
+        print(json.dumps(report, ensure_ascii=False))
+        return
     if args.form == 'pink_standup':
         if args.render:
             from check_standup import check_standup, make_preview

@@ -20,6 +20,10 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "bubbles")
+            {
+                await CheckBubbleBurst();GetTree().Quit();return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "pink_standup")
             {
                 await CheckPinkStandup();GetTree().Quit();return;
@@ -210,6 +214,61 @@ public partial class Preview : Node
             GetTree().Quit();
         }
         catch (Exception ex) { GD.PrintErr(ex); GetTree().Quit(1); }
+    }
+
+    private async Task CheckBubbleBurst()
+    {
+        _viewport = new SubViewport { Size = new Vector2I(592, 600), TransparentBg = true,
+            RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
+        AddChild(_viewport);
+        var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+        var elapsed = typeof(DeniaBubbleBurst).GetProperty(nameof(DeniaBubbleBurst.Elapsed))!;
+        foreach (bool black in new[] { false, true })
+        foreach (int fps in new[] { 30, 60, 144 })
+        {
+            var burst = new DeniaBubbleBurst { IsBlack = black, Position = new Vector2(296, 300) };
+            _viewport.AddChild(burst);
+            burst.SetProcess(false);
+            for (int frame = 0; frame < fps; frame++)
+            {
+                burst._Process(1.0 / fps);
+                if (_render) await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                else await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            }
+            Check(Math.Abs(burst.Elapsed - 1) < 1e-8, $"bubble timing at {fps} FPS, black={black}");
+            burst._Process(0.6);
+            Check(burst.IsQueuedForDeletion(), $"bubble cleanup at {fps} FPS, black={black}");
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
+        foreach (bool black in new[] { false, true })
+        {
+            var burst = new DeniaBubbleBurst { IsBlack = black, Position = new Vector2(296, 300) };
+            _viewport.AddChild(burst);
+            burst.SetProcess(false);
+            var radii = (float[])typeof(DeniaBubbleBurst).GetField("_radii", flags)!.GetValue(burst)!;
+            var lifetimes = (float[])typeof(DeniaBubbleBurst).GetField("_lifetimes", flags)!.GetValue(burst)!;
+            Array.Fill(lifetimes, 1.25f);
+            foreach (float radius in new[] { 3.5f, 10.5f })
+            foreach (float scale in new[] { 0.5f, 1f, 2f })
+            {
+                Array.Fill(radii, radius);
+                burst.Scale = Vector2.One * scale;
+                foreach (double remaining in new[] { 0.5, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001, 0.0, -0.001 })
+                {
+                    elapsed.SetValue(burst, 1.25 * (1 - remaining));
+                    burst.QueueRedraw();
+                    if (_render) await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                    else await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                    Check(!burst.IsQueuedForDeletion(), $"tail sample black={black}, radius={radius}, scale={scale}, remaining={remaining}");
+                }
+            }
+            burst._Process(1.5);
+            Check(burst.IsQueuedForDeletion(), "expired burst frees itself");
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        }
+        File.WriteAllText(Path.Combine(_output, "checks.json"),
+            $"{{\"checks\":{_checks},\"form\":\"bubbles\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
+        GD.Print($"PASS: {_checks} bubble checks, render={_render}");
     }
 
     private async Task CheckPinkAttack()
