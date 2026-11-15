@@ -14,7 +14,7 @@ Godot export (Python 3.11+; FFmpeg/ffprobe required for regeneration):
 python -B myModresources/denia/tools/visuals/prepare_runtime_videos.py
 ```
 
-The workspace-local masters live in `artResources/Denia/游戏视频/`, outside Git and
+The workspace-local masters live in `artResources/Denia/人物形象与动画/`, outside Git and
 outside disposable `.cache`. Missing runtime files are restored from those masters.
 A fresh checkout needs the local source/master assets before packing.
 
@@ -39,3 +39,10 @@ Animagine XL checkpoint through local ComfyUI, using 768-pixel single-tile batch
 `prepare_execution_video.py` encodes the preserved 3840×1772 PNG frames at quality 10.
 `execution_video.json` records the resulting master and per-frame hashes. Large
 PNG frames and OGV masters stay in `artResources`, outside Git and `.cache`.
+
+Master relocation (2026-11-15): the earlier `artResources/Denia/游戏视频/` directory
+was merged into `artResources/Denia/人物形象与动画/`. Video bytes are unchanged.
+`denia_execution_middle.ogv` is the current quality-10 Animagine runtime master.
+`denia_execution_alignment_reference_20261115.ogv` is the earlier quality-8 clip
+kept solely as an alignment reference; it is not restored or packaged by these
+scripts. `denia_character_select_bg.ogv` remains the compatibility fallback.

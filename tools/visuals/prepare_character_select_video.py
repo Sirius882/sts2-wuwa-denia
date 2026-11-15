@@ -12,7 +12,7 @@ MOD = ROOT / 'myModresources/denia'
 SOURCE = ROOT / 'artResources/Denia/选人界面背景视频.mp4'
 VIDEO = MOD / 'videos/denia_character_select_bg.ogv'
 POSTER = MOD / 'images/char_select/denia_bg_poster.jpg'
-MASTER = ROOT / 'artResources/Denia/游戏视频/denia_character_select_bg.ogv'
+MASTER = ROOT / 'artResources/Denia/人物形象与动画/denia_character_select_bg.ogv'
 MANIFEST = Path(__file__).parent / 'character_select_video.json'
 
 
