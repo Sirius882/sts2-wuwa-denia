@@ -46,7 +46,10 @@ float smooth_range(float a, float b, float x) {
     vec4 t11 = sample_frame(index, vec2(h1.x, h1.y));
     vec4 bic = (t00 * g0.x + t10 * g1.x) * g0.y + (t01 * g0.x + t11 * g1.x) * g1.y;
     vec4 bil = sample_frame(index, uv);
-    return clamp(mix(bic, bil, 0.56), 0.0, 1.0);
+    vec4 raw = clamp(mix(bic, bil, 0.56), 0.0, 1.0);
+    // Un-attenuate RGB at transparent borders where hardware LINEAR filtering mixed foreground RGB with (0,0,0,0)
+    vec3 cleanRgb = (raw.a > 0.03 && raw.a < 0.96) ? clamp(raw.rgb / pow(raw.a, 0.62), 0.0, 1.0) : raw.rgb;
+    return vec4(cleanRgb, raw.a);
   }
 
   vec3 computeIridescence(vec2 px, vec3 bSphere, float t) {
@@ -86,32 +89,37 @@ float smooth_range(float a, float b, float x) {
     vec4 c1 = sampleBicubic(min(frame_index + 1, 73), uv1, uRes);
 
     // Contrast-Adaptive Sharpening (CAS) for razor-sharp anime line-art & staff filigree
-    vec2 stepUv = 0.82 / uRes;
+    // Alpha-aware CAS from the remade source: sharpen interiors without ringing at transparent borders.
+    vec2 stepUv = 0.80 / uRes;
     vec4 n0 = sample_frame(frame_index, uv0 + vec2(0.0, -stepUv.y));
     vec4 s0 = sample_frame(frame_index, uv0 + vec2(0.0,  stepUv.y));
     vec4 e0 = sample_frame(frame_index, uv0 + vec2( stepUv.x, 0.0));
     vec4 w0 = sample_frame(frame_index, uv0 + vec2(-stepUv.x, 0.0));
-    vec3 lap0 = c0.rgb * 4.0 - (n0.rgb + s0.rgb + e0.rgb + w0.rgb);
+    float minA0 = min(min(n0.a, s0.a), min(e0.a, w0.a));
+    vec3 lap0 = (c0.rgb * 4.0 - (n0.rgb + s0.rgb + e0.rgb + w0.rgb)) * smooth_range(0.6, 0.95, minA0);
 
     vec4 n1 = sample_frame(min(frame_index + 1, 73), uv1 + vec2(0.0, -stepUv.y));
     vec4 s1 = sample_frame(min(frame_index + 1, 73), uv1 + vec2(0.0,  stepUv.y));
     vec4 e1 = sample_frame(min(frame_index + 1, 73), uv1 + vec2( stepUv.x, 0.0));
     vec4 w1 = sample_frame(min(frame_index + 1, 73), uv1 + vec2(-stepUv.x, 0.0));
-    vec3 lap1 = c1.rgb * 4.0 - (n1.rgb + s1.rgb + e1.rgb + w1.rgb);
+    float minA1 = min(min(n1.a, s1.a), min(e1.a, w1.a));
+    vec3 lap1 = (c1.rgb * 4.0 - (n1.rgb + s1.rgb + e1.rgb + w1.rgb)) * smooth_range(0.6, 0.95, minA1);
 
-    c0.rgb = clamp(c0.rgb + lap0 * 0.14, 0.0, 1.0);
-    c1.rgb = clamp(c1.rgb + lap1 * 0.14, 0.0, 1.0);
+    if (c0.a > 0.75) c0.rgb = clamp(c0.rgb + lap0 * 0.15, 0.0, 1.0);
+    if (c1.a > 0.75) c1.rgb = clamp(c1.rgb + lap1 * 0.15, 0.0, 1.0);
 
     // Confidence-weighted premultiplied alpha blend
     float wBlend = fraction;
     float aDiff = c1.a - c0.a;
-    if (abs(aDiff) > 0.35) {
-      wBlend = clamp(fraction + aDiff * 0.16 * sin(fraction * 3.14159), 0.0, 1.0);
+    // Crisp edge contour shaping from the remade animator, shared by forward and reverse playback.
+    if (abs(aDiff) > 0.25) {
+      wBlend = clamp(fraction + aDiff * 0.24 * sin(fraction * 3.14159), 0.0, 1.0);
     }
-    float outA = mix(c0.a, c1.a, wBlend);
+    float rawOutA = mix(c0.a, c1.a, wBlend);
+    float outA = smooth_range(0.32, 0.82, rawOutA);
     vec3 pm0 = c0.rgb * c0.a;
     vec3 pm1 = c1.rgb * c1.a;
-    vec3 outRgb = (outA > 1e-4) ? mix(pm0, pm1, wBlend) / outA : vec3(0.0);
+    vec3 outRgb = (rawOutA > 1e-4) ? mix(pm0, pm1, wBlend) / rawOutA : vec3(0.0);
 
     vec3 iri = computeIridescence(px, uBubble, uTime);
     outRgb = clamp(outRgb + iri * outA, 0.0, 1.0);

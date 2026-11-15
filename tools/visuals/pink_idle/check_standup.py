@@ -17,6 +17,18 @@ def check_standup(folder: Path, mod: Path):
     px = uv * res
     def tile(image, n, w, h):
         return image[n // 8 * h:(n // 8 + 1) * h, n % 8 * w:(n % 8 + 1) * w]
+    def remade_sample(image, sample_uv):
+        color = sharpen(image, sample_uv, resolution=res, blend=.56, step=.80, gain=0)
+        alpha = color[:, 3:]
+        cleaned = np.clip(color[:, :3] / np.maximum(alpha, 1e-8) ** .62, 0, 1)
+        color[:, :3] = np.where((alpha > .03) & (alpha < .96), cleaned, color[:, :3])
+        neighbors = [bilinear(image, sample_uv + shift / res)
+                     for shift in (np.array([0, -.80]), np.array([0, .80]), np.array([.80, 0]), np.array([-.80, 0]))]
+        minimum_alpha = np.minimum.reduce([neighbor[:, 3:] for neighbor in neighbors])
+        laplacian = (color[:, :3] * 4 - sum(neighbor[:, :3] for neighbor in neighbors)) * smoothstep(.6, .95, minimum_alpha)
+        sharpened = np.clip(color[:, :3] + laplacian * .15, 0, 1)
+        color[:, :3] = np.where(alpha > .75, sharpened, color[:, :3])
+        return color
     errors = {}
     for seconds in (0.0, .413, 1.7, 3.083):
         frame = seconds / 3.083 * 73
@@ -25,15 +37,14 @@ def check_standup(folder: Path, mod: Path):
         inside = ((flow_uv >= 0) & (flow_uv <= 1)).all(axis=1)
         flow = (bilinear(tile(fields, i, 63, 93), flow_uv)[:, :2] * 255 - 128) * .25
         flow[~inside] = 0
-        c0 = sharpen(tile(atlas, i, 504, 768), np.clip(uv - frac * flow / res, .001, .999),
-                     resolution=res, blend=.56, step=.82, gain=.14)
-        c1 = sharpen(tile(atlas, min(i + 1, 73), 504, 768), np.clip(uv + (1 - frac) * flow / res, .001, .999),
-                     resolution=res, blend=.56, step=.82, gain=.14)
+        c0 = remade_sample(tile(atlas, i, 504, 768), np.clip(uv - frac * flow / res, .001, .999))
+        c1 = remade_sample(tile(atlas, min(i + 1, 73), 504, 768), np.clip(uv + (1 - frac) * flow / res, .001, .999))
         diff = c1[:, 3:] - c0[:, 3:]
-        weight = np.where(abs(diff) > .35, np.clip(frac + diff * .16 * np.sin(frac * 3.14159), 0, 1), frac)
-        alpha = c0[:, 3:] * (1 - weight) + c1[:, 3:] * weight
+        weight = np.where(abs(diff) > .25, np.clip(frac + diff * .24 * np.sin(frac * 3.14159), 0, 1), frac)
+        raw_alpha = c0[:, 3:] * (1 - weight) + c1[:, 3:] * weight
+        alpha = smoothstep(.32, .82, raw_alpha)
         rgb = c0[:, :3] * c0[:, 3:] * (1 - weight) + c1[:, :3] * c1[:, 3:] * weight
-        straight = np.divide(rgb, alpha, out=np.zeros_like(rgb), where=alpha > 1e-4)
+        straight = np.divide(rgb, raw_alpha, out=np.zeros_like(rgb), where=raw_alpha > 1e-4)
         if seconds <= .70:
             d = (px - [257.22, 539.82]) / 145.5
             r2 = (d * d).sum(axis=1, keepdims=True)

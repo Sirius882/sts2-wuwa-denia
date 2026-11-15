@@ -79,6 +79,8 @@ python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form pin
 
 ## 粉态坐姿至攻击站姿（2026-11-15）
 
+2026-11-15已接入用户重制版（源JS SHA256 `1096d1c3310d58334a1755f7a2dd53a0892bdda14fdc8fc7dfe9d2c0f6184bb9`），正放和倒放同时更新全部图像／光流，并移植新版透明边缘去污染、alpha门控CAS、光流置信度及透明度曲线；独立CPU对照同步参考原GLSL。保持3.083秒、身体标定、交接与出伤时间，6,038项原生检查通过。
+
 `pink_standup_animator.js`／HTML原件保存在`source/`。导入器提取74幅504×768透明WebP、逐帧裁剪位置及63×93光流，保持原3.083秒时长；Godot原生GPU实时补间、Bicubic/CAS和泡泡薄膜着色，不用HTML或视频播放。
 
 ```powershell
