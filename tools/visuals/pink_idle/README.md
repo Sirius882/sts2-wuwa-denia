@@ -4,6 +4,8 @@
 
 共用时钟／动作绑定在 `src/Visuals/DeniaFlowIdleVisual.cs`；粉／黑特效分别在 `DeniaPinkIdleVisual.cs`、`DeniaBlackIdleVisual.cs` 与对应 `shaders/denia_*_idle.gdshader`。资源在 `images/characters/denia/realtime_pink/` 和 `realtime_black/`。工具沿用原 `pink_idle/` 目录，`--form` 选择实际形态，省略时为 pink。
 
+2026-11-15按`规划.md`更新：全部旧帧图集／旧首姿／旧黑态挥砍贴图已删除，场景只保留新待机图集的一帧作加载占位。后撤／死亡不再播放动画，死亡直接显示静态能量图；黑态4段以上等待后续专用素材，正常结算且保持新待机。以下旧动作说明为历史记录。粉态完整序列已变为起身→攻击→倒放起身→坐姿待机，出伤时点保持起身后的既定位置。
+
 ```powershell
 python myModresources/denia/tools/visuals/pink_idle/import_animator.py
 python myModresources/denia/tools/visuals/pink_idle/run_preview.py
@@ -87,3 +89,13 @@ python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form pin
 生产控制器在两种粉态攻击前调用`PlayWithPinkStandup`，共用一条时间轴和同一组命中等待。起身期间攻击局部时钟为零，跨帧余量在起身结束后继续传给攻击；黑态沿用原时序。起身开头保留当前待机相位，0.14秒交接坐姿；最后0.16秒交接原攻击首姿，均包含在3.083秒内。身体身高／锚点连续标定，多段首姿比单段靠右，使用单独的结束锚点。两个透明视口按最终屏幕像素渲染，以预乘色混合后一次合成背景，避免直接淡入淡出两个人物造成变暗；非交接阶段只更新起身视口，结束／中断禁用所有视口。
 
 `PinkStandupChecks.cs`直接链接生产类和控制器，检查30／60／144 FPS、普通／Fast、两次出伤、跨帧、重播／后撤／切态／死亡以及黑态原时序；原生捕获两条完整30Hz序列、交接两端与镜像。`check_standup.py`独立核对原GLSL四个时刻、待机／攻击交接端点及镜像。输出`pink_standup_single.mp4`、`pink_standup_combo.mp4`及`pink_standup_joins.jpg`，这是生产类的独立预览，不是实际战斗录像。
+
+倒放起身沿用正放的素材／光流／身体标定和预乘混合，攻击完整收招结束后才开始3.083秒回坐。`TimelineClock`涵盖正放／攻击／倒放，攻击局部`Clock`在倒放期间钳制于末帧，伤害Task不会重建或重发。回坐最后一帧把同一待机相位交回控制器。普通速度单段完整11.332秒、多段20.829333秒；Fast均除以3。`--form pink_standup --render`现捕获341／626帧，并比较回坐末帧与恢复待机逐像素一致。
+
+## 地图画笔
+
+```powershell
+python -B myModresources/denia/tools/visuals/pink_idle/run_preview.py --form map_brush --render
+```
+
+直接运行生产`DeniaMapBrushVisual`／`DeniaBubbleBurst`，检查长按静止连续发射、松手不生成、重新落笔立即生成、卡顿不集中补发、30／60／144FPS慢速粒子，以及浅粉→粉紫→深紫的渐变端点。生成`map_brush.mp4`和`map_brush.jpg`。游戏侧使用原生`NMapDrawings`有效绘制状态，只有本机Denia左键落笔时生成粉态泡泡，橡皮擦与其他角色保持游戏原逻辑；颜色按线条所属角色判断，队友的Denia线条也使用同一渐变。详见工作区`docs/ui/denia-map-brush-and-code-animation-only.md`。

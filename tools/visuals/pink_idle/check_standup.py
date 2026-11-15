@@ -56,6 +56,7 @@ def check_standup(folder: Path, mod: Path):
     for tag in ('single', 'combo'):
         assert abs(pixels(tag + '_idle_before') - pixels(tag + '_entry_zero')).max() <= 1, 'entry preserves current idle exactly'
         assert abs(pixels(tag + '_attack_start') - pixels(tag + '_attack_original')).max() <= 1, 'exit preserves original attack exactly'
+        assert abs(pixels(tag + '_return_seated') - pixels(tag + '_idle_after')).max() <= 1, 'reverse standup preserves final seated phase'
         outgoing, incoming, middle = (pixels(f'{tag}_join_{t:.3f}') for t in (2.923, 3.083, 3.003))
         opaque = (outgoing[:, :, 3] > 250) & (incoming[:, :, 3] > 250)
         assert np.quantile(middle[:, :, 3][opaque], .1) > 249, 'crossfade must retain opaque body brightness'
@@ -70,9 +71,9 @@ def check_standup(folder: Path, mod: Path):
             normal, mirror = pixels(f'{tag}_join_{t:.3f}'), pixels(f'{tag}_mirror_{t:.3f}')
             assert abs(normal[:, ::-1] - mirror).mean() < .15, (tag, t, 'all three bodies mirror around same anchor')
         count = len(list(folder.glob(f'standup_{tag}_[0-9][0-9][0-9][0-9].png')))
-        assert count == (249 if tag == 'single' else 534), (tag, count)
+        assert count == (341 if tag == 'single' else 626), (tag, count)
     print(f'PASS: original standup GLSL {errors}; exact idle/attack endpoints and both mirrored joins')
-    return {'original_glsl_mean_error': errors, 'exact_seam_endpoints': True,
+    return {'original_glsl_mean_error': errors, 'exact_seam_endpoints': True, 'exact_return_to_idle': True,
             'opaque_handoff': True, 'head_and_feet_aligned': True}
 
 
@@ -99,3 +100,12 @@ def make_preview(folder: Path, output: Path):
             sheet.paste(picture, (x + (320 - picture.width) // 2, y + 24))
             pen.text((x + 8, y + 7), f'{tag} {t:.3f}s', fill='white')
     sheet.save(output / 'pink_standup_joins.jpg')
+    return_times = (0, .08, .16, .7, 1.7, 2.943, 3.013, 3.083)
+    sheet = Image.new('RGB', (1440, 640), tuple(background.astype(int)));pen = ImageDraw.Draw(sheet)
+    for row, tag in enumerate(('single', 'combo')):
+        for i, t in enumerate(return_times):
+            picture = composite(folder / f'{tag}_return_{t:.3f}.png').crop((400, 300, 880, 810))
+            picture.thumbnail((180, 295));x, y = i * 180, row * 320
+            sheet.paste(picture, (x + (180 - picture.width) // 2, y + 20))
+            pen.text((x + 4, y + 4), f'{tag} {t:.3f}s', fill='white')
+    sheet.save(output / 'pink_return_joins.jpg')

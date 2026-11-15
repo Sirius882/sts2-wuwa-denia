@@ -24,10 +24,15 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
     private ColorRect? _handoff, _attackSnapshot;
     private ShaderMaterial? _handoffMaterial;
     private double _leadInElapsed;
+    private double _returnElapsed;
     private double _idleStartClock;
     public double LeadInDuration { get; private set; }
-    public double TimelineClock => _leadInElapsed + Clock;
+    public double ReturnDuration => LeadInDuration;
+    public double TotalDuration => LeadInDuration + DurationSeconds + ReturnDuration;
+    public double TimelineClock => _leadInElapsed + Clock + _returnElapsed;
+    public double IdleHandoffClock => _idleStartClock + TimelineClock;
     public bool IsPreparing => LeadInDuration > 0 && _leadInElapsed < LeadInDuration;
+    public bool IsReturning => Playing && ReturnDuration > 0 && Clock >= DurationSeconds;
     public Task Impact => ImpactAt(0);
     public Task ImpactAt(int index) => index >= 0 && index < _impacts.Length ? _impacts[index].Task : Task.CompletedTask;
     public event Action? Finished;
@@ -41,7 +46,7 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         _heldImpact = 0;
         _holdAtImpact = holdAtImpact;
         _speed = speed;
-        LeadInDuration = _leadInElapsed = 0;
+        LeadInDuration = _leadInElapsed = _returnElapsed = 0;
         SetPreparationVisibility(false);
         SetAttackOpacity(1);
         Seek(0);
@@ -87,11 +92,12 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         UpdatePreparation();
     }
 
-    /// <summary>总时间轴由起身加原攻击构成，原攻击光流及命中坐标仍使用自身时钟。</summary>
+    /// <summary>总时间轴由起身、原攻击和倒放起身构成，命中坐标仍使用攻击自身时钟。</summary>
     public void SeekTimeline(double seconds)
     {
         if (!double.IsFinite(seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
         _leadInElapsed = Math.Clamp(seconds, 0, LeadInDuration);
+        _returnElapsed = Math.Clamp(seconds - LeadInDuration - DurationSeconds, 0, ReturnDuration);
         Seek(Math.Max(0, seconds - LeadInDuration));
         UpdatePreparation();
     }
@@ -140,13 +146,13 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
 
     private void UpdatePreparation()
     {
-        if (!GodotObject.IsInstanceValid(_standup) || !IsPreparing)
+        if (!GodotObject.IsInstanceValid(_standup) || !(IsPreparing || IsReturning))
         {
             SetPreparationVisibility(false);
             SetAttackOpacity(1);
             return;
         }
-        float t = (float)_leadInElapsed;
+        float t = (float)(IsReturning ? ReturnDuration - _returnElapsed : _leadInElapsed);
         float entry = Mathf.SmoothStep(0, 1, Mathf.Clamp(t / 0.14f, 0, 1));
         float exit = Mathf.SmoothStep(0, 1, Mathf.Clamp((t - (float)LeadInDuration + 0.16f) / 0.16f, 0, 1));
         ConfigureHandoffViews();
@@ -158,10 +164,10 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         _standup.Scale = Vector2.One * scale;
         var offset = (_standup.DesignOrigin - origin) * scale;
         _standup.Position = new Vector2(Flip ? -offset.X : offset.X, offset.Y);
-        _standup.Seek(_leadInElapsed);
+        _standup.Seek(t);
         _standup.Show();
         _seated!.Scale = Vector2.One * (LayoutHeight / _seated.LayoutHeight);
-        _seated.Seek(_idleStartClock + _leadInElapsed);
+        _seated.Seek(IdleHandoffClock);
         _seated.Visible = entry < 1;
         _standupView!.RenderTargetUpdateMode = SubViewport.UpdateMode.Always;
         _seatedView!.RenderTargetUpdateMode = entry < 1 ? SubViewport.UpdateMode.Always : SubViewport.UpdateMode.Disabled;
@@ -190,6 +196,7 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         foreach (var impact in _impacts) impact.TrySetResult();
         Playing = false;
         _leadInElapsed = LeadInDuration;
+        _returnElapsed = ReturnDuration;
         SetPreparationVisibility(false);
         SetAttackOpacity(1);
         Hide();
@@ -207,11 +214,22 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
             advance -= used;
             UpdatePreparation();
         }
-        double next = Clock + advance;
-        Seek(_holdAtImpact && _heldImpact < _impacts.Length ? Math.Min(next, GetImpactTime(_heldImpact)) : next);
+        if (Clock < DurationSeconds)
+        {
+            double before = Clock;
+            double next = Clock + advance;
+            Seek(_holdAtImpact && _heldImpact < _impacts.Length ? Math.Min(next, GetImpactTime(_heldImpact)) : next);
+            advance = Clock >= DurationSeconds ? Math.Max(0, advance - (Clock - before)) : 0;
+        }
         for (int i = 0; i < _impacts.Length; i++)
             if (Clock >= GetImpactTime(i)) _impacts[i].TrySetResult();
         if (Clock < DurationSeconds) return;
+        if (ReturnDuration > 0)
+        {
+            _returnElapsed = Math.Min(ReturnDuration, _returnElapsed + advance);
+            UpdatePreparation();
+            if (_returnElapsed < ReturnDuration) return;
+        }
         Stop();
         Finished?.Invoke();
     }

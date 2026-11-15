@@ -120,6 +120,12 @@ public sealed class Denia : PlaceholderCharacterModel
         "res://images/characters/denia/realtime_pink_1hit/flow.png",
         "res://images/characters/denia/realtime_pink_1hit/tracking.tres",
         "res://shaders/denia_pink_1hit.gdshader",
+        // 粉态起身／回坐共用同一素材与实时混合，提前加载避免首次攻击时临时读取。
+        "res://images/characters/denia/realtime_pink_standup/frames.webp",
+        "res://images/characters/denia/realtime_pink_standup/flow.png",
+        "res://images/characters/denia/realtime_pink_standup/tracking.tres",
+        "res://shaders/denia_pink_standup.gdshader",
+        "res://shaders/denia_pink_handoff.gdshader",
         // 角色图标
         "res://images/ui/top_panel/character_icon_denia.png",
         "res://scenes/ui/character_icons/denia_icon.tscn",
@@ -129,8 +135,7 @@ public sealed class Denia : PlaceholderCharacterModel
         // 双形态立绘
         "res://images/packed/character_select/denia_pink.png",
         "res://images/packed/character_select/denia_black.png",
-        // 形态切换中间图已停用；保留黑态攻击特效预加载。
-        "res://images/ui/combat/denia_black_attack_fx.png",
+        // 形态切换中间图已停用；原黑态攻击特效也已移除，只使用新代码动画。
         // 战斗UI图标
         "res://images/ui/combat/denia_virtual_matter.png",
         "res://images/ui/combat/denia_virtual_matter_cost_icon.png",

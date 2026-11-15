@@ -20,6 +20,10 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "map_brush")
+            {
+                await CheckMapBrush();GetTree().Quit();return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "bubbles")
             {
                 await CheckBubbleBurst();GetTree().Quit();return;
@@ -70,27 +74,8 @@ public partial class Preview : Node
             _idle.BindActions(_actions);
             Check(_idle.Visible && !_actions.Visible, "realtime idle replaces old sprite");
             Check(_actions.SpriteFrames.GetFrameCount("idle") == 1, "old idle atlas has been removed from scene");
-            _actions.AnimationFinished += () => {
-                if (_actions.Animation == "attack" || _actions.Animation == "dodge") _actions.Play("idle");
-            };
-            foreach (string action in black ? new[] { "attack", "dodge" } : new[] { "attack", "dodge", "death" })
-            {
-                Check(_actions.SpriteFrames.HasAnimation(action), action + " retained");
-                _actions.Play(action);
-                Check(!_idle.Visible && _actions.Visible, action + " immediately hides realtime idle");
-                if (action != "death")
-                {
-                    _actions.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished);
-                    Check(_idle.Visible && !_actions.Visible, action + " finish restores realtime idle");
-                }
-                else
-                {
-                    _actions.Pause();
-                    _actions.SetFrameAndProgress(_actions.SpriteFrames.GetFrameCount("death") - 1, 1);
-                    Check(!_idle.Visible && _actions.Visible, "death terminal pose stays visible");
-                }
-                _actions.Play("idle");
-            }
+            foreach (string action in new[] { "attack", "dodge", "death" })
+                Check(!_actions.SpriteFrames.HasAnimation(action), action + " old animation removed");
             foreach (int fps in new[] { 30, 60, 144 })
             {
                 _idle.Seek(0);
@@ -334,7 +319,7 @@ public partial class Preview : Node
             && material.GetShaderParameter("fraction").AsSingle() == 0, "attack final pose clamps without loop");
         var actions = new AnimatedSprite2D { SpriteFrames = new SpriteFrames() };
         actions.SpriteFrames.AddAnimation("idle");actions.SpriteFrames.AddAnimation("attack");
-        var rest = GD.Load<Texture2D>("res://images/characters/denia/realtime_pink/action_rest.png");
+        var rest = GD.Load<Texture2D>("res://images/characters/denia/realtime_pink/frames.webp");
         actions.SpriteFrames.AddFrame("idle", rest);actions.SpriteFrames.AddFrame("attack", rest);
         var legacyBody = new Node2D();_viewport.AddChild(legacyBody);
         legacyBody.AddChild(actions);actions.Play("idle");
@@ -385,19 +370,19 @@ public partial class Preview : Node
             {
                 current.SeekTimeline(current.LeadInDuration + frame / 60.0);
                 // Reproduce late animation signals/direct shows that used to reveal an old body.
-                if (frame % 31 == 0) { legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
+                if (frame % 31 == 0) { legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
                 node.Sync._Process(1.0 / 60);
                 Check(!legacy.IsVisibleInTree() && !idle.IsVisibleInTree() && current.IsVisibleInTree(),
                     "single hit owns body through attack and recovery " + fast + ":" + frame);
             }
-            legacy.Play("attack");
+            legacy.Show();
             current.SeekTimeline(current.LeadInDuration);current.ReleaseImpact();current._Process(10);
             Check(!current.Playing && !current.IsVisibleInTree() && idle.IsVisibleInTree() && !legacy.IsVisibleInTree()
                 && legacy.Animation == "idle" && !legacy.IsPlaying(),
                 "controller restores only realtime idle after recovery");
             current = node.Sync.PlayPinkSingleHit()!;current.SetProcess(false);var pending = current.Impact;
             node.Sync.PlayDodge(false);
-            Check(!current.Playing && pending.IsCompleted && legacy.IsVisibleInTree() && legacy.Animation == "dodge",
+            Check(!current.Playing && pending.IsCompleted && !legacy.IsVisibleInTree() && legacy.Animation == "idle",
                 "dodge interrupts single hit and releases damage wait");
             node.Sync.PlayPinkSingleHit()!.SetProcess(false);node.Entity.Black = true;node.Sync.SetForm(true);
             Check(!current.Playing && !node.Pink.IsVisibleInTree() && node.Black.IsVisibleInTree(), "form switch keeps black body exclusive");
@@ -416,7 +401,7 @@ public partial class Preview : Node
         }
         node.Sync.PlayPinkSingleHit()!.SetProcess(false);node.Sync.PlayDeath();
         Check(!node.Pink.GetNode<DeniaPinkAttackVisual>(DeniaPinkAttackVisual.NodeName).Playing
-            && legacy.Animation == "death" && legacy.IsVisibleInTree(), "death replaces single hit without overlap");
+            && !node.Pink.IsVisibleInTree() && !node.Black.IsVisibleInTree(), "death replaces single hit without overlap");
         node.Free();
     }
 
@@ -487,14 +472,14 @@ public partial class Preview : Node
             for(int frame=0;frame<=lastFrame;frame++)
             {
                 current.SeekTimeline(current.LeadInDuration + frame/60.0);
-                if(frame%31==0){legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished);}
+                if(frame%31==0){legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished);}
                 node.Sync._Process(1.0/60);
                 Check(current.IsVisibleInTree()&&!idle.IsVisibleInTree()&&!legacy.IsVisibleInTree(),"combo body exclusive "+fast+":"+frame);
             }
             current.ReleaseRemainingImpacts(current.Impact);current._Process(30);
             Check(!current.Playing&&idle.IsVisibleInTree()&&!legacy.IsVisibleInTree(),"combo returns only realtime idle");
             current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);var a=current.Impact;var b=current.ImpactAt(1);node.Sync.PlayDodge(dark);
-            Check(!current.Playing&&a.IsCompleted&&b.IsCompleted&&legacy.Animation=="dodge","dodge cancels both waits");
+            Check(!current.Playing&&a.IsCompleted&&b.IsCompleted&&legacy.Animation=="idle"&&!legacy.IsVisibleInTree(),"dodge cancels both waits");
             current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);node.Entity.Black=!dark;node.Sync.SetForm(!dark);
             Check(!current.Playing&&current.ImpactAt(1).IsCompleted&&!overlay.IsVisibleInTree(),"form switch cancels combo");
             node.Entity.Black=dark;node.Sync.SetForm(dark);
@@ -510,7 +495,7 @@ public partial class Preview : Node
             }
         }
         var dying=node.Sync.PlaySingleHit(dark,true)!;dying.SetProcess(false);node.Sync.PlayDeath();
-        Check(!dying.Playing&&dying.ImpactAt(1).IsCompleted&&(dark?!node.Black.IsVisibleInTree():legacy.Animation=="death"),"death replaces combo");
+        Check(!dying.Playing&&dying.ImpactAt(1).IsCompleted&&!node.Black.IsVisibleInTree()&&!node.Pink.IsVisibleInTree(),"death replaces combo");
         node.Free();attack.Play(1,true);var leaving=attack.ImpactAt(1);attack.Free();Check(leaving.IsCompleted,"leaving scene releases both waits");
         File.WriteAllText(Path.Combine(_output,"checks.json"),$"{{\"checks\":{_checks},\"form\":\"{(dark?"dark_2hit":"pink_2hit")}\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
         GD.Print($"PASS: {_checks} {(dark?"dark":"pink")} combo checks, render={_render}");
@@ -588,7 +573,7 @@ public partial class Preview : Node
             for (int frame = 0; frame <= 476; frame++)
             {
                 current.SeekTimeline(current.LeadInDuration + frame / 60.0);
-                if (frame % 31 == 0) { legacy.Play("attack");legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
+                if (frame % 31 == 0) { legacy.Show();idle.Show();legacy.EmitSignal(AnimatedSprite2D.SignalName.AnimationFinished); }
                 node.Sync._Process(1.0 / 60);
                 Check(!legacy.IsVisibleInTree() && !idle.IsVisibleInTree() && current.IsVisibleInTree(), "dark owns body " + fast + ":" + frame);
             }
@@ -596,7 +581,7 @@ public partial class Preview : Node
             Check(!current.Playing && idle.IsVisibleInTree() && !legacy.IsVisibleInTree(), "dark recovery restores realtime idle");
             current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);var pending = current.Impact;
             node.Sync.PlayDodge(true);
-            Check(!current.Playing && pending.IsCompleted && legacy.Animation == "dodge" && legacy.IsVisibleInTree(), "dark dodge releases hit wait");
+            Check(!current.Playing && pending.IsCompleted && legacy.Animation == "idle" && !legacy.IsVisibleInTree(), "dark hurt interruption releases hit wait without old dodge");
             current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);pending = current.Impact;
             node.Entity.Black = false;node.Sync.SetForm(false);
             Check(!current.Playing && pending.IsCompleted && node.Pink.IsVisibleInTree() && !node.Black.IsVisibleInTree(), "dark to pink cancels hit");

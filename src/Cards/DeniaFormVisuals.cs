@@ -34,11 +34,11 @@ public static class DeniaFormPatch
     /// <summary>能量 UI 大图标兼尸体形态。</summary>
     internal const string CorpseTexPath = "res://images/ui/combat/denia_energy_icon_big.png";
     /// <summary>黑色形态攻击特效（常态透明，左下角对齐黑立绘中心）。</summary>
-    internal const string BlackAttackFxTexPath = "res://images/ui/combat/denia_black_attack_fx.png";
+    // 旧挥砍贴图已移除；保留强化调用入口以兼容现有卡牌。
 
     // 动画可增加透明留边，人物大小仍按最初 512 像素画布标定。
     internal const float BodyReferenceHeight = 512f;
-    public const float PinkDeathDuration = 2f;
+    public const float PinkDeathDuration = 0f;
     public const float BlackFxDuration = 0.2f;
 
     /// <summary>设置里的加速模式（Fast）。Instant 由 Cmd.Wait 自行跳过。</summary>
@@ -171,38 +171,15 @@ public static class DeniaFormPatch
         return GetSyncNode(node)?.PlayDodge(DeniaFormHelper.IsBlack(node.Entity)) == true;
     }
 
-    public static void PlayBlackAttackFxSlash(Creature creature)
-    {
-        try
-        {
-            var node = GetCreatureNode(creature);
-            if (node == null || IsDying(node)) return;
-            EnsureOverlays(node);
-            GetSyncNode(node)?.PlayBlackFxSlash();
-        }
-        catch { }
-    }
+    public static void PlayBlackAttackFxSlash(Creature creature) { }
 
     /// <summary>黑色形态攻击特效：虚质/黯核强化脉冲 0.2s。攻击牌路径下不调用。</summary>
     public static void PlayBlackAttackFxPulse(Creature creature)
     {
-        try
-        {
-            // if 攻击牌：绝不播脉冲
-            if (IsBlackFormAttackCardActive(creature)) return;
-            var node = GetCreatureNode(creature);
-            if (node == null || IsDying(node)) return;
-            EnsureOverlays(node);
-            GetSyncNode(node)?.PlayBlackFxPulse();
-        }
-        catch { }
+        // if 攻击牌：绝不播脉冲；旧脉冲现已整体停用。
     }
 
-    public static async Task AwaitBlackFx(Creature creature)
-    {
-        if (ShouldSkipCombatFxWait()) return;
-        await Cmd.Wait(BlackFxDuration);
-    }
+    public static Task AwaitBlackFx(Creature creature) => Task.CompletedTask;
 
     private static NCreature? GetCreatureNode(Creature creature)
     {
@@ -344,22 +321,7 @@ public static class DeniaFormPatch
 
     private static void EnsureBlackFxOverlay(NCreature nc)
     {
-        try
-        {
-            var visuals = nc.Visuals;
-            if (visuals == null || !GodotObject.IsInstanceValid(visuals)) return;
-            if (_blackFxOverlay.TryGetValue(nc, out var existing)
-                && existing != null && GodotObject.IsInstanceValid(existing) && existing.IsInsideTree())
-                return;
-            var fx = TryMakeOptionalOverlay(BlackFxNodeName, BlackAttackFxTexPath);
-            if (fx == null) return;
-            // 左下角为 pivot：PivotOffset 在 Apply 时设为 (0, size.Y)
-            fx.Modulate = new Color(1, 1, 1, 0);
-            visuals.AddChild(fx);
-            visuals.MoveChild(fx, visuals.GetChildCount() - 1);
-            _blackFxOverlay[nc] = fx;
-        }
-        catch { }
+        // 左下角为 pivot：PivotOffset 在 Apply 时设为 (0, size.Y)。旧特效现已停用，不再创建覆盖层。
     }
 
     private static TextureRect? TryMakeOptionalOverlay(string name, string path)
@@ -726,6 +688,9 @@ public partial class DeniaFormOverlaySync : Node
                 _singleHit.Visible = false;
                 overlay.AddChild(_singleHit);
                 _singleHit.Finished += () => {
+                    // 倒放起身的坐姿端已推进待机相位，恢复同一相位避免回到旧时钟时跳动。
+                    if (_singleHit?.LeadInDuration > 0)
+                        overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Seek(_singleHit.IdleHandoffClock);
                     ResetBodyAnimation();
                     StopSingleHit();
                 };
@@ -743,7 +708,7 @@ public partial class DeniaFormOverlaySync : Node
         {
             GD.PrintErr($"[DeniaSingleHit] Animation skipped: {exception.Message}");
             StopSingleHit();
-            PlayBodyAnimation(isBlack, "attack");
+            ResetBodyAnimation();
             return null;
         }
     }
@@ -795,25 +760,14 @@ public partial class DeniaFormOverlaySync : Node
         if (GodotObject.IsInstanceValid(_risePreview)) _risePreview!.QueueFree();
     }
 
-    public void PlayAttack(bool isBlack)
-    {
-        PlayBodyAnimation(isBlack, "attack");
-    }
+    public void PlayAttack(bool isBlack) { } // 没有新素材的动作保持新待机，不回退旧动画。
 
-    public bool PlayDodge(bool isBlack) => PlayBodyAnimation(isBlack, "dodge");
-
-    private bool PlayBodyAnimation(bool isBlack, StringName animation)
+    public bool PlayDodge(bool isBlack)
     {
-        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return true;
-        var sprite = (isBlack ? _black : _pink)?.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
-        if (sprite == null || !GodotObject.IsInstanceValid(sprite)
-            || !sprite.SpriteFrames.HasAnimation(animation)) return false;
+        if (_state is AnimState.DeathTransition or AnimState.Dead) return true;
         StopSingleHit();
         ResetBodyAnimation();
-        sprite.SpeedScale = DeniaFormPatch.IsFastMode() ? 3f : 1f;
-        sprite.Play(animation);
-        sprite.SetFrameAndProgress(0, 0);
-        return true;
+        return true; // 用户不需要后撤动作，接管旧触发但不播放动画。
     }
 
     private void ResetBodyAnimation()
@@ -822,11 +776,13 @@ public partial class DeniaFormOverlaySync : Node
         {
             if (overlay == null || !GodotObject.IsInstanceValid(overlay)) continue;
             var sprite = overlay.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
-            if (sprite != null && GodotObject.IsInstanceValid(sprite)
-                && (sprite.Animation == "attack" || sprite.Animation == "dodge" || sprite.Animation == "death"))
+            if (sprite != null && GodotObject.IsInstanceValid(sprite))
             {
                 sprite.SpeedScale = 1f;
                 sprite.Play("idle");
+                sprite.Pause();
+                sprite.Hide();
+                overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Show();
             }
         }
     }
@@ -901,24 +857,15 @@ public partial class DeniaFormOverlaySync : Node
         if (_creatureNode != null && GodotObject.IsInstanceValid(_creatureNode))
             DeniaFormPatch.SetDying(_creatureNode, true);
         // 原粉立绘 → 尸体三段过渡已改为粉态跌倒 / 黑态直接显示能量图。
-        _state = _deathWasBlack ? AnimState.Dead : AnimState.DeathTransition;
+        // 2026-11-15：用户不需要死亡动画，两态现在直接保留静态能量形象。
+        // 死亡动画不受加速模式影响，结束后保留伏地末帧。（旧规则已停用）
+        _state = AnimState.Dead;
         _animTime = 0;
         ResetMotion();
         _blackFxAlpha = _blackFxRot = 0f;
-        SetRectVisual(_pink, !_deathWasBlack, 1f, 1f, 0f);
+        SetRectVisual(_pink, false, 1f, 1f, 0f);
         SetRectVisual(_black, false, 1f, 1f, 0f);
-        SetRectVisual(_corpse, _deathWasBlack, 1f, 1f, 0f);
-        if (!_deathWasBlack)
-        {
-            var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
-            if (sprite != null && sprite.SpriteFrames.HasAnimation("death"))
-            {
-                // 死亡动画不受加速模式影响，结束后保留伏地末帧。
-                sprite.SpeedScale = 1f;
-                sprite.Play("death");
-                sprite.SetFrameAndProgress(0, 0);
-            }
-        }
+        SetRectVisual(_corpse, true, 1f, 1f, 0f);
         EnsureParentAllowsOverflow();
         ApplyTransforms();
     }
