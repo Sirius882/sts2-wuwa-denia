@@ -24,6 +24,10 @@ public static class DeniaEntry
             if (_initialized)
                 return;
 
+            // 游戏动态加载mod DLL，不会像独立Godot工程那样自动建立C#脚本路径映射。
+            // 必须在选人背景等PackedScene被预加载／实例化前注册本程序集；RitsuLib公开API负责幂等处理。
+            STS2RitsuLib.RitsuLibFramework.EnsureGodotScriptsRegistered(typeof(DeniaEntry).Assembly);
+
             // TuneStrain 已内嵌进 beta 的 denia.dll。先确保其战斗生命周期状态完成初始化，
             // 再对整个合并程序集统一 PatchAll 一次。
             TuneStrainEntry.Bootstrap();
