@@ -26,6 +26,8 @@ public partial class Preview
             {
                 DeniaFormPatch.Fast = speed == 3;
                 var attack = node.Sync.PlaySingleHit(false, multi)!;attack.SetProcess(false);
+                // 此循环专测光流时间轴／保持；Fast粉态的非阻塞策略另在catalog逐项验证。
+                attack.ConfigureCombatPlayback(true, speed == 3);
                 Check(attack.LeadInDuration == lead && attack.IsPreparing && attack.Clock == 0,
                     tag + " begins with full native standup");
                 Check(!legacy.IsVisibleInTree() && !idle.IsVisibleInTree(), "legacy and idle body stay exclusive");
@@ -76,6 +78,10 @@ public partial class Preview
             }
             current = node.Sync.PlaySingleHit(false, multi)!;current.SetProcess(false);current.SeekTimeline(0.8);
             var old = current.Impact;
+            Check(node.Sync.PlaySingleHit(false, multi) == null && !old.IsCompleted,
+                "normal intro rejects a replacement before damage");
+            current.ReleaseRemainingImpacts(old); // 原攻击命令结束／取消后才能开始下一次。
+            DeniaFormPatch.Fast = true;
             current = node.Sync.PlaySingleHit(false, multi)!;current.SetProcess(false);
             Check(old.IsCompleted && current.TimelineClock == 0 && !current.Impact.IsCompleted,
                 "replay restarts intro and releases only old damage gates");
@@ -84,6 +90,7 @@ public partial class Preview
             var black = node.Sync.PlaySingleHit(true, multi)!;black.SetProcess(false);
             Check(black.LeadInDuration == 0 && !black.IsPreparing, "black timing remains unchanged");
             node.Entity.Black = false;node.Sync.SetForm(false);
+            DeniaFormPatch.Fast = false;
 
             if (_render)
             {

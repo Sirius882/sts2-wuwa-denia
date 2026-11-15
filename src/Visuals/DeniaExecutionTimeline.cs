@@ -1,6 +1,6 @@
 namespace Denia;
 
-/// <summary>独立于解码帧率的演出时序；原结算只等待到最后白闪。</summary>
+/// <summary>独立于解码帧率的演出时序；原结算等待完整画面退场，Release只负责开始退场。</summary>
 internal static class DeniaExecutionTimeline
 {
     public const float Enter = 24f / 30f;

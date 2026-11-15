@@ -16,6 +16,10 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
     public bool Playing { get; private set; }
     private float _speed = 1;
     private bool _holdAtImpact;
+    private bool _protectUntilDamage;
+    private int _confirmedImpacts;
+    public bool WaitForDamage { get; private set; } = true;
+    public bool CanBeInterrupted => !Playing || !_protectUntilDamage || _confirmedImpacts >= ImpactCount;
     private TaskCompletionSource[] _impacts = [];
     private int _heldImpact;
     private DeniaPinkStandupVisual? _standup;
@@ -44,6 +48,9 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         _impacts = new TaskCompletionSource[ImpactCount];
         for (int i = 0; i < _impacts.Length; i++) _impacts[i] = new TaskCompletionSource();
         _heldImpact = 0;
+        _confirmedImpacts = 0;
+        _protectUntilDamage = false;
+        WaitForDamage = true;
         _holdAtImpact = holdAtImpact;
         _speed = speed;
         LeadInDuration = _leadInElapsed = _returnElapsed = 0;
@@ -185,9 +192,26 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
             _heldImpact++;
     }
 
+    /// <summary>起播时固定模式；快速粉态不门控伤害，普通模式保护到实际伤害轮次完成。</summary>
+    public void ConfigureCombatPlayback(bool waitForDamage, bool allowEarlyInterruption)
+    {
+        WaitForDamage = waitForDamage;
+        _holdAtImpact = waitForDamage;
+        _protectUntilDamage = !allowEarlyInterruption;
+    }
+
+    public void ConfirmDamage(Task expectedFirst)
+    {
+        if (ReferenceEquals(expectedFirst, Impact)) _confirmedImpacts++;
+    }
+
     public void ReleaseRemainingImpacts(Task expectedFirst)
     {
-        if (ReferenceEquals(expectedFirst, Impact)) _holdAtImpact = false;
+        if (ReferenceEquals(expectedFirst, Impact))
+        {
+            _holdAtImpact = false;
+            _protectUntilDamage = false;
+        }
     }
 
     public void Stop()

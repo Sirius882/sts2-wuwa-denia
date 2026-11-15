@@ -197,5 +197,5 @@ public sealed class DeniaExecutionAnimationChoice : DeniaAnimationChoice
     public override string PortraitPath => "res://images/packed/card_portraits/denia/card_face_sorrow.png";
     internal override DeniaAnimationPreviewKind? Preview => DeniaAnimationPreviewKind.Execution;
     public override List<(string, string)>? Localization => new CardLoc(Title: "三级集谐处决",
-        Description: "原速播放完整画面与音轨，5.633秒后放行，退场与尾音继续。不造成伤害、不改变形态。");
+        Description: "原速播放完整画面与音轨。必须等画面完整结束（约6.133秒），不可被下一演出打断，尾音继续。不造成伤害、不改变形态。");
 }

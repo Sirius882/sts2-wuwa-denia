@@ -65,8 +65,9 @@ anchor_bottom=1.0
 script=ExtResource("1")
 ''', encoding='utf-8')
     shutil.copyfile(SOURCE / 'Preview.cs', runtime / 'Preview.cs')
+    shutil.copyfile(SOURCE / 'ExecutionRuleFixture.cs', runtime / 'ExecutionRuleFixture.cs')
     links = ''.join(f'<Compile Include="{MOD / "src/Visuals" / name}" Link="{name}" />' for name in
-                    ('DeniaExecutionTimeline.cs', 'DeniaExecutionOverlay.cs'))
+                    ('DeniaExecutionTimeline.cs', 'DeniaExecutionOverlay.cs', 'DeniaExecutionRule.cs'))
     (runtime / 'ExecutionPreview.csproj').write_text(f'''<Project Sdk="Godot.NET.Sdk/4.5.1">
 <PropertyGroup><TargetFramework>net9.0</TargetFramework><Nullable>enable</Nullable>
 <EnableDynamicLoading>true</EnableDynamicLoading><RitsuLibReferenceTarget>0.113.0</RitsuLibReferenceTarget></PropertyGroup>
@@ -84,7 +85,8 @@ script=ExtResource("1")
     run([str(godot), '--headless', '--path', str(runtime), '--editor', '--import'], ROOT, runtime / 'import.log')
     command = [str(godot), '--path', str(runtime), '--audio-driver', 'WASAPI' if args.audio_check else 'Dummy',
                '--log-file', str(runtime / 'godot.log')]
-    command += ['--max-fps', '60'] if args.audio_check else ['--fixed-fps', '30']
+    # 非渲染检查包含并发尾音；使用墙钟，避免固定步进快过原生音频释放造成假泄漏。
+    command += ['--max-fps', '60'] if args.audio_check or not args.render else ['--fixed-fps', '30']
     command += ['--display-driver', 'windows', '--position', '-16000,-16000',
                 '--rendering-method', 'forward_plus', '--rendering-driver', 'd3d12'] if args.render or args.audio_check else ['--headless']
     if args.audio_check:
