@@ -32,6 +32,10 @@ public partial class Preview : Node
             {
                 await CheckPinkStandup();GetTree().Quit();return;
             }
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "dark_4hit")
+            {
+                await CheckPinkMulti(true, true);GetTree().Quit();return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "dark_2hit")
             {
                 await CheckPinkMulti(true);GetTree().Quit();return;
@@ -405,29 +409,31 @@ public partial class Preview : Node
         node.Free();
     }
 
-    private async Task CheckPinkMulti(bool dark = false)
+    private async Task CheckPinkMulti(bool dark = false, bool four = false)
     {
-        double duration=dark?DeniaDarkMultiAttackVisual.Duration:DeniaPinkMultiAttackVisual.Duration;
-        double firstTime=dark?DeniaDarkMultiAttackVisual.FirstImpact:DeniaPinkMultiAttackVisual.FirstImpact;
-        double secondTime=dark?DeniaDarkMultiAttackVisual.SecondImpact:DeniaPinkMultiAttackVisual.SecondImpact;
+        double duration=four?DeniaDarkFourAttackVisual.Duration:dark?DeniaDarkMultiAttackVisual.Duration:DeniaPinkMultiAttackVisual.Duration;
+        double firstTime=four?DeniaDarkFourAttackVisual.ImpactTimes[0]:dark?DeniaDarkMultiAttackVisual.FirstImpact:DeniaPinkMultiAttackVisual.FirstImpact;
+        double secondTime=four?DeniaDarkFourAttackVisual.ImpactTimes[1]:dark?DeniaDarkMultiAttackVisual.SecondImpact:DeniaPinkMultiAttackVisual.SecondImpact;
         int lastFrame=(int)Math.Ceiling(duration*60);
-        string prefix=dark?"dark_multi":"multi";
-        _viewport = new SubViewport { Size = new Vector2I(896, 504), TransparentBg = true,
+        string prefix=four?"dark_four":dark?"dark_multi":"multi";
+        Vector2I canvas = dark && !four ? new(1728, 972) : new(1536, 864);
+        double[] sampleTimes = four ? [0.0, ..DeniaDarkFourAttackVisual.ImpactTimes, 8.4] : [0.0,firstTime,secondTime,dark?6.2:10.2];
+        _viewport = new SubViewport { Size = canvas, TransparentBg = true,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
         AddChild(_viewport);
-        DeniaSingleHitVisual attack = dark?new DeniaDarkMultiAttackVisual():new DeniaPinkMultiAttackVisual();_viewport.AddChild(attack);
+        DeniaSingleHitVisual attack = four?new DeniaDarkFourAttackVisual():dark?new DeniaDarkMultiAttackVisual():new DeniaPinkMultiAttackVisual();_viewport.AddChild(attack);
         attack.Position = attack.DesignOrigin;attack.SetProcess(false);
-        Check(attack.Initialized && attack.ImpactCount == 2, "132-frame combo initializes with exactly two impact gates");
+        Check(attack.Initialized && attack.ImpactCount == (four?4:2), "source combo initializes with the required impact gates");
         var body = attack.GetNode<ColorRect>("FlowBody");var material = (ShaderMaterial)body.Material;
-        Check(material.GetShaderParameter("frames").As<Texture2D>().GetSize() == new Vector2(7168,dark?7056:8568), "all 132 original combo frames");
-        Check(material.GetShaderParameter("flow_fields").As<Texture2D>().GetSize() == new Vector2(1792,dark?1764:2142), "RGBA forward and reverse flow preserved");
+        Check(material.GetShaderParameter("frames").As<Texture2D>().GetSize() == new Vector2(canvas.X*8,canvas.Y*(four?15:dark?9:17)), "all remade source frames");
+        Check(material.GetShaderParameter("flow_fields").As<Texture2D>().GetSize() == (four?new Vector2(640,675):dark?new Vector2(1728,1098):new Vector2(768,918)), "original linear flow fields preserved");
         int completions=0;attack.Finished+=()=>completions++;
         foreach (int fps in new[] {30,60,144})
         foreach (int speed in new[] {1,3})
         {
             attack.Play(speed,true);attack.SetProcess(false);
             var first=attack.ImpactAt(0);var second=attack.ImpactAt(1);
-            for(int hit=0;hit<2;hit++)
+            for(int hit=0;hit<attack.ImpactCount;hit++)
             {
                 double due=attack.GetImpactTime(hit);
                 while(attack.Clock+1.0/fps*speed < due) attack._Process(1.0/fps);
@@ -438,7 +444,7 @@ public partial class Preview : Node
                 if(hit==0)Check(!second.IsCompleted,"first swing cannot release second number");
                 attack.ReleaseImpact(attack.ImpactAt(hit));
             }
-            Check(attack.ImpactAt(2).IsCompleted,"round three adds no wait");
+            Check(attack.ImpactAt(attack.ImpactCount).IsCompleted,"later rounds add no wait");
             int before=completions;attack._Process(30);attack._Process(30);
             Check(completions==before+1&&!attack.Playing,"combo plays once including recovery");
         }
@@ -450,7 +456,7 @@ public partial class Preview : Node
         if(_render)
         {
             attack.Show();
-            foreach(double t in new[]{0.0,firstTime,secondTime,dark?6.2:10.2})
+            foreach(double t in sampleTimes)
             {
                 attack.Seek(t);await Capture($"{prefix}_composite_{t:F3}");
                 body.Reparent(_viewport,false);body.Position=Vector2.Zero;attack.Hide();await Capture($"{prefix}_glsl_{t:F3}");
@@ -458,7 +464,7 @@ public partial class Preview : Node
             }
             for(int frame=0;frame<=lastFrame;frame++){attack.Seek(frame/60.0);await Capture($"{prefix}_{frame:D4}");}
             attack.Seek(secondTime);await Capture(prefix+"_right");
-            attack.SetFacing(true);attack.Position=new Vector2(896-attack.DesignOrigin.X,attack.DesignOrigin.Y);await Capture(prefix+"_left");
+            attack.SetFacing(true);attack.Position=new Vector2(canvas.X-attack.DesignOrigin.X,attack.DesignOrigin.Y);await Capture(prefix+"_left");
             attack.SetFacing(false);attack.Position=attack.DesignOrigin;attack.Modulate=new Color(1,1,1,0.5f);await Capture(prefix+"_half_alpha");attack.Modulate=Colors.White;
         }
         attack.Hide();_viewport.Size=new Vector2I(1920,1080);
@@ -467,8 +473,8 @@ public partial class Preview : Node
         var legacy=overlay.GetNode<AnimatedSprite2D>("Body/Idle");var idle=overlay.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle");
         foreach(bool fast in new[]{false,true})
         {
-            DeniaFormPatch.Fast=fast;var current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);
-            Check((dark?current is DeniaDarkMultiAttackVisual:current is DeniaPinkMultiAttackVisual),"pink multi uses new combo");
+            DeniaFormPatch.Fast=fast;var current=node.Sync.PlaySingleHit(dark,true,four)!;current.SetProcess(false);
+            Check((four?current is DeniaDarkFourAttackVisual:dark?current is DeniaDarkMultiAttackVisual:current is DeniaPinkMultiAttackVisual),"pink multi uses new combo");
             for(int frame=0;frame<=lastFrame;frame++)
             {
                 current.SeekTimeline(current.LeadInDuration + frame/60.0);
@@ -478,9 +484,9 @@ public partial class Preview : Node
             }
             current.ReleaseRemainingImpacts(current.Impact);current._Process(30);
             Check(!current.Playing&&idle.IsVisibleInTree()&&!legacy.IsVisibleInTree(),"combo returns only realtime idle");
-            current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);var a=current.Impact;var b=current.ImpactAt(1);node.Sync.PlayDodge(dark);
+            current=node.Sync.PlaySingleHit(dark,true,four)!;current.SetProcess(false);var a=current.Impact;var b=current.ImpactAt(1);node.Sync.PlayDodge(dark);
             Check(!current.Playing&&a.IsCompleted&&b.IsCompleted&&legacy.Animation=="idle"&&!legacy.IsVisibleInTree(),"dodge cancels both waits");
-            current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);node.Entity.Black=!dark;node.Sync.SetForm(!dark);
+            current=node.Sync.PlaySingleHit(dark,true,four)!;current.SetProcess(false);node.Entity.Black=!dark;node.Sync.SetForm(!dark);
             Check(!current.Playing&&current.ImpactAt(1).IsCompleted&&!overlay.IsVisibleInTree(),"form switch cancels combo");
             node.Entity.Black=dark;node.Sync.SetForm(dark);
         }
@@ -488,16 +494,16 @@ public partial class Preview : Node
         if(_render)
         {
             node.Sync.SetForm(dark);idle.Seek(0);await Capture(prefix+"_idle_alignment");
-            foreach(double t in new[]{0.0,firstTime,secondTime})
+            foreach(double t in (four ? new double[]{0.0,DeniaDarkFourAttackVisual.ImpactTimes[0],DeniaDarkFourAttackVisual.ImpactTimes[1],DeniaDarkFourAttackVisual.ImpactTimes[2],DeniaDarkFourAttackVisual.ImpactTimes[3]} : new[]{0.0,firstTime,secondTime}))
             {
-                var current=node.Sync.PlaySingleHit(dark,true)!;current.SetProcess(false);current.SeekTimeline(current.LeadInDuration + t);node.Sync._Process(0);await Capture($"{prefix}_controller_{t:F3}");
+                var current=node.Sync.PlaySingleHit(dark,true,four)!;current.SetProcess(false);current.SeekTimeline(current.LeadInDuration + t);node.Sync._Process(0);await Capture($"{prefix}_controller_{t:F3}");
                 node.Hide();attack.Position=new Vector2(960,800);attack.Scale=Vector2.One*(350/attack.LayoutHeight);attack.Show();attack.Seek(t);await Capture($"{prefix}_isolated_{t:F3}");attack.Hide();node.Show();
             }
         }
-        var dying=node.Sync.PlaySingleHit(dark,true)!;dying.SetProcess(false);node.Sync.PlayDeath();
+        var dying=node.Sync.PlaySingleHit(dark,true,four)!;dying.SetProcess(false);node.Sync.PlayDeath();
         Check(!dying.Playing&&dying.ImpactAt(1).IsCompleted&&!node.Black.IsVisibleInTree()&&!node.Pink.IsVisibleInTree(),"death replaces combo");
         node.Free();attack.Play(1,true);var leaving=attack.ImpactAt(1);attack.Free();Check(leaving.IsCompleted,"leaving scene releases both waits");
-        File.WriteAllText(Path.Combine(_output,"checks.json"),$"{{\"checks\":{_checks},\"form\":\"{(dark?"dark_2hit":"pink_2hit")}\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
+        File.WriteAllText(Path.Combine(_output,"checks.json"),$"{{\"checks\":{_checks},\"form\":\"{(four?"dark_4hit":dark?"dark_2hit":"pink_2hit")}\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
         GD.Print($"PASS: {_checks} {(dark?"dark":"pink")} combo checks, render={_render}");
     }
 
@@ -673,7 +679,8 @@ public partial class Preview : Node
         using var image = _viewport.GetTexture().GetImage();
         Check(image.SavePng(Path.Combine(_output, name + ".png")) == Error.Ok, "GPU capture " + name);
         // 黑态双挥击的攻击链／冲击会覆盖原画布角落，以独立原GLSL像素对照验证其透明度。
-        if (!name.StartsWith("dark_multi_", StringComparison.Ordinal) || _viewport.Size != new Vector2I(896, 504))
+        if (!(name.StartsWith("dark_multi_", StringComparison.Ordinal) || name.StartsWith("dark_four_", StringComparison.Ordinal)
+            || name.StartsWith("multi_", StringComparison.Ordinal)))
             Check(image.GetPixel(0, 0).A < 0.01f && image.GetPixel(image.GetWidth() - 1, image.GetHeight() - 1).A < 0.01f,
                 "transparent corners " + name);
     }

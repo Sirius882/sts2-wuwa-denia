@@ -13,11 +13,11 @@ public partial class DeniaPinkMultiAttackVisual : DeniaSingleHitVisual
     protected override string ShaderPath => "res://shaders/denia_pink_2hit.gdshader";
     public override double DurationSeconds => Duration;
     public override int FrameCount => 132;
-    public override float LayoutHeight => 227;
-    public override Vector2 DesignOrigin => new(418, 416);
+    public override float LayoutHeight => 428;
+    public override Vector2 DesignOrigin => new(720, 750);
     // 两次挥击首姿的身体比单段首姿靠右；起身过程中平滑移到对应位置，脚底与头部一起对齐。
-    protected override Vector2 PinkStandupEndOrigin => new(151.5f, 744.5f);
-    protected override Vector2 CanvasSize => new(896, 504);
+    protected override Vector2 PinkStandupEndOrigin => new(174, 735);
+    protected override Vector2 CanvasSize => new(1536, 864);
     protected override bool UsesTracking => false;
     protected override bool WrapFrames => true;
     public override double DamageTime => FirstImpact;

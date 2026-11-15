@@ -20,7 +20,7 @@ internal static class DeniaSingleHitAttackPatch
         if (NonInteractiveMode.IsActive) return;
         if (!DeniaPinkAttackRule.TryStart(__instance.ModelSource as CardModel, __instance.Attacker,
             ____hitCount, out _)) return;
-        var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!, ____hitCount >= 2);
+        var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!, ____hitCount >= 2, ____hitCount >= 4);
         if (visual == null) return;
         var previous = ____beforeDamage;
         var afterAnimation = ____afterAttackerAnim;
