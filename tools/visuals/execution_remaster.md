@@ -6,6 +6,10 @@ ComfyUI and the batch client were stopped and GPU memory released. Do not resume
 until the user explicitly asks. The runtime OGV is still the old quality-8 asset;
 no new video has been encoded, deployed or pushed. The aligned WAV and reusable
 workflow are prepared. Durable progress and pause notes are next to `frames_4k`.
+The prepared WAV is preserved there as `denia_execution_aligned_prepared.wav`.
+The runtime `sounds/denia_execution.wav` keeps the pre-remaster soundtrack while
+the task is paused, so other animation updates can be packed independently.
+Regenerate the aligned WAV after completing the new OGV when this task resumes.
 
 The re-cut source is `artResources/Denia/人物形象与动画/环三层集谐处决动画原视频.mp4`.
 Alignment uses the previous runtime OGV at 192×88 plus soundtrack cross-correlation.
