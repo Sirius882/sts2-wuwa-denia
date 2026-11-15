@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[4]
 HERE = Path(__file__).resolve().parent
 CONFIG = HERE / 'execution_video_remaster.json'
 OUTPUT = ROOT / 'myModresources/denia/videos'
-MASTER = ROOT / 'artResources/Denia/游戏视频/denia_execution_middle.ogv'
+MASTER = ROOT / 'artResources/Denia/人物形象与动画/denia_execution_middle.ogv'
 
 
 def sha(path):
