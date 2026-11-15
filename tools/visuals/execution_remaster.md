@@ -1,15 +1,26 @@
 # Execution video remaster (2026-11-15)
 
-Paused at the user's request on 2026-11-15 at 11:10 +08:00. Completed and hash-verified:
-34/137 frames (0–29, 49–51, 136). Frame 30 was interrupted; resume from frame 30.
-ComfyUI and the batch client were stopped and GPU memory released. Do not resume
-until the user explicitly asks. The runtime OGV is still the old quality-8 asset;
-no new video has been encoded, deployed or pushed. The aligned WAV and reusable
-workflow are prepared. Durable progress and pause notes are next to `frames_4k`.
-The prepared WAV is preserved there as `denia_execution_aligned_prepared.wav`.
-The runtime `sounds/denia_execution.wav` keeps the pre-remaster soundtrack while
-the task is paused, so other animation updates can be packed independently.
-Regenerate the aligned WAV after completing the new OGV when this task resumes.
+Completed on 2026-11-15 at 17:55 +08:00 after the user resumed the task at
+16:37. All 137 frame hashes and 3840x1772 dimensions were verified. The durable
+frame directory, progress record and prepared soundtrack remain available for
+reproduction; no ComfyUI process for this task remains running.
+
+Runtime video is now Theora quality 10: 35,048,069 bytes, 137 decoded pictures and
+137/30 seconds. SSIM against the enhanced PNG sequence is 0.995590. The source
+frames, timing and soundtrack alignment below are unchanged. Full-frame QA found
+maximum downsampled source MSE 0.00024632 and motion-compensated enhancement
+residual MSE 0.000263765; contact sheets and native preview are next to `frames_4k`.
+82 D3D12 rendering checks passed. Real-time audio initially exceeded the existing
+80ms limit (84.3ms); the recheck passed all 36 assertions with 74.0ms maximum drift,
+while shutdown still reported the existing single-resource cleanup diagnostic.
+These checks do not establish real combat performance or speaker output.
+
+The earlier pause at 11:10 saved 34 frames (0-29, 49-51, 136). Resume skipped those
+verified images. An exclusive Windows file lock on the monitor report interrupted
+the client once; its already-completed server output was recovered without
+regeneration, and report reads now retry brief sharing violations. This retry was
+verified using an actual exclusive Windows file handle. The same memory profile
+stayed at 9.17 GiB dedicated / 161 MiB shared throughout the resumed run.
 
 The re-cut source is `artResources/Denia/人物形象与动画/环三层集谐处决动画原视频.mp4`.
 Alignment uses the previous runtime OGV at 192×88 plus soundtrack cross-correlation.
@@ -29,7 +40,9 @@ Run from the workspace root:
 ```powershell
 python -B myModresources/denia/tools/visuals/remaster_execution.py extract
 powershell -File myModresources/denia/tools/visuals/start_execution_comfy.ps1
-# In another shell, after the server is ready:
+# In another shell, monitor only this ComfyUI server PID:
+powershell -File myModresources/denia/tools/visuals/watch_execution_gpu.ps1 -ComfyProcessId <PID>
+# After the server is ready and the monitor is running:
 python -B myModresources/denia/tools/visuals/remaster_execution.py upscale
 python -B myModresources/denia/tools/visuals/prepare_execution_video.py
 python -B myModresources/denia/tools/visuals/prepare_execution_audio.py
@@ -58,3 +71,8 @@ large assets are not tracked. Workflows, metadata and scripts are tracked. Logs,
 extracted source frames and ComfyUI scratch outputs live in workspace `.cache`.
 After cache cleanup, re-extract source frames and restart the server; completed
 PNG frames resume by hash without repeating their generation.
+
+The GPU monitor is reusable source, not a cache dependency. It samples the specified
+server process only and interrupts its pending/running queue after two consecutive
+samples above 1 GiB shared GPU memory. Stop this task's server after generation to
+release its memory; do not stop unrelated Python or ComfyUI processes.

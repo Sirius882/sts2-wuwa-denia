@@ -42,6 +42,21 @@ def extract(config, scratch):
     assert all((folder / f'frame_{i:04d}.png').is_file() for i in range(count))
 
 
+
+def read_memory_report(path):
+    # Windows may briefly deny reads while the monitor atomically replaces its report.
+    # Retry that sharing violation; a persistent error must still stop the batch.
+    for attempt in range(20):
+        try:
+            return json.loads(path.read_text(encoding='utf-8-sig'))
+        except FileNotFoundError:
+            return {}
+        except (PermissionError, json.JSONDecodeError):
+            if attempt == 19:
+                raise
+            time.sleep(0.05)
+
+
 def upscale(config, scratch, base, indices):
     workflow = json.loads(WORKFLOW.read_text(encoding='utf-8'))
     fingerprint = hashlib.sha256(json.dumps([workflow, config], sort_keys=True,
@@ -80,7 +95,7 @@ def upscale(config, scratch, base, indices):
         print(f'{index:04d}: queued {prompt_id}', flush=True)
         while True:
             memory_report = scratch / 'gpu-memory.json'
-            if memory_report.is_file() and json.loads(memory_report.read_text(encoding='utf-8-sig')).get('stopped_for_shared_memory'):
+            if read_memory_report(memory_report).get('stopped_for_shared_memory'):
                 raise RuntimeError('Memory monitor stopped ComfyUI; restart with the verified memory profile before resuming')
             history = api(base, f'/history/{prompt_id}')
             if prompt_id in history:
