@@ -37,6 +37,8 @@ public partial class Preview : Control
             Check(Math.Abs(DeniaExecutionTimeline.Video - 137f / 30) < 0.0001, "video frame timing includes original gingerbread");
             Check(Math.Abs(DeniaExecutionTimeline.Release - 169f / 30) < 0.0001, "damage release timing is unchanged");
             await Play();
+            // 无显示驱动的Dummy音频后端不可靠地回收并发播放实例；队列／尾音取消在GPU模式验证。
+            if (_render) await CheckQueuedExecution();
             if (_render) await CheckFullScreenCoverage();
             var interrupted = new DeniaExecutionOverlay();
             AddChild(interrupted);
@@ -50,11 +52,47 @@ public partial class Preview : Control
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             Check(GetChildCount() == 0, "all presentation nodes released");
             if (_render) await CheckDreamShader();
+            GC.Collect(); GC.WaitForPendingFinalizers();
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (DisplayServer.GetName() == "headless") await Task.Delay(250); // 留出原生音频混音线程回收时间。
             File.WriteAllText(Path.Combine(_output, "checks.json"), $"{{\"checks\":{_checks},\"render\":{_render.ToString().ToLowerInvariant()}}}");
             GD.Print($"PASS: {_checks} execution checks, render={_render}");
             GetTree().Quit();
         }
         catch (Exception ex) { GD.PrintErr(ex); GetTree().Quit(1); }
+    }
+
+    private async Task CheckQueuedExecution()
+    {
+        var room = new MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom();
+        AddChild(room); MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom.Instance = room;
+        var first = DeniaExecutionRule.Play(null);
+        var firstOverlay = room.GetNode<DeniaExecutionOverlay>("DeniaExecutionOverlay");
+        var second = DeniaExecutionRule.Play(null);
+        Check(!first.IsCompleted && !second.IsCompleted && room.GetChildCount() == 1,
+            "concurrent executions queue without replacing the active full picture");
+        for (int frame = 0; frame < 1000 && !first.IsCompleted; frame++)
+        {
+            Check(!second.IsCompleted, "next execution cannot finish ahead of protected picture");
+            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+            if (!firstOverlay.VisualCompletion.IsCompleted)
+                Check(!first.IsCompleted && firstOverlay.Visible, "production rule waits through entire visual return");
+        }
+        Check(first.IsCompletedSuccessfully && firstOverlay.VisualCompletion.IsCompletedSuccessfully,
+            "first execution releases only after actual visual completion");
+        Check(GodotObject.IsInstanceValid(firstOverlay) && firstOverlay.IsInsideTree() && !firstOverlay.Visible
+            && firstOverlay.GetNode<AudioStreamPlayer>("ExecutionAudio").Playing,
+            "queued execution preserves previous audio tail");
+        Check(!second.IsCompleted && room.GetNode<DeniaExecutionOverlay>("DeniaExecutionOverlay") != firstOverlay,
+            "next full picture begins after first visual completes");
+        // Room removal is the only exceptional cancellation; queued/in-flight waits must all release.
+        RemoveChild(room); room.QueueFree();
+        await second;
+        Check(second.IsCompletedSuccessfully, "room exit releases queued presentation without a stuck command");
+        MegaCrit.Sts2.Core.Nodes.Rooms.NCombatRoom.Instance = null;
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        // 已取消的WaitAsync不取消SceneTreeTimer本身；让房间退出前建立的原生计时器自然释放。
+        await ToSignal(GetTree().CreateTimer(DeniaExecutionTimeline.Release + 0.2), SceneTreeTimer.SignalName.Timeout);
     }
 
     private async Task Play()
@@ -63,6 +101,8 @@ public partial class Preview : Control
         var overlay = new DeniaExecutionOverlay();
         AddChild(overlay);
         var animation = overlay.GetNode<AnimationPlayer>("AnimationPlayer");
+        var fullPicture = overlay.VisualCompletion;
+        Check(!fullPicture.IsCompleted, "full-picture gate begins closed");
         var audio = overlay.GetNode<AudioStreamPlayer>("ExecutionAudio");
         Check(audio.Playing && !overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer").Visible,
             "audio starts with the filter before the video becomes visible");
@@ -100,6 +140,7 @@ public partial class Preview : Control
             var video = overlay.GetNode<VideoStreamPlayer>("VideoStreamPlayer");
             if (!overlay.Visible && !tailSeen)
             {
+                Check(fullPicture.IsCompletedSuccessfully, "full-picture gate opens only after Return finishes");
                 Check(overlay.GetNode<Control>("InputBlocker").MouseFilter == MouseFilterEnum.Ignore
                     && (!_audioCheck || audio.Playing) && !video.IsPlaying(),
                     "audio tail survives the visual return without blocking input or decoding video");
@@ -110,7 +151,11 @@ public partial class Preview : Control
             {
                 overlay.RevealGame();
                 released = true;
+                Check(!fullPicture.IsCompleted, "white flash starts return but does not release the full-picture gate");
             }
+            if (released && !fullPicture.IsCompleted)
+                Check(overlay.GetNode<Control>("InputBlocker").MouseFilter == MouseFilterEnum.Stop,
+                    "input remains blocked throughout visual return");
             if (_render)
             {
                 var image = GetViewport().GetTexture().GetImage();
@@ -137,6 +182,7 @@ public partial class Preview : Control
             $"{name} video decoded through character segment ({maxVideoPosition:F3})");
         Check(!GodotObject.IsInstanceValid(overlay) || !overlay.IsInsideTree(), $"{name} overlay completed");
         Check(tailSeen, "presentation retained its fading audio after returning to game");
+        Check(fullPicture.IsCompletedSuccessfully, "complete picture eventually releases its waiter");
         if (_render) Check(handoffSeen, "GPU captured the direct filter-to-video handoff");
         if (_audioCheck)
         {

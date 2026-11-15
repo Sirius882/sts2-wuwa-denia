@@ -569,6 +569,7 @@ public partial class DeniaFormOverlaySync : Node
         var overlay = isBlack ? _black : _pink;
         if (overlay == null || _creatureNode == null || DeniaFormPatch.IsDying(_creatureNode)
             || isBlack != IsCurrentlyBlack() || _state is AnimState.Dead) return null;
+        if (_singleHit?.Playing == true && !_singleHit.CanBeInterrupted) return null;
         try
         {
             StopSingleHit();
@@ -600,6 +601,8 @@ public partial class DeniaFormOverlaySync : Node
             if (isBlack) _singleHit.Play(speed, holdAtImpact: true);
             else _singleHit.PlayWithPinkStandup(speed,
                 overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Clock ?? 0, holdAtImpact: true);
+            _singleHit.ConfigureCombatPlayback(waitForDamage: isBlack || speed == 1,
+                allowEarlyInterruption: speed > 1);
             SetBodyVisible(overlay, false);
             return _singleHit;
         }
@@ -631,6 +634,7 @@ public partial class DeniaFormOverlaySync : Node
     {
         if (GodotObject.IsInstanceValid(_preview) || !_hasBaseLayout || _creatureNode == null
             || DeniaFormPatch.IsDying(_creatureNode)) return;
+        if (_singleHit?.Playing == true && !_singleHit.CanBeInterrupted) return;
         StopSingleHit();
         var preview = new DeniaAnimationPreview { Name = "AnimationPreview", Kind = kind,
             Speed = DeniaFormPatch.IsFastMode() ? 3 : 1,

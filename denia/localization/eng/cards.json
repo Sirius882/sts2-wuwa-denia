@@ -206,7 +206,7 @@
   "DENIA-DENIA_ANIMATION_TEST.title": "Animation Test (Internal)",
   "DENIA-DENIA_ANIMATION_TEST.description": "Choose an animation by category and preview it at the current speed setting. Presentation only; no form changes, damage or Tune Strain resolution.",
   "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.title": "Level 3 Execution",
-  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "Original-speed visuals and audio. Releases after 5.633s; the return and audio tail continue. No damage or form changes.",
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "Original-speed visuals and audio. Waits for the full picture (about 6.133s), without interruption by the next presentation. Audio tail continues. No damage or form changes.",
   "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.title": "Black Rise (Spare)",
   "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.description": "Spare presentation: 3s in every speed mode. Preview waits for playback without damage or form changes.",
   "DENIA-DENIA_PINK_CATEGORY_ANIMATION_CHOICE.title": "Pink Form",

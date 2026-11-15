@@ -11,6 +11,7 @@ public partial class Preview
         _viewport = new SubViewport { Size = new Vector2I(960, 720), TransparentBg = true,
             RenderTargetUpdateMode = SubViewport.UpdateMode.Always };
         AddChild(_viewport);
+        CheckCombatAnimationPolicy();
         foreach (bool black in new[] { false, true })
         foreach (bool fast in new[] { false, true })
         foreach (var kind in Enum.GetValues<DeniaAnimationPreviewKind>())
@@ -71,5 +72,54 @@ public partial class Preview
         File.WriteAllText(Path.Combine(_output, "checks.json"),
             $"{{\"checks\":{_checks},\"form\":\"catalog\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
         GD.Print($"PASS: {_checks} animation catalog checks, render={_render}");
+    }
+
+    private void CheckCombatAnimationPolicy()
+    {
+        foreach (bool black in new[] { false, true })
+        foreach (bool fast in new[] { false, true })
+        foreach (int hits in new[] { 1, 2, 4 })
+        {
+            DeniaFormPatch.Fast = fast;
+            var node = ControllerFixture.Create(_viewport);
+            node.Entity.Black = black; node.Sync.SetForm(black);
+            var attack = node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4)!;
+            attack.SetProcess(false);
+            var first = attack.Impact;
+            Check(attack.WaitForDamage == (black || !fast), "table: only Fast pink skips damage waits");
+            Check(attack.CanBeInterrupted == fast, "table: only Fast permits interruption before damage");
+            if (fast)
+            {
+                // 模拟下个动作在起身／首挥击之前到来；旧门控必须立即释放，不影响新实例门控。
+                var next = node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4);
+                Check(next != null && first.IsCompleted && next.Impact != first,
+                    "Fast replaces pre-hit animation and releases old waits");
+                next!.SetProcess(false);
+                if (!black)
+                {
+                    next._Process((next.LeadInDuration + next.DamageTime + 0.3) / 3);
+                    Check(next.Clock > next.DamageTime, "Fast pink advances past impact without a damage callback");
+                }
+            }
+            else
+            {
+                Check(node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4) == null && !first.IsCompleted,
+                    "Normal cannot replace protected intro or swing");
+                for (int i = 0; i < attack.ImpactCount; i++)
+                {
+                    attack.SeekTimeline(attack.LeadInDuration + attack.GetImpactTime(i));
+                    attack.ReleaseImpact(attack.ImpactAt(i));
+                    Check(!attack.CanBeInterrupted, "Normal releasing a pre-damage gate alone cannot unlock replacement");
+                    attack.ConfirmDamage(first);
+                    Check(attack.CanBeInterrupted == (i + 1 == attack.ImpactCount),
+                        "Normal unlocks only after the required actual damage rounds");
+                }
+                var next = node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4);
+                Check(next != null && first.IsCompleted, "Normal can replace recovery after confirmed numbers");
+                next!.SetProcess(false);
+            }
+            node.Free();
+        }
+        DeniaFormPatch.Fast = false;
     }
 }

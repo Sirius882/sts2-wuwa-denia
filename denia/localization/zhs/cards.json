@@ -206,7 +206,7 @@
   "DENIA-DENIA_ANIMATION_TEST.title": "动画测试（内部）",
   "DENIA-DENIA_ANIMATION_TEST.description": "按类别选择一个动画，按当前速度模式完整播放。仅测试演出，不改变形态、伤害或集谐结算。",
   "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.title": "三级集谐处决",
-  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "原速播放完整画面与音轨，5.633秒后放行，退场与尾音继续。不造成伤害、不改变形态。",
+  "DENIA-DENIA_EXECUTION_ANIMATION_CHOICE.description": "原速播放完整画面与音轨。必须等画面完整结束（约6.133秒），不可被下一演出打断，尾音继续。不造成伤害、不改变形态。",
   "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.title": "黑态起身（备用）",
   "DENIA-DENIA_BLACK_RISE_ANIMATION_CHOICE.description": "备用演出，所有速度下均为3秒。测试期间等待完整演出，不造成伤害、不改变形态。",
   "DENIA-DENIA_PINK_CATEGORY_ANIMATION_CHOICE.title": "粉色形态",

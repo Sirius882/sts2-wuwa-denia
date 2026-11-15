@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Godot;
 using STS2RitsuLib.Scaffolding.Visuals.StateMachine;
 using STS2RitsuLib.Scaffolding.Visuals.StateMachine.Backends;
@@ -11,6 +12,7 @@ public partial class DeniaExecutionOverlay : CanvasLayer
 {
     private static readonly Vector2 Design = new(1920, 886);
     private readonly CancellationTokenSource _exit = new();
+    private readonly TaskCompletionSource _visualCompletion = new();
     private Control _inputBlocker = null!;
     private Vector2 _size;
     private AnimationPlayer _player = null!;
@@ -34,6 +36,7 @@ public partial class DeniaExecutionOverlay : CanvasLayer
     [Export] public float Clock { get; set; }
     public Vector2 TargetUv { get; set; } = new(0.7f, 0.5f);
     public CancellationToken ExitToken => _exit.Token;
+    public Task VisualCompletion => _visualCompletion.Task;
 
     public override void _Ready()
     {
@@ -77,6 +80,7 @@ public partial class DeniaExecutionOverlay : CanvasLayer
                 Hide();
                 _inputBlocker.MouseFilter = Control.MouseFilterEnum.Ignore;
                 _video.Stop();
+                _visualCompletion.TrySetResult();
             };
             var builder = ModAnimStateMachineBuilder.Create();
             // 入场／人物／冲击共用一条时钟，避免逐段切换累计一帧的误差。
@@ -120,7 +124,7 @@ public partial class DeniaExecutionOverlay : CanvasLayer
         {
             _age += delta;
             // 画面结束后仅保留房间拥有的声音尾段，不阻挡输入或延迟原结算。
-            if (_age >= DeniaExecutionTimeline.AudioEnd) { QueueFree(); return; }
+            if (_visualFinished && _age >= DeniaExecutionTimeline.AudioEnd) { QueueFree(); return; }
             if (_visualFinished) return;
             if (_video == null || _ink == null) return;
             // 抵消浮点插值误差，避免恰好在30 FPS切点时晚显示一帧。
@@ -181,12 +185,17 @@ public partial class DeniaExecutionOverlay : CanvasLayer
 
     public override void _ExitTree()
     {
+        _visualCompletion.TrySetResult();
         _exit.Cancel();
         _machine?.Dispose();
         _backend?.Stop();
         _backend?.Dispose();
         if (GodotObject.IsInstanceValid(_video)) _video.Stop();
-        if (GodotObject.IsInstanceValid(_audio)) _audio.Stop();
+        if (GodotObject.IsInstanceValid(_audio))
+        {
+            _audio.Stop();
+            _audio.Stream = null; // 房间卸载时释放仍在播放的尾音实例。
+        }
         _exit.Dispose();
     }
 

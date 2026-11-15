@@ -1,4 +1,6 @@
 using System;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using AemeathWw.Scripts;
 using Godot;
@@ -15,6 +17,7 @@ namespace Denia;
 internal sealed class DeniaExecutionRule : IAemeathResonanceBreakRule
 {
     private const string NodeName = "DeniaExecutionOverlay";
+    private static readonly ConditionalWeakTable<NCombatRoom, SemaphoreSlim> RoomQueues = new();
     internal static readonly DeniaExecutionRule Instance = new();
     public int Priority => -100;
 
@@ -29,16 +32,16 @@ internal sealed class DeniaExecutionRule : IAemeathResonanceBreakRule
         if (NonInteractiveMode.IsActive) return;
         var room = NCombatRoom.Instance;
         if (!GodotObject.IsInstanceValid(room) || !room!.IsInsideTree()) return;
+        var queue = RoomQueues.GetValue(room, _ => new SemaphoreSlim(1, 1));
+        await queue.WaitAsync();
         DeniaExecutionOverlay? overlay = null;
         try
         {
-            // 前次命中后的退场可能尚未结束；移除其视觉后按原命令顺序播放下一次。
+            if (!GodotObject.IsInstanceValid(room) || !room.IsInsideTree()) return;
+            // 完整画面不可打断；前次已结束的画面只留下音轨尾段，不因下一次处决被移除。
             var previous = room.GetNodeOrNull<DeniaExecutionOverlay>(NodeName);
             if (GodotObject.IsInstanceValid(previous))
-            {
-                room.RemoveChild(previous);
-                previous.QueueFree();
-            }
+                previous.Name = $"{NodeName}AudioTail{previous.GetInstanceId()}";
             var targetNode = target == null ? null : room.GetCreatureNode(target);
             Vector2 size = room.GetViewportRect().Size;
             overlay = new DeniaExecutionOverlay { Name = NodeName,
@@ -49,6 +52,8 @@ internal sealed class DeniaExecutionRule : IAemeathResonanceBreakRule
             var timer = room.GetTree().CreateTimer(DeniaExecutionTimeline.Release);
             await timer.ToSignal(timer, SceneTreeTimer.SignalName.Timeout).ToTask().WaitAsync(overlay.ExitToken);
             if (GodotObject.IsInstanceValid(overlay)) overlay.RevealGame();
+            // 放行须等Return真正播放结束；不使用固定Total计时，以免慢帧提前结束画面等待。
+            await overlay.VisualCompletion.WaitAsync(overlay.ExitToken);
         }
         catch (OperationCanceledException) { }
         catch (Exception exception)
@@ -56,5 +61,6 @@ internal sealed class DeniaExecutionRule : IAemeathResonanceBreakRule
             GD.PrintErr($"[DeniaExecution] Presentation skipped: {exception.Message}");
             if (GodotObject.IsInstanceValid(overlay)) overlay!.QueueFree();
         }
+        finally { queue.Release(); }
     }
 }
