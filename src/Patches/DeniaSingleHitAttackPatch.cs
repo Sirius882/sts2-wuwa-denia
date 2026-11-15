@@ -19,17 +19,7 @@ internal static class DeniaSingleHitAttackPatch
         __state = null;
         if (NonInteractiveMode.IsActive) return;
         if (!DeniaPinkAttackRule.TryStart(__instance.ModelSource as CardModel, __instance.Attacker,
-            ____hitCount, out bool useLegacy))
-        {
-            if (useLegacy)
-            {
-                var actor = __instance.Attacker!;
-                bool black = DeniaFormHelper.IsBlack(actor);
-                DeniaFormPatch.PlayAttack(actor, black);
-                if (black) DeniaFormPatch.PlayBlackAttackFxSlash(actor);
-            }
-            return;
-        }
+            ____hitCount, out _)) return;
         var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!, ____hitCount >= 2);
         if (visual == null) return;
         var previous = ____beforeDamage;

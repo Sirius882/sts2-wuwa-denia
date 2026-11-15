@@ -21,6 +21,7 @@
     <Compile Remove="tools/visuals/execution_preview/Preview.cs" />
     <Compile Remove="tools/visuals/pink_idle/Preview.cs" />
     <Compile Remove="tools/visuals/pink_idle/PinkStandupChecks.cs" />
+    <Compile Remove="tools/visuals/pink_idle/MapBrushChecks.cs" />
     <Compile Remove="tools/visuals/pink_idle/ControllerFixture.cs" />
   </ItemGroup>
   <ItemGroup>

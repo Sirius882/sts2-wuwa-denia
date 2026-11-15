@@ -8,14 +8,14 @@ public partial class NCreature : Node2D
 {
     public PreviewEntity Entity = new();
     public Node2D Visuals = null!, Body = new();
-    public TextureRect Pink = null!, Black = null!;
+    public TextureRect Pink = null!, Black = null!, Corpse = null!;
     public DeniaFormOverlaySync Sync = null!;
     public Vector2 LayoutPosition = new(262, 117), LayoutSize = new(226, 350);
 }
 public static class DeniaFormHelper { public static bool IsBlack(PreviewEntity entity) => entity.Black; }
 public static class DeniaFormPatch
 {
-    public const float PinkDeathDuration = 2;
+    public const float PinkDeathDuration = 0;
     public static bool Fast;
     public static bool IsFastMode() => Fast;
     public static bool IsDying(NCreature node) => node.Entity.Dying;
@@ -65,8 +65,11 @@ public static class ControllerFixture
             node.Visuals.GetNodeOrNull<Node2D>(name)?.Hide();
         node.Pink = Build(node.Visuals, "PinkVisuals", new DeniaPinkIdleVisual());
         node.Black = Build(node.Visuals, "DarkVisuals", new DeniaBlackIdleVisual());
+        node.Corpse = new TextureRect { Texture = GD.Load<Texture2D>("res://images/ui/combat/denia_energy_icon_big.png"),
+            Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
+        node.Visuals.AddChild(node.Corpse);
         node.Sync = new DeniaFormOverlaySync();node.Visuals.AddChild(node.Sync);
-        node.Sync.Bind(node, node.Pink, node.Black, null, null);
+        node.Sync.Bind(node, node.Pink, node.Black, node.Corpse, null);
         node.Sync.SetProcess(false);
         node.Sync.SetForm(false);
         DeniaFormPatch.SyncOverlayLayout(node);

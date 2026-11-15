@@ -25,7 +25,7 @@ def run(command, cwd, log, timeout=180):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--render', action='store_true')
-    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup', 'bubbles'), default='pink')
+    parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup', 'bubbles', 'map_brush'), default='pink')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-pink-idle')
     args = parser.parse_args()
     output = args.output.resolve()
@@ -36,12 +36,13 @@ def main():
     scene = MOD / 'scenes/creature_visuals/denia_pink.tscn'
     paths = [scene, MOD / 'shaders/denia_pink_idle.gdshader', MOD / 'shaders/denia_black_idle.gdshader', MOD / 'shaders/denia_black_rise.gdshader', MOD / 'shaders/denia_pink_1hit.gdshader', MOD / 'shaders/denia_dark_1hit.gdshader', MOD / 'shaders/denia_pink_2hit.gdshader', MOD / 'shaders/denia_dark_2hit.gdshader']
     paths += [MOD / 'shaders/denia_pink_standup.gdshader', MOD / 'shaders/denia_pink_handoff.gdshader']
+    paths += [MOD / 'images/ui/combat/denia_energy_icon_big.png']
     # Include the actual action textures referenced by the production scene.
     import re
     paths += [MOD / p for p in re.findall(r'path="res://([^"]+)"', scene.read_text())]
     for form in ('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'pink_standup'):
         paths += list((MOD / f'images/characters/denia/realtime_{form}').glob('*'))
-    if args.form == 'bubbles':
+    if args.form in ('bubbles', 'map_brush'):
         paths = []  # The particle regression needs no character textures or scenes.
     for source in set(paths):
         target = runtime / source.relative_to(MOD)
@@ -49,6 +50,7 @@ def main():
         shutil.copyfile(source, target)
     shutil.copyfile(HERE / 'Preview.cs', runtime / 'Preview.cs')
     shutil.copyfile(HERE / 'PinkStandupChecks.cs', runtime / 'PinkStandupChecks.cs')
+    shutil.copyfile(HERE / 'MapBrushChecks.cs', runtime / 'MapBrushChecks.cs')
     shutil.copyfile(HERE / 'ControllerFixture.cs', runtime / 'ControllerFixture.cs')
     # Link the exact production controller body; no copied controller implementation in fixtures.
     controller = (MOD / 'src/Cards/DeniaFormVisuals.cs').read_text(encoding='utf-8-sig')
@@ -75,7 +77,7 @@ script=ExtResource("1")
 ''', encoding='utf-8')
     links = ''.join(f'<Compile Include="{MOD / "src/Visuals" / (name + ".cs")}" Link="{name}.cs" />'
                     for name in ('DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
-                                 'DeniaBubbleBurst', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaPinkStandupVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual', 'DeniaPinkMultiAttackVisual', 'DeniaDarkMultiAttackVisual'))
+                                 'DeniaBubbleBurst', 'DeniaMapBrushVisual', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaPinkStandupVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual', 'DeniaPinkMultiAttackVisual', 'DeniaDarkMultiAttackVisual'))
     (runtime / 'PinkIdlePreview.csproj').write_text(f'''<Project Sdk="Godot.NET.Sdk/4.5.1">
 <PropertyGroup><TargetFramework>net9.0</TargetFramework><Nullable>enable</Nullable>
 <EnableDynamicLoading>true</EnableDynamicLoading></PropertyGroup>
@@ -91,6 +93,12 @@ script=ExtResource("1")
     command += ['--', args.form]
     run(command, ROOT, runtime / 'process.log')
     report = json.loads((runtime / 'captures/checks.json').read_text())
+    if args.form == 'map_brush':
+        if args.render:
+            from check_brush import make_preview
+            make_preview(runtime / 'captures', output)
+        print(json.dumps(report, ensure_ascii=False))
+        return
     if args.form == 'bubbles':
         print(json.dumps(report, ensure_ascii=False))
         return

@@ -90,9 +90,7 @@ public static class DeniaGameOverDeathPatch
 public partial class DeniaGameOverDeathOverlay : Node2D
 {
     private const string NodeName = "DeniaGameOverDeathOverlay";
-    private AnimatedSprite2D? _pink;
     private Sprite2D? _corpse;
-    private double _elapsed;
 
     public static void TryAttachToCreatureVisuals(NCreatureVisuals visuals, bool isBlack = false)
     {
@@ -193,9 +191,8 @@ public partial class DeniaGameOverDeathOverlay : Node2D
 
         host.AddChild(overlay);
         hidePlaceholder();
-        overlay.SetProcess(!isBlack);
-        // 立刻画第一帧，避免等下一帧 _Process 才出现。
-        if (!isBlack) overlay._pink!.Play("death");
+        overlay.SetProcess(false);
+        // 立刻画第一帧，避免等下一帧 _Process 才出现；两态现均直接显示静态能量形象。
     }
 
     private bool Initialize(Vector2 size, bool flipH, bool isBlack)
@@ -203,55 +200,21 @@ public partial class DeniaGameOverDeathOverlay : Node2D
         try
         {
             Texture2D? corpseTexture = ResourceLoader.Load<Texture2D>(DeniaFormPatch.CorpseTexPath);
-            var scene = ResourceLoader.Load<PackedScene>("res://scenes/creature_visuals/denia_pink.tscn");
-            if (corpseTexture == null || scene == null) return false;
-            var source = scene.Instantiate();
-            var frames = source.GetNode<AnimatedSprite2D>("PinkVisuals").SpriteFrames;
-            source.Free();
-            if (!frames.HasAnimation("death")) return false;
-
-            // 使用 Sprite2D 挂在 Node2D 宿主；粉态共享战斗帧动画及同一像素比例。
-            _pink = new AnimatedSprite2D
-            {
-                Name = "DeniaGameOverPink", SpriteFrames = frames, FlipH = flipH,
-                Scale = Vector2.One * (size.Y / DeniaFormPatch.BodyReferenceHeight),
-                Animation = "death", Visible = !isBlack
-            };
+            if (corpseTexture == null) return false;
+            // 使用 Sprite2D 挂在 Node2D 宿主；粉态共享战斗帧动画及同一像素比例。（旧规则已停用）
             Vector2 texSize = corpseTexture.GetSize();
             _corpse = new Sprite2D
             {
                 Name = "DeniaGameOverCorpse", Texture = corpseTexture, FlipH = flipH,
                 Scale = Vector2.One * Mathf.Min(size.X / texSize.X, size.Y / texSize.Y),
-                Visible = isBlack
+                Visible = true
             };
-            AddChild(_pink);
             AddChild(_corpse);
             return true;
         }
         catch
         {
             return false;
-        }
-    }
-
-    public override void _Process(double delta)
-    {
-        try
-        {
-            if (!GodotObject.IsInstanceValid(this) || !IsInsideTree())
-            {
-                SetProcess(false);
-                return;
-            }
-            _elapsed += delta;
-            if (_elapsed < DeniaFormPatch.PinkDeathDuration) return;
-            _pink!.Pause();
-            _pink.SetFrameAndProgress(_pink.SpriteFrames.GetFrameCount("death") - 1, 1f);
-            SetProcess(false);
-        }
-        catch
-        {
-            SetProcess(false);
         }
     }
 

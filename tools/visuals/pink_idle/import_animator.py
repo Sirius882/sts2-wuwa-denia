@@ -103,11 +103,8 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     atlas.save(output / 'frames.webp', lossless=True, exact=True, method=6)
     flow_atlas.save(output / 'flow.png')
-    # Existing attacks/dodges use the old idle's first pose as their endpoint.
-    if not rise and not attack:
-        legacy_name = 'dark' if black else 'pink'
-        legacy = Image.open(MOD / f'images/characters/denia/sprite_sheets/denia_{legacy_name}_idle.png')
-        legacy.crop((0, 0, 264, 528)).save(output / 'action_rest.png')
+    # Existing attacks/dodges used the old idle's first pose as their endpoint.
+    # 2026-11-15: the legacy actions are removed; scene placeholders now use the new atlas directly.
     # A native Resource keeps the metadata in the PCK without an export include filter.
     lines = ['[gd_resource type="Resource" format=3]', '', '[resource]']
     tracking = dict(meta)

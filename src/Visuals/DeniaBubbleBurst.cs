@@ -10,6 +10,7 @@ public partial class DeniaBubbleBurst : Node2D
     private static readonly Vector2[] PinkStar = [new(0, -1.5f), new(0.35f, -0.35f), new(1.5f, 0), new(0.35f, 0.35f),
         new(0, 1.5f), new(-0.35f, 0.35f), new(-1.5f, 0), new(-0.35f, -0.35f)];
     public bool IsBlack { get; init; }
+    public float PlaybackSpeed { get; init; } = 1;
     public double Elapsed { get; private set; }
 
     public override void _Ready()
@@ -30,7 +31,7 @@ public partial class DeniaBubbleBurst : Node2D
 
     public override void _Process(double delta)
     {
-        Elapsed += delta;
+        Elapsed += delta * PlaybackSpeed;
         if (Elapsed >= 1.5) QueueFree();
         else QueueRedraw();
     }
