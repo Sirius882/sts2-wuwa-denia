@@ -1,12 +1,15 @@
 {
-  "source": "artResources\\Denia\\选人界面背景视频.mp4",
+  "source": "artResources/Denia/选人界面背景视频.mp4",
   "source_sha256": "f8f72cf55c0c7d10b467cce5caa97f2048af59b593f6a3d470b7e28fbff7d4f1",
-  "video_sha256": "5e9b8ec8976c87b8be2c3006c70874dd3d9e1099906b5fc71b9ae65cd2878df1",
+  "video_sha256": "b8f4d63514efd8be8d0661c71fbaf896ee78f8f9143a35838e2a91b129c6659a",
   "poster_sha256": "1a607082e69545a698c2b6752d4837349c885d24c5e4634a3ce18c04e09596b3",
   "width": 3840,
   "height": 2160,
   "fps": 60,
   "duration": 6.616667,
   "audio": false,
-  "theora_quality": 8
+  "theora_quality": 10,
+  "video_bytes": 100485856,
+  "average_bitrate": 121494227,
+  "local_master": "artResources/Denia/游戏视频/denia_character_select_bg.ogv"
 }

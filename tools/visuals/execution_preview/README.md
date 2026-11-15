@@ -10,13 +10,16 @@ python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --
 python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --audio-check
 ```
 
-The first command regenerates the tracked OGV from source frames 54–190: the extreme-close-up
+The first command regenerates the local OGV from source frames 54–190: the extreme-close-up
 gingerbread transition and the character segment. The legacy resource filename remains
 `denia_execution_middle.ogv`. It has 137 frame intervals at 30 FPS (4.566667 seconds), at
 3840×1772 from the ComfyUI-upscaled slice, retaining the original aspect ratio. GPU checks also
 verify the native video texture's resolution. The separate soundtrack and cut points are unchanged.
 Theora may represent repeated frames with empty packets, so the preparation check uses its timeline
 length rather than requiring a decoded picture for every interval.
+
+Large OGV files are no longer tracked. See `../runtime_videos.md` for local master
+restoration; the original execution MP4 is currently absent from its documented path.
 
 The overlay applies a growing, uneven pink-white filter across the entire viewport for 0.8 seconds,
 without cinematic bars. The final code-animation frame is fully white, then the clip and its opaque
