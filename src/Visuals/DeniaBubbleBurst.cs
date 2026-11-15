@@ -60,9 +60,11 @@ public partial class DeniaBubbleBurst : Node2D
             }
             else
             {
-                var points = new Vector2[PinkStar.Length];
-                for (int j = 0; j < points.Length; j++) points[j] = p + PinkStar[j] * radius * 0.75f * ratio;
-                DrawColoredPolygon(points, new Color(1, 225 / 255f, 252 / 255f, ratio));
+                // 在单位星形上三角剖分，避免寿命末端缩小／平移后的顶点退化。
+                // 绘制变换保留原位置、大小和透明度，随后恢复以免影响下个泡泡。
+                DrawSetTransform(p, 0, Vector2.One * (radius * 0.75f * ratio));
+                DrawColoredPolygon(PinkStar, new Color(1, 225 / 255f, 252 / 255f, ratio));
+                DrawSetTransform(Vector2.Zero);
             }
         }
     }
