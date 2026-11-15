@@ -29,3 +29,9 @@ stream = ExtResource("2_video")
 expand = true
 loop = true
 volume = 0.0
+
+[node name="HardwareVideo" type="TextureRect" parent="."]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+expand_mode = 1

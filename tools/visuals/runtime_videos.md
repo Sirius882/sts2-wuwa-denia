@@ -1,5 +1,11 @@
 # Local runtime videos
 
+Windows character selection now uses the original MP4 through system Media
+Foundation/D3D11 hardware decode; see `native_video/README.md`. Large `videos/*.mp4`
+are also ignored by Git and verified/copied from `artResources` before pack.
+The quality-10 OGV below remains as a compatibility fallback, not the primary
+Windows playback path. The execution-video pipeline remains unchanged/paused.
+
 Large `videos/*.ogv` files are ignored by Git. Their stable `.uid` files, preparation
 scripts and small metadata remain tracked. Pack scripts run this command before
 Godot export (Python 3.11+; FFmpeg/ffprobe required for regeneration):
