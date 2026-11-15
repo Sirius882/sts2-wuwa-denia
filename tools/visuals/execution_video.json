@@ -1,0 +1,12 @@
+{
+  "video_sha256": "8252dbd64aa37a16800f9ad50aede9e9d313142b7b9fa84cd2af9de7b9787e2d",
+  "video_bytes": 26200889,
+  "theora_quality": 8,
+  "width": 3840,
+  "height": 1772,
+  "fps": 30,
+  "frame_intervals": 137,
+  "duration": 4.566666666666666,
+  "local_master": "artResources/Denia/\u6e38\u620f\u89c6\u9891/denia_execution_middle.ogv",
+  "note": "Current pre-remaster runtime asset. prepare_execution_video.py replaces this manifest after all new frames are ready."
+}

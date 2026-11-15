@@ -1,0 +1,114 @@
+{
+  "1": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "animagine-xl-4.0-opt.safetensors"
+    }
+  },
+  "2": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "1",
+        1
+      ],
+      "text": "masterpiece, best quality, very aesthetic, anime coloring, sharp lineart, faithful colors, detailed animation frame"
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "1",
+        1
+      ],
+      "text": "worst quality, low quality, lowres, blurry, artifacts, deformed, extra fingers, altered face, oversaturated, text, watermark"
+    }
+  },
+  "4": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "frame_0050.png"
+    }
+  },
+  "5": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": [
+        "4",
+        0
+      ],
+      "upscale_method": "lanczos",
+      "width": 3840,
+      "height": 1772,
+      "crop": "disabled"
+    }
+  },
+  "6": {
+    "class_type": "UltimateSDUpscaleNoUpscale",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "2",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ],
+      "seed": 118451,
+      "steps": 12,
+      "cfg": 4.5,
+      "sampler_name": "dpmpp_2m",
+      "scheduler": "karras",
+      "denoise": 0.1,
+      "mode_type": "Linear",
+      "tile_width": 768,
+      "tile_height": 768,
+      "mask_blur": 32,
+      "tile_padding": 32,
+      "seam_fix_mode": "None",
+      "seam_fix_denoise": 0.1,
+      "seam_fix_width": 64,
+      "seam_fix_mask_blur": 16,
+      "seam_fix_padding": 32,
+      "force_uniform_tiles": true,
+      "tiled_decode": true,
+      "batch_size": 1,
+      "upscaled_image": [
+        "5",
+        0
+      ]
+    }
+  },
+  "7": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "8",
+        0
+      ],
+      "filename_prefix": "sample_memory_safe_0050"
+    }
+  },
+  "8": {
+    "class_type": "ImageScale",
+    "inputs": {
+      "image": [
+        "6",
+        0
+      ],
+      "upscale_method": "lanczos",
+      "width": 3840,
+      "height": 1772,
+      "crop": "disabled"
+    }
+  }
+}

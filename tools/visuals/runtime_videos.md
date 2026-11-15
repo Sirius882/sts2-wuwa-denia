@@ -25,7 +25,11 @@ Quality mode uses variable bitrate; adding `-b:v` in this mode does not set bitr
 This is lossy transcoding, even at quality 10. Godot plays the prepared stream;
 it does not encode it again during import, export or playback.
 
-The preserved execution master keeps its existing quality and timing. Its original
-MP4 is currently absent from the documented source path, so it must not be deleted
-on the assumption that `prepare_execution_video.py` can regenerate it. This script
-and its original trim recipe are retained for when that source is available again.
+The execution master is rebuilt from the re-cut source
+`artResources/Denia/人物形象与动画/环三层集谐处决动画原视频.mp4`.
+`execution_video_remaster.json` records the aligned source frames and source PTS;
+`execution_upscale_workflow.json` and `remaster_execution.py` run the specified
+Animagine XL checkpoint through local ComfyUI, using 768-pixel single-tile batches.
+`prepare_execution_video.py` encodes the preserved 3840×1772 PNG frames at quality 10.
+`execution_video.json` records the resulting master and per-frame hashes. Large
+PNG frames and OGV masters stay in `artResources`, outside Git and `.cache`.

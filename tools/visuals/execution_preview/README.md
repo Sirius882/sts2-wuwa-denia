@@ -10,7 +10,7 @@ python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --
 python -B myModresources/denia/tools/visuals/execution_preview/run_preview.py --audio-check
 ```
 
-The first command regenerates the local OGV from source frames 54–190: the extreme-close-up
+The first command regenerates the local OGV from aligned ComfyUI frames: the extreme-close-up
 gingerbread transition and the character segment. The legacy resource filename remains
 `denia_execution_middle.ogv`. It has 137 frame intervals at 30 FPS (4.566667 seconds), at
 3840×1772 from the ComfyUI-upscaled slice, retaining the original aspect ratio. GPU checks also
@@ -19,7 +19,8 @@ Theora may represent repeated frames with empty packets, so the preparation chec
 length rather than requiring a decoded picture for every interval.
 
 Large OGV files are no longer tracked. See `../runtime_videos.md` for local master
-restoration; the original execution MP4 is currently absent from its documented path.
+restoration and `../execution_remaster.md` for the new source's frame/audio alignment
+and maximum-quality Animagine remaster workflow.
 
 The overlay applies a growing, uneven pink-white filter across the entire viewport for 0.8 seconds,
 without cinematic bars. The final code-animation frame is fully white, then the clip and its opaque
@@ -50,11 +51,12 @@ Standalone Godot may report that the Sentry extension is absent; it is not neede
 All game speed modes, including Instant, use the same 1x execution animation and video.
 
 The separate stereo WAV starts at filter time zero, independently of the hidden video pre-roll.
-`execution_audio_alignment.json` records the preserved sound source, hashes, frame offset and exact
-sample range. The current source is `三级集谐处决_有声完整源.mp4`; its original AAC and video PTS
-were preserved during upscaling. The original frame comparison still supplies the mapping:
-slice frame 54 matches sound-source frame 204 at PTS 6.906s; the 0.8s entrance
-therefore starts at source audio 6.106s (sample 293088 at 48 kHz). The WAV contains 401600 samples
+`execution_audio_alignment.json` records the sound source, hashes, frame offset and exact
+sample range. The current source is `环三层集谐处决动画原视频.mp4`; source frame 54
+is at PTS 1.914s, and the 0.8s entrance starts source audio at 1.114s (sample 53472
+at 48 kHz). The newly extracted unfaded middle is sample-identical to the earlier
+soundtrack; its historical source mapping is retained in the alignment metadata.
+The WAV contains 401600 samples
 (8.366667s): a smooth 0.8s fade-in, unchanged aligned middle, then a 3s fade-out from the end of the
 video at presentation time 5.366667s. The source ends before this tail finishes, so decaying echoes
 extend only its post-video audio; dialogue and the video segment are not looped or stretched.
