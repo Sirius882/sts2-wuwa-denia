@@ -20,6 +20,10 @@ public partial class Preview : Node
             _render = DisplayServer.GetName() != "headless";
             bool black = OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "black";
             Directory.CreateDirectory(_output);
+            if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "catalog")
+            {
+                await CheckAnimationCatalog();GetTree().Quit();return;
+            }
             if (OS.GetCmdlineUserArgs().Length > 0 && OS.GetCmdlineUserArgs()[0] == "map_brush")
             {
                 await CheckMapBrush();GetTree().Quit();return;
@@ -385,9 +389,9 @@ public partial class Preview : Node
                 && legacy.Animation == "idle" && !legacy.IsPlaying(),
                 "controller restores only realtime idle after recovery");
             current = node.Sync.PlayPinkSingleHit()!;current.SetProcess(false);var pending = current.Impact;
-            node.Sync.PlayDodge(false);
+            node.Sync.SetForm(false);
             Check(!current.Playing && pending.IsCompleted && !legacy.IsVisibleInTree() && legacy.Animation == "idle",
-                "dodge interrupts single hit and releases damage wait");
+                "form refresh interrupts single hit and releases damage wait");
             node.Sync.PlayPinkSingleHit()!.SetProcess(false);node.Entity.Black = true;node.Sync.SetForm(true);
             Check(!current.Playing && !node.Pink.IsVisibleInTree() && node.Black.IsVisibleInTree(), "form switch keeps black body exclusive");
             node.Entity.Black = false;node.Sync.SetForm(false);
@@ -484,8 +488,8 @@ public partial class Preview : Node
             }
             current.ReleaseRemainingImpacts(current.Impact);current._Process(30);
             Check(!current.Playing&&idle.IsVisibleInTree()&&!legacy.IsVisibleInTree(),"combo returns only realtime idle");
-            current=node.Sync.PlaySingleHit(dark,true,four)!;current.SetProcess(false);var a=current.Impact;var b=current.ImpactAt(1);node.Sync.PlayDodge(dark);
-            Check(!current.Playing&&a.IsCompleted&&b.IsCompleted&&legacy.Animation=="idle"&&!legacy.IsVisibleInTree(),"dodge cancels both waits");
+            current=node.Sync.PlaySingleHit(dark,true,four)!;current.SetProcess(false);var a=current.Impact;var b=current.ImpactAt(1);node.Sync.SetForm(dark);
+            Check(!current.Playing&&a.IsCompleted&&b.IsCompleted&&legacy.Animation=="idle"&&!legacy.IsVisibleInTree(),"form refresh cancels both waits");
             current=node.Sync.PlaySingleHit(dark,true,four)!;current.SetProcess(false);node.Entity.Black=!dark;node.Sync.SetForm(!dark);
             Check(!current.Playing&&current.ImpactAt(1).IsCompleted&&!overlay.IsVisibleInTree(),"form switch cancels combo");
             node.Entity.Black=dark;node.Sync.SetForm(dark);
@@ -586,8 +590,8 @@ public partial class Preview : Node
             current.ReleaseImpact();current._Process(10);
             Check(!current.Playing && idle.IsVisibleInTree() && !legacy.IsVisibleInTree(), "dark recovery restores realtime idle");
             current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);var pending = current.Impact;
-            node.Sync.PlayDodge(true);
-            Check(!current.Playing && pending.IsCompleted && legacy.Animation == "idle" && !legacy.IsVisibleInTree(), "dark hurt interruption releases hit wait without old dodge");
+            node.Sync.SetForm(true);
+            Check(!current.Playing && pending.IsCompleted && legacy.Animation == "idle" && !legacy.IsVisibleInTree(), "dark form refresh releases hit wait without old dodge");
             current = node.Sync.PlaySingleHit(true)!;current.SetProcess(false);pending = current.Impact;
             node.Entity.Black = false;node.Sync.SetForm(false);
             Check(!current.Playing && pending.IsCompleted && node.Pink.IsVisibleInTree() && !node.Black.IsVisibleInTree(), "dark to pink cancels hit");

@@ -16,9 +16,9 @@ using MegaCrit.Sts2.Core.Settings;
 namespace Denia;
 
 /// <summary>
-/// 双形态战斗立绘覆盖 + 呼吸/黑攻特效/变形/死亡视觉。
+/// 双形态实时待机／攻击、内部预览与静态死亡形象。
 /// 覆盖层挂在 Visuals 下：缩小 debuff 走 Visuals.Scale；左右朝向同步 Body.Scale.X。
-/// 术语「黑色形态攻击特效」：denia_black_attack_fx.png，左下角对齐黑立绘中心。
+/// 旧黑态挥砍／强化特效已停用，由代码攻击动画统一呈现。
 /// </summary>
 [HarmonyPatch(typeof(NCreature), "_Ready")]
 public static class DeniaFormPatch
@@ -27,21 +27,18 @@ public static class DeniaFormPatch
     private const string PinkNodeName = "DeniaPinkOverlay";
     private const string BlackNodeName = "DeniaBlackOverlay";
     private const string CorpseNodeName = "DeniaCorpseOverlay";
-    private const string BlackFxNodeName = "DeniaBlackAttackFx";
 
     internal const string PinkTexPath = "res://images/packed/character_select/denia_pink.png";
     internal const string BlackTexPath = "res://images/packed/character_select/denia_black.png";
     /// <summary>能量 UI 大图标兼尸体形态。</summary>
     internal const string CorpseTexPath = "res://images/ui/combat/denia_energy_icon_big.png";
-    /// <summary>黑色形态攻击特效（常态透明，左下角对齐黑立绘中心）。</summary>
-    // 旧挥砍贴图已移除；保留强化调用入口以兼容现有卡牌。
+    // 旧挥砍贴图、强化脉冲及其兼容调用入口均已移除。
 
     // 动画可增加透明留边，人物大小仍按最初 512 像素画布标定。
     internal const float BodyReferenceHeight = 512f;
     public const float PinkDeathDuration = 0f;
-    public const float BlackFxDuration = 0.2f;
 
-    /// <summary>设置里的加速模式（Fast）。Instant 由 Cmd.Wait 自行跳过。</summary>
+    /// <summary>攻击和粉态衔接在 Fast 模式以三倍速播放，待机／泡泡／处决保持原速。</summary>
     internal static bool IsFastMode()
     {
         try
@@ -54,17 +51,13 @@ public static class DeniaFormPatch
         }
     }
 
-    /// <summary>Fast 下黑态特效改为 fire-and-forget（速度仍 0.2s）。</summary>
-    public static bool ShouldSkipCombatFxWait() => IsFastMode();
+
 
     private static readonly Dictionary<NCreature, TextureRect> _pinkOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _blackOverlay = new();
     private static readonly Dictionary<NCreature, TextureRect> _corpseOverlay = new();
-    private static readonly Dictionary<NCreature, TextureRect> _blackFxOverlay = new();
     private static readonly HashSet<NCreature> _dying = new();
-    // 同一张攻击牌若已播 slash，则强化脉冲跳过（满足 if attack elif enhance）
-    /// <summary>本张牌为攻击牌时置位：强化脉冲不得播放（if 攻击 elif 强化）。</summary>
-    private static readonly HashSet<Creature> _blackFormAttackCardActive = new();
+    // 同张牌的攻击动画只启动一次，现由 DeniaPinkAttackRule 管理。
 
     public static void Postfix(NCreature __instance)
     {
@@ -118,32 +111,6 @@ public static class DeniaFormPatch
     }
 
     /// <summary>黑色形态攻击特效：攻击挥砍 0.2s。</summary>
-    public static void BeginBlackFormCardPlay(Creature creature, bool isAttackCard)
-    {
-        if (creature == null) return;
-        if (isAttackCard) _blackFormAttackCardActive.Add(creature);
-        else _blackFormAttackCardActive.Remove(creature);
-    }
-
-    public static void EndBlackFormCardPlay(Creature creature)
-    {
-        if (creature != null) _blackFormAttackCardActive.Remove(creature);
-    }
-
-    public static bool IsBlackFormAttackCardActive(Creature creature)
-        => creature != null && _blackFormAttackCardActive.Contains(creature);
-
-    public static void PlayAttack(Creature creature, bool isBlack)
-    {
-        try
-        {
-            var node = GetCreatureNode(creature);
-            if (node == null || IsDying(node)) return;
-            EnsureOverlays(node);
-            GetSyncNode(node)?.PlayAttack(isBlack);
-        }
-        catch { }
-    }
 
     internal static DeniaSingleHitVisual? PlaySingleHit(Creature creature, bool multiHit = false, bool fourHit = false)
     {
@@ -153,33 +120,17 @@ public static class DeniaFormPatch
         return GetSyncNode(node)?.PlaySingleHit(DeniaFormHelper.IsBlack(creature), multiHit, fourHit);
     }
 
-    internal static Task PlayBlackRise(Creature creature)
+    internal static Task PlayAnimationPreview(Creature creature, DeniaAnimationPreviewKind kind)
     {
         if (MegaCrit.Sts2.Core.Helpers.NonInteractiveMode.IsActive || creature.Player?.Character is not Denia)
             return Task.CompletedTask;
         var node = GetCreatureNode(creature);
         if (node == null || IsDying(node) || creature.IsDead) return Task.CompletedTask;
         EnsureOverlays(node);
-        return GetSyncNode(node)?.PlayBlackRise() ?? Task.CompletedTask;
+        return GetSyncNode(node)?.PlayAnimationPreview(kind) ?? Task.CompletedTask;
     }
-
-    internal static bool TryPlayDodge(NCreature node)
-    {
-        if (node?.Entity?.Player?.Character is not Denia) return false;
-        if (IsDying(node)) return true;
-        EnsureOverlays(node);
-        return GetSyncNode(node)?.PlayDodge(DeniaFormHelper.IsBlack(node.Entity)) == true;
-    }
-
-    public static void PlayBlackAttackFxSlash(Creature creature) { }
 
     /// <summary>黑色形态攻击特效：虚质/黯核强化脉冲 0.2s。攻击牌路径下不调用。</summary>
-    public static void PlayBlackAttackFxPulse(Creature creature)
-    {
-        // if 攻击牌：绝不播脉冲；旧脉冲现已整体停用。
-    }
-
-    public static Task AwaitBlackFx(Creature creature) => Task.CompletedTask;
 
     private static NCreature? GetCreatureNode(Creature creature)
     {
@@ -221,7 +172,6 @@ public static class DeniaFormPatch
         {
             HidePlaceholderBodies(nc.Visuals);
             EnsureCorpseOverlay(nc);
-            EnsureBlackFxOverlay(nc);
             RebindSync(nc);
             SyncOverlayLayout(nc);
             return;
@@ -250,7 +200,6 @@ public static class DeniaFormPatch
             AttachIdleAnimation(visuals, black, "DarkVisuals");
 
             EnsureCorpseOverlay(nc);
-            EnsureBlackFxOverlay(nc);
             RebindSync(nc);
             SyncOverlayLayout(nc);
         }
@@ -266,21 +215,13 @@ public static class DeniaFormPatch
         if (sprite == null || !GodotObject.IsInstanceValid(sprite) || sprite.SpriteFrames == null)
             return;
 
-        // 帧动画继承现有覆盖层的显隐、变形与死亡状态，避免两套驱动互相覆盖。
+        // 场景单帧只用于加载占位；就绪后由实时动画接管，旧动作信号不再驱动显隐。
         var body = new Node2D { Name = "Body" };
         overlay.AddChild(body);
         sprite.Reparent(body, false);
         sprite.Name = "Idle";
         sprite.Visible = true;
         sprite.Play("idle");
-        sprite.AnimationFinished += () =>
-        {
-            if (GodotObject.IsInstanceValid(sprite) && (sprite.Animation == "attack" || sprite.Animation == "dodge"))
-            {
-                sprite.SpeedScale = 1f;
-                sprite.Play("idle");
-            }
-        };
         overlay.Texture = null;
         if (nodeName == "PinkVisuals" || nodeName == "DarkVisuals")
         {
@@ -288,7 +229,7 @@ public static class DeniaFormPatch
                 ? new DeniaPinkIdleVisual() : new DeniaBlackIdleVisual();
             realtime.Name = "RealtimeIdle";
             body.AddChild(realtime);
-            if (realtime.Initialized) realtime.BindActions(sprite);
+            if (realtime.Initialized) { sprite.Hide(); sprite.Pause(); }
             else realtime.QueueFree();
         }
     }
@@ -298,8 +239,7 @@ public static class DeniaFormPatch
         if (!_pinkOverlay.TryGetValue(nc, out var p) || p == null) return;
         if (!_blackOverlay.TryGetValue(nc, out var b) || b == null) return;
         _corpseOverlay.TryGetValue(nc, out var corpse);
-        _blackFxOverlay.TryGetValue(nc, out var blackFx);
-        EnsureSyncNode(nc, p, b, corpse, blackFx);
+        EnsureSyncNode(nc, p, b, corpse);
     }
 
     private static void EnsureCorpseOverlay(NCreature nc)
@@ -317,11 +257,6 @@ public static class DeniaFormPatch
             _corpseOverlay[nc] = corpse;
         }
         catch { }
-    }
-
-    private static void EnsureBlackFxOverlay(NCreature nc)
-    {
-        // 左下角为 pivot：PivotOffset 在 Apply 时设为 (0, size.Y)。旧特效现已停用，不再创建覆盖层。
     }
 
     private static TextureRect? TryMakeOptionalOverlay(string name, string path)
@@ -353,8 +288,7 @@ public static class DeniaFormPatch
         NCreature nc,
         TextureRect pink,
         TextureRect black,
-        TextureRect? corpse,
-        TextureRect? blackFx)
+        TextureRect? corpse)
     {
         try
         {
@@ -371,13 +305,13 @@ public static class DeniaFormPatch
             var existing = visuals.GetNodeOrNull<DeniaFormOverlaySync>(SyncNodeName);
             if (existing != null && GodotObject.IsInstanceValid(existing))
             {
-                existing.Bind(nc, pink, black, corpse, blackFx);
+                existing.Bind(nc, pink, black, corpse);
                 return;
             }
 
             var sync = new DeniaFormOverlaySync { Name = SyncNodeName };
             visuals.AddChild(sync);
-            sync.Bind(nc, pink, black, corpse, blackFx);
+            sync.Bind(nc, pink, black, corpse);
         }
         catch { }
     }
@@ -416,7 +350,6 @@ public static class DeniaFormPatch
             ApplyBaseLayout(_blackOverlay, nc, localPos, size);
             ApplyBaseLayout(_corpseOverlay, nc, localPos, size);
             // 黑攻特效：尺寸跟 Bounds，pivot 左下角，位置在 ApplyTransforms 对齐中心
-            ApplyBaseLayout(_blackFxOverlay, nc, localPos, size);
 
             GetSyncNode(nc)?.SetBaseLayout(localPos, size);
             SyncFacing(nc);
@@ -470,7 +403,6 @@ public static class DeniaFormPatch
             SetFlip(_pinkOverlay, nc, flip);
             SetFlip(_blackOverlay, nc, flip);
             SetFlip(_corpseOverlay, nc, flip);
-            SetFlip(_blackFxOverlay, nc, flip);
         }
         catch { }
     }
@@ -530,13 +462,7 @@ public static class DeniaFormPatch
                     black.Scale = Vector2.One;
                     black.Rotation = 0f;
                 }
-                if (_blackFxOverlay.TryGetValue(node, out var fx) && fx != null && GodotObject.IsInstanceValid(fx))
-                {
-                    fx.Visible = true; // 始终挂着，靠 alpha 控制
-                    fx.Modulate = new Color(1, 1, 1, 0);
-                    fx.Scale = Vector2.One;
-                    fx.Rotation = 0f;
-                }
+
                 HideTransient(node);
             }
 
@@ -572,7 +498,6 @@ public static class DeniaFormPatch
                 _pinkOverlay.Remove(k);
                 _blackOverlay.Remove(k);
                 _corpseOverlay.Remove(k);
-                _blackFxOverlay.Remove(k);
                 _dying.Remove(k);
             }
         }
@@ -581,39 +506,27 @@ public static class DeniaFormPatch
 }
 
 /// <summary>
-/// 战斗立绘动画：Idle 呼吸 / 黑攻特效 / 两态死亡。
-/// 视觉-only，不改游戏状态。等待由调用方 Cmd.Wait。
+/// 战斗立绘：实时待机、命中门控攻击、内部预览与静态死亡。
+/// 视觉-only，不改游戏状态；攻击只在命中点等待，预览等完整演出。
 /// </summary>
 public partial class DeniaFormOverlaySync : Node
 {
     private enum AnimState
     {
         Idle,
-        BlackFxSlash,
-        BlackFxPulse,
-        DeathTransition,
         Dead
     }
-
-    private const float BreathPeriod = 4.4f; // 原 2.2s，减半速度 → 周期加倍
-    /// <summary>仅竖直方向正弦拉伸幅度（相对 Scale.Y）。</summary>
-    private const float BreathScaleAmpY = 0.035f / 3f; // 原 0.035，缩到三分之一
-
-    private const float BlackFxSec = 0.2f;
-    private const float BlackFxRotDeg = 90f;
 
 
     private NCreature? _creatureNode;
     private TextureRect? _pink;
     private TextureRect? _black;
     private TextureRect? _corpse;
-    private TextureRect? _blackFx;
 
     private Vector2 _baseLocalPos = Vector2.Zero;
     private Vector2 _baseSize = new(200f, 300f);
     private bool _hasBaseLayout;
-    private bool _hasIdleFrames;
-    private DeniaBlackRiseVisual? _risePreview;
+    private DeniaAnimationPreview? _preview;
     private DeniaSingleHitVisual? _singleHit;
     private bool _attackWasBlack;
 
@@ -622,34 +535,21 @@ public partial class DeniaFormOverlaySync : Node
     private Vector2 _lastBoundsSize = Vector2.Zero;
     private double _layoutTimer;
 
-    private bool _deathWasBlack;
-    public float DeathDuration => _deathWasBlack ? 0f : DeniaFormPatch.PinkDeathDuration;
+    public float DeathDuration => 0f;
 
     private AnimState _state = AnimState.Idle;
-    private double _animTime;
-    private double _breathPhase;
 
-    private Vector2 _motionOffset = Vector2.Zero;
-    private float _motionRot;
-    private Vector2 _motionScale = Vector2.One;
-
-    private float _blackFxAlpha;
-    private float _blackFxRot;
 
     public void Bind(
         NCreature creatureNode,
         TextureRect pink,
         TextureRect black,
-        TextureRect? corpse,
-        TextureRect? blackFx)
+        TextureRect? corpse)
     {
         _creatureNode = creatureNode;
         _pink = pink;
         _black = black;
         _corpse = corpse;
-        _blackFx = blackFx;
-        _hasIdleFrames = pink.GetNodeOrNull<AnimatedSprite2D>("Body/Idle") != null
-                         || black.GetNodeOrNull<AnimatedSprite2D>("Body/Idle") != null;
         _layoutTimer = 0;
         SetProcess(true);
     }
@@ -668,15 +568,12 @@ public partial class DeniaFormOverlaySync : Node
     {
         var overlay = isBlack ? _black : _pink;
         if (overlay == null || _creatureNode == null || DeniaFormPatch.IsDying(_creatureNode)
-            || isBlack != IsCurrentlyBlack() || _state is AnimState.DeathTransition or AnimState.Dead) return null;
+            || isBlack != IsCurrentlyBlack() || _state is AnimState.Dead) return null;
         try
         {
             StopSingleHit();
             ResetBodyAnimation();
             _state = AnimState.Idle;
-            _animTime = 0;
-            ResetMotion();
-            _blackFxAlpha = _blackFxRot = 0;
             _attackWasBlack = isBlack;
             fourHit = isBlack && fourHit;
             var nodeName = fourHit ? DeniaDarkFourAttackVisual.FourNodeName : multiHit ? DeniaPinkMultiAttackVisual.MultiNodeName : DeniaSingleHitVisual.NodeName;
@@ -730,28 +627,29 @@ public partial class DeniaFormOverlaySync : Node
         SetBodyVisible(_black, true);
     }
 
-    internal async Task PlayBlackRise()
+    internal async Task PlayAnimationPreview(DeniaAnimationPreviewKind kind)
     {
-        if (_risePreview != null || !_hasBaseLayout || _creatureNode == null
+        if (GodotObject.IsInstanceValid(_preview) || !_hasBaseLayout || _creatureNode == null
             || DeniaFormPatch.IsDying(_creatureNode)) return;
         StopSingleHit();
-        var preview = new DeniaBlackRiseVisual { Name = "BlackRisePreview" };
+        var preview = new DeniaAnimationPreview { Name = "AnimationPreview", Kind = kind,
+            Speed = DeniaFormPatch.IsFastMode() ? 3 : 1,
+            IdleClock = _pink?.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Clock ?? 0 };
         try
         {
+            _preview = preview;
             GetParent().AddChild(preview);
-            if (!preview.Initialized) return;
-            _risePreview = preview;
             ApplyTransforms();
             await preview.Completion;
         }
         catch (Exception exception)
         {
-            GD.PrintErr($"[DeniaBlackRise] Preview skipped: {exception.Message}");
+            GD.PrintErr($"[DeniaAnimationPreview] Preview skipped: {exception.Message}");
         }
         finally
         {
             if (GodotObject.IsInstanceValid(preview)) preview.QueueFree();
-            if (ReferenceEquals(_risePreview, preview)) _risePreview = null;
+            if (ReferenceEquals(_preview, preview)) _preview = null;
             if (GodotObject.IsInstanceValid(_creatureNode) && !DeniaFormPatch.IsDying(_creatureNode!))
                 DeniaFormPatch.RefreshForCreature(_creatureNode!.Entity);
         }
@@ -759,17 +657,7 @@ public partial class DeniaFormOverlaySync : Node
 
     public override void _ExitTree()
     {
-        if (GodotObject.IsInstanceValid(_risePreview)) _risePreview!.QueueFree();
-    }
-
-    public void PlayAttack(bool isBlack) { } // 没有新素材的动作保持新待机，不回退旧动画。
-
-    public bool PlayDodge(bool isBlack)
-    {
-        if (_state is AnimState.DeathTransition or AnimState.Dead) return true;
-        StopSingleHit();
-        ResetBodyAnimation();
-        return true; // 用户不需要后撤动作，接管旧触发但不播放动画。
+        if (GodotObject.IsInstanceValid(_preview)) _preview!.QueueFree();
     }
 
     private void ResetBodyAnimation()
@@ -794,10 +682,6 @@ public partial class DeniaFormOverlaySync : Node
         StopSingleHit();
         ResetBodyAnimation();
         _state = AnimState.Idle;
-        _animTime = 0;
-        ResetMotion();
-        _blackFxAlpha = 0f;
-        _blackFxRot = 0f;
         try
         {
             if (_corpse != null && GodotObject.IsInstanceValid(_corpse))
@@ -806,45 +690,12 @@ public partial class DeniaFormOverlaySync : Node
         catch { }
     }
 
-    public void PlayBlackFxSlash()
-    {
-        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
-        if (!IsCurrentlyBlack()) return;
-        _state = AnimState.BlackFxSlash;
-        _animTime = 0;
-        _blackFxAlpha = 0f;
-        _blackFxRot = 0f;
-    }
-
-    public void PlayBlackFxPulse()
-    {
-        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
-        if (!IsCurrentlyBlack()) return;
-        // 攻击挥砍优先，不打断 slash
-        try
-        {
-            if (_creatureNode?.Entity != null
-                && DeniaFormPatch.IsBlackFormAttackCardActive(_creatureNode.Entity))
-                return;
-        }
-        catch { }
-        // attack slash has priority
-        if (_state == AnimState.BlackFxSlash) return;
-        _state = AnimState.BlackFxPulse;
-        _animTime = 0;
-        _blackFxAlpha = 0f;
-        _blackFxRot = 0f;
-    }
-
     public void SetForm(bool isBlack)
     {
         StopSingleHit();
-        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
+        if (_state == AnimState.Dead) return;
         ResetBodyAnimation();
         _state = AnimState.Idle;
-        _animTime = 0;
-        ResetMotion();
-        _blackFxAlpha = _blackFxRot = 0f;
         SetRectVisual(_pink, !isBlack, 1f, 1f, 0f);
         SetRectVisual(_black, isBlack, 1f, 1f, 0f);
         ApplyTransforms();
@@ -852,19 +703,13 @@ public partial class DeniaFormOverlaySync : Node
 
     public void PlayDeath()
     {
-        if (_state == AnimState.DeathTransition || _state == AnimState.Dead) return;
+        if (_state == AnimState.Dead) return;
         StopSingleHit();
-        _deathWasBlack = IsCurrentlyBlack(); // 在死亡清除形态 Power 之前记住形态。
         ResetBodyAnimation();
         if (_creatureNode != null && GodotObject.IsInstanceValid(_creatureNode))
             DeniaFormPatch.SetDying(_creatureNode, true);
-        // 原粉立绘 → 尸体三段过渡已改为粉态跌倒 / 黑态直接显示能量图。
         // 2026-11-15：用户不需要死亡动画，两态现在直接保留静态能量形象。
-        // 死亡动画不受加速模式影响，结束后保留伏地末帧。（旧规则已停用）
         _state = AnimState.Dead;
-        _animTime = 0;
-        ResetMotion();
-        _blackFxAlpha = _blackFxRot = 0f;
         SetRectVisual(_pink, false, 1f, 1f, 0f);
         SetRectVisual(_black, false, 1f, 1f, 0f);
         SetRectVisual(_corpse, true, 1f, 1f, 0f);
@@ -880,13 +725,6 @@ public partial class DeniaFormOverlaySync : Node
             return DeniaFormHelper.IsBlack(_creatureNode.Entity);
         }
         catch { return false; }
-    }
-
-    private void ResetMotion()
-    {
-        _motionOffset = Vector2.Zero;
-        _motionRot = 0f;
-        _motionScale = Vector2.One;
     }
 
     private static void SetRectVisual(TextureRect? rect, bool visible, float alpha, float? scale, float? rotation)
@@ -914,11 +752,9 @@ public partial class DeniaFormOverlaySync : Node
             bool creatureValid = _creatureNode != null && GodotObject.IsInstanceValid(_creatureNode);
             if (!creatureValid)
             {
-                // 战斗卸载后 NCreature 可能已释放，但死亡/尸体动画仍需继续播完。
-                if (_state == AnimState.Dead
-                    || _state == AnimState.DeathTransition)
+                // Game Over 转移 Visuals 后保留静态能量形象。
+                if (_state == AnimState.Dead)
                 {
-                    UpdateAnimation(delta);
                     ApplyTransforms();
                 }
                 else
@@ -974,97 +810,16 @@ public partial class DeniaFormOverlaySync : Node
                 needLayout = true;
             if (needLayout) DeniaFormPatch.SyncOverlayLayout(_creatureNode!);
 
-            UpdateAnimation(delta);
             ApplyTransforms();
         }
         catch { }
-    }
-
-    private void UpdateAnimation(double delta)
-    {
-        switch (_state)
-        {
-            case AnimState.Idle:
-                UpdateBreath(delta);
-                break;
-            case AnimState.BlackFxSlash:
-                UpdateBlackFxSlash(delta);
-                break;
-            case AnimState.BlackFxPulse:
-                UpdateBlackFxPulse(delta);
-                break;
-            case AnimState.DeathTransition:
-                UpdateDeath(delta);
-                break;
-            case AnimState.Dead:
-                ResetMotion();
-                break;
-        }
-    }
-
-    private void UpdateBreath(double delta)
-    {
-        _breathPhase += delta;
-        float t = (float)(_breathPhase * (Mathf.Tau / BreathPeriod));
-        float sin = Mathf.Sin(t);
-        // 仅竖直正弦拉伸；水平不动、不旋转、不位移
-        _motionOffset = Vector2.Zero;
-        _motionRot = 0f;
-        // 帧动画已包含呼吸，不再叠加整张立绘拉伸；静态立绘保留原有呼吸。
-        _motionScale = _hasIdleFrames ? Vector2.One : new Vector2(1f, 1f + BreathScaleAmpY * sin);
-    }
-
-    private void UpdateBlackFxSlash(double delta)
-    {
-        ResetMotion();
-        _animTime += delta;
-        float t = Mathf.Clamp((float)_animTime / BlackFxSec, 0f, 1f);
-        if (t < 0.5f) _blackFxAlpha = t / 0.5f;
-        else _blackFxAlpha = 1f - (t - 0.5f) / 0.5f;
-        _blackFxRot = Mathf.DegToRad(BlackFxRotDeg) * t;
-        if (_animTime >= BlackFxSec)
-        {
-            _blackFxAlpha = 0f;
-            _blackFxRot = 0f;
-            _state = AnimState.Idle;
-        }
-    }
-
-    private void UpdateBlackFxPulse(double delta)
-    {
-        ResetMotion();
-        _animTime += delta;
-        float t = Mathf.Clamp((float)_animTime / BlackFxSec, 0f, 1f);
-        if (t < 0.5f) _blackFxAlpha = t / 0.5f;
-        else _blackFxAlpha = 1f - (t - 0.5f) / 0.5f;
-        _blackFxRot = 0f;
-        if (_animTime >= BlackFxSec)
-        {
-            _blackFxAlpha = 0f;
-            _state = AnimState.Idle;
-        }
-    }
-
-    private void UpdateDeath(double delta)
-    {
-        // 死亡动画保持原速；Visuals 转交 Game Over 后仍能完成。
-        _animTime += delta;
-        ResetMotion();
-        if (_animTime < DeniaFormPatch.PinkDeathDuration) return;
-        var sprite = _pink?.GetNodeOrNull<AnimatedSprite2D>("Body/Idle");
-        if (sprite != null && sprite.SpriteFrames.HasAnimation("death"))
-        {
-            sprite.Pause();
-            sprite.SetFrameAndProgress(sprite.SpriteFrames.GetFrameCount("death") - 1, 1f);
-        }
-        _state = AnimState.Dead;
     }
 
     private void EnsureParentAllowsOverflow()
     {
         try
         {
-            foreach (var rect in new[] { _pink, _black, _corpse, _blackFx })
+            foreach (var rect in new[] { _pink, _black, _corpse })
             {
                 if (rect == null || !GodotObject.IsInstanceValid(rect)) continue;
                 rect.ClipContents = false;
@@ -1083,50 +838,38 @@ public partial class DeniaFormOverlaySync : Node
     private void ApplyTransforms()
     {
         if (!_hasBaseLayout) return;
-        Vector2 center = _baseLocalPos + _baseSize * 0.5f;
-        Vector2 pos = _baseLocalPos + _motionOffset;
+        Vector2 pos = _baseLocalPos;
 
         if (_singleHit?.Playing == true)
         {
-            if (IsCurrentlyBlack() != _attackWasBlack || _state is AnimState.DeathTransition or AnimState.Dead) StopSingleHit();
+            if (IsCurrentlyBlack() != _attackWasBlack || _state is AnimState.Dead) StopSingleHit();
             else SetBodyVisible(_attackWasBlack ? _black : _pink, false);
         }
-        ApplyBody(_pink, pos, centerPivot: true);
-        ApplyBody(_black, pos, centerPivot: true);
+        ApplyBody(_pink, pos);
+        ApplyBody(_black, pos);
 
-        ApplyBody(_corpse, pos, centerPivot: true);
+        ApplyBody(_corpse, pos);
 
-        if (GodotObject.IsInstanceValid(_risePreview))
+        if (GodotObject.IsInstanceValid(_preview))
         {
-            if (_state is AnimState.DeathTransition or AnimState.Dead || _creatureNode?.Entity.IsDead == true)
-                _risePreview!.QueueFree();
+            if (_state is AnimState.Dead || _creatureNode?.Entity.IsDead == true)
+                _preview!.QueueFree();
             else
             {
-                if (_pink != null) _pink.Visible = false;
-                if (_black != null) _black.Visible = false;
-                _risePreview!.Position = pos + new Vector2(_baseSize.X * 0.5f, _baseSize.Y);
-                _risePreview.Scale = Vector2.One * (_baseSize.Y / _risePreview.LayoutHeight);
-                _risePreview.SetFacing(_creatureNode?.Body?.Scale.X < 0);
+                if (_preview!.ReplacesBody)
+                {
+                    if (_pink != null) _pink.Visible = false;
+                    if (_black != null) _black.Visible = false;
+                }
+                _preview!.Position = pos + new Vector2(_baseSize.X * 0.5f, _baseSize.Y);
+                _preview.Scale = Vector2.One * (_baseSize.Y / _preview.LayoutHeight);
+                _preview.SetFacing(_creatureNode?.Body?.Scale.X < 0);
             }
         }
 
-        // 黑色形态攻击特效：左下角对齐黑立绘中心
-        if (_blackFx != null && GodotObject.IsInstanceValid(_blackFx))
-        {
-            _blackFx.Size = _baseSize;
-            _blackFx.PivotOffset = new Vector2(0f, _baseSize.Y); // 左下角
-            Vector2 blackCenter = center + _motionOffset;
-            _blackFx.Position = blackCenter - _blackFx.PivotOffset;
-            _blackFx.Rotation = _blackFxRot;
-            _blackFx.Scale = Vector2.One;
-            var m = _blackFx.Modulate;
-            m.A = Mathf.Clamp(_blackFxAlpha, 0f, 1f);
-            _blackFx.Modulate = m;
-            _blackFx.Visible = true;
-        }
     }
 
-    private void ApplyBody(TextureRect? rect, Vector2 pos, bool centerPivot)
+    private void ApplyBody(TextureRect? rect, Vector2 pos)
     {
         if (rect == null || !GodotObject.IsInstanceValid(rect)) return;
         try
@@ -1134,21 +877,17 @@ public partial class DeniaFormOverlaySync : Node
             rect.Size = _baseSize;
             rect.Rotation = 0f;
 
-            rect.Scale = _motionScale;
-            Vector2 s = rect.Scale;
-            // Control.Scale + PivotOffset 不可靠，用位置补偿钉锚点（PivotOffset=0）。
-            // 呼吸与死亡共用固定底边，动画本身负责跌倒运动。
+            // 人物比例／朝向由各代码动画自身负责，覆盖层只提供稳定的脚底布局。
+            rect.Scale = Vector2.One;
             rect.PivotOffset = Vector2.Zero;
-            rect.Position = pos + new Vector2(
-                _baseSize.X * 0.5f * (1f - s.X),
-                _baseSize.Y * (1f - s.Y));
+            rect.Position = pos;
         }
         catch { }
     }
 }
 
 /// <summary>
-/// Death/revive triggers; black FX via BeforeCardPlayed.
+/// Death/revive triggers; code attacks begin when AttackCommand declares its hit count.
 /// </summary>
 [HarmonyPatch(typeof(NCreature), nameof(NCreature.SetAnimationTrigger))]
 public static class DeniaAnimTriggerPatch
@@ -1207,9 +946,6 @@ public static class DeniaBeforeCardPlayedAnimPatch
             if (node != null && DeniaFormPatch.IsDying(node))
                 return;
 
-            bool isAttack = card.Type == CardType.Attack;
-            DeniaFormPatch.BeginBlackFormCardPlay(creature, isAttack);
-
             // 粉态等攻击指令确定段数后只启动一种动作；黑态现在共用此入口。
             DeniaPinkAttackRule.Begin(card, creature, true);
         }
@@ -1224,7 +960,7 @@ public static class DeniaStartDeathAnimPatch
     {
         try
         {
-            // AnimDie 在原方法返回前读取等待时长，先启动自定义死亡并记住形态。
+            // AnimDie 在原方法返回前读取等待时长，先切换为静态能量形象。
             if (__instance?.Entity?.Player?.Character is Denia)
                 DeniaFormPatch.PlayDeath(__instance.Entity);
         }
@@ -1236,7 +972,7 @@ public static class DeniaStartDeathAnimPatch
         try
         {
             if (__instance?.Entity?.Player?.Character is not Denia) return;
-            // 粉态跌倒 2s，黑态直接显示能量图。
+            // 两态均无死亡动画，直接显示静态能量图。
             __result = DeniaFormPatch.GetDeathDuration(__instance);
         }
         catch { }

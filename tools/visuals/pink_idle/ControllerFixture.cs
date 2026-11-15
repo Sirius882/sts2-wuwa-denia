@@ -70,7 +70,7 @@ public static class ControllerFixture
             Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
         node.Visuals.AddChild(node.Corpse);
         node.Sync = new DeniaFormOverlaySync();node.Visuals.AddChild(node.Sync);
-        node.Sync.Bind(node, node.Pink, node.Black, node.Corpse, null);
+        node.Sync.Bind(node, node.Pink, node.Black, node.Corpse);
         node.Sync.SetProcess(false);
         node.Sync.SetForm(false);
         DeniaFormPatch.SyncOverlayLayout(node);
@@ -88,5 +88,15 @@ public static class ControllerFixture
         };
         idle.Name = "RealtimeIdle";body.AddChild(idle);idle.BindActions(actions);
         return overlay;
+    }
+}
+
+public static class LegacyPlaceholderFixture
+{
+    public static void BindActions(this DeniaFlowIdleVisual visual, AnimatedSprite2D actions)
+    {
+        void Sync() { bool idle = actions.Animation == "idle"; actions.Visible = !idle; visual.Visible = idle; if (idle) actions.Pause(); }
+        actions.AnimationChanged += () => { Sync(); Callable.From(Sync).CallDeferred(); };
+        Sync();
     }
 }
