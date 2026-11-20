@@ -19,13 +19,21 @@ internal partial class DeniaAnimationPreview : Node2D
     private readonly TaskCompletionSource _completion = new();
     internal Task Completion => _completion.Task;
 
+    internal static bool IsAvailable(DeniaAnimationPreviewKind kind) => kind switch
+    {
+        DeniaAnimationPreviewKind.PinkStandup or DeniaAnimationPreviewKind.PinkSitdown or DeniaAnimationPreviewKind.BlackRise
+            => DeniaModConfig.UseCodeAnimation,
+        DeniaAnimationPreviewKind.BlackTriple or DeniaAnimationPreviewKind.PinkCollapse => !DeniaModConfig.UseCodeAnimation,
+        _ => true
+    };
+
     public override void _Ready()
     {
         string? Clip(string video) => DeniaModConfig.UseCodeAnimation ? null : video;
         _visual = Kind switch {
             DeniaAnimationPreviewKind.PinkIdle => new DeniaPinkIdleVisual { VideoClip = Clip("pink_idle") },
             DeniaAnimationPreviewKind.BlackIdle => new DeniaBlackIdleVisual { VideoClip = Clip("dark_idle") },
-            DeniaAnimationPreviewKind.PinkStandup or DeniaAnimationPreviewKind.PinkSitdown => new DeniaPinkStandupVisual { VideoClip = Clip("pink_standup") },
+            DeniaAnimationPreviewKind.PinkStandup or DeniaAnimationPreviewKind.PinkSitdown => new DeniaPinkStandupVisual(),
             DeniaAnimationPreviewKind.BlackRise => new DeniaBlackRiseVisual(),
             DeniaAnimationPreviewKind.PinkSingle => new DeniaPinkAttackVisual { VideoClip = Clip("pink_1hit") },
             DeniaAnimationPreviewKind.PinkMulti => new DeniaPinkMultiAttackVisual { VideoClip = Clip("pink_2hit") },
@@ -38,10 +46,15 @@ internal partial class DeniaAnimationPreview : Node2D
         if (_visual != null)
         {
             AddChild(_visual);
-            if (!_visual.Initialized) throw new InvalidOperationException("Animation preview did not initialize.");
+            if (!_visual.Initialized || (_visual.VideoPlaybackRequested && !_visual.UsingVideo))
+            {
+                _completion.TrySetResult();
+                SetProcess(false);
+                return;
+            }
             if (_visual is DeniaSingleHitVisual attack)
             {
-                if (Kind is DeniaAnimationPreviewKind.PinkSingle or DeniaAnimationPreviewKind.PinkMulti)
+                if (!attack.VideoPlaybackRequested && Kind is (DeniaAnimationPreviewKind.PinkSingle or DeniaAnimationPreviewKind.PinkMulti))
                     attack.PlayWithPinkStandup(Speed, IdleClock);
                 else attack.Play(Speed);
                 Duration = attack.TotalDuration / Speed;
@@ -76,7 +89,7 @@ internal partial class DeniaAnimationPreview : Node2D
             double clock = Math.Min(Elapsed * PlaybackSpeed, _visual.PlaybackDuration);
             bool reversed = Kind == DeniaAnimationPreviewKind.PinkSitdown;
             _visual.Seek(reversed ? _visual.PlaybackDuration - clock : clock);
-            _visual.SyncVideoAudio(_visual.GetVideoAudio(reversed), clock, PlaybackSpeed, false);
+            _visual.SyncVideoAudio(_visual.GetVideoAudio(), clock, PlaybackSpeed, false);
         }
     }
 

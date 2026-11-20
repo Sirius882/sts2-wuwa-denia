@@ -230,7 +230,8 @@ public static class DeniaFormPatch
                 : new DeniaBlackIdleVisual { VideoClip = "dark_idle", LoadVideoOnReady = !DeniaModConfig.UseCodeAnimation };
             realtime.Name = "RealtimeIdle";
             body.AddChild(realtime);
-            if (realtime.Initialized) { sprite.Hide(); sprite.Pause(); }
+            sprite.Pause();
+            if (realtime.Initialized) sprite.Visible = !realtime.HasBody;
             else realtime.QueueFree();
         }
     }
@@ -579,7 +580,6 @@ public partial class DeniaFormOverlaySync : Node
         try
         {
             StopSingleHit();
-            ResetBodyAnimation();
             _state = AnimState.Idle;
             _attackWasBlack = isBlack;
             ApplyAnimationSetting();
@@ -587,7 +587,7 @@ public partial class DeniaFormOverlaySync : Node
             string clip = isBlack
                 ? fourHit ? "dark_4hit" : tripleHit ? "dark_3hit" : multiHit ? "dark_2hit" : "dark_1hit"
                 : multiHit ? "pink_2hit" : "pink_1hit";
-            bool video = !_useCodeAnimation && FileAccess.FileExists(DeniaBattleVideo.PathFor(clip));
+            bool video = !_useCodeAnimation;
             tripleHit = video && isBlack && tripleHit && !fourHit;
             var nodeName = video
                 ? fourHit ? "VideoFourHit" : tripleHit ? "VideoTripleHit" : multiHit ? "VideoMultiHit" : "VideoSingleHit"
@@ -621,11 +621,12 @@ public partial class DeniaFormOverlaySync : Node
                     StopSingleHit();
                 };
             }
+            if (video && !_singleHit.UsingVideo) return null;
             EnsureParentAllowsOverflow();
             DeniaFormPatch.SyncOverlayLayout(_creatureNode);
             bool fast = DeniaFormPatch.IsFastMode();
             float speed = fast ? 3 : 1;
-            if (isBlack) _singleHit.Play(speed, holdAtImpact: true);
+            if (isBlack || video) _singleHit.Play(speed, holdAtImpact: true);
             else _singleHit.PlayWithPinkStandup(speed,
                 overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Clock ?? 0, holdAtImpact: true);
             _singleHit.ConfigureCombatPlayback(waitForDamage: isBlack || !fast, allowEarlyInterruption: fast);
@@ -659,7 +660,7 @@ public partial class DeniaFormOverlaySync : Node
     internal async Task PlayAnimationPreview(DeniaAnimationPreviewKind kind)
     {
         if (GodotObject.IsInstanceValid(_preview) || !_hasBaseLayout || _creatureNode == null
-            || DeniaFormPatch.IsDying(_creatureNode)) return;
+            || DeniaFormPatch.IsDying(_creatureNode) || !DeniaAnimationPreview.IsAvailable(kind)) return;
         if (_singleHit?.Playing == true && !_singleHit.CanBeInterrupted) return;
         StopSingleHit();
         var preview = new DeniaAnimationPreview { Name = "AnimationPreview", Kind = kind,
@@ -695,6 +696,7 @@ public partial class DeniaFormOverlaySync : Node
         _useCodeAnimation = DeniaModConfig.UseCodeAnimation;
         foreach (var overlay in new[] { _pink, _black })
             overlay?.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.SetVideoPlayback(!_useCodeAnimation);
+        ResetBodyAnimation();
     }
 
     private void ResetBodyAnimation()
@@ -708,8 +710,9 @@ public partial class DeniaFormOverlaySync : Node
                 sprite.SpeedScale = 1f;
                 sprite.Play("idle");
                 sprite.Pause();
-                sprite.Hide();
-                overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Show();
+                var idle = overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle");
+                sprite.Visible = idle?.HasBody != true;
+                idle?.Show();
             }
         }
     }

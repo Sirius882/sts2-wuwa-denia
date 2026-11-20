@@ -31,7 +31,6 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
     private DeniaPinkIdleVisual? _seated;
     private SubViewport? _standupView, _seatedView, _attackView;
     private ColorRect? _handoff, _attackSnapshot;
-    private Sprite2D? _videoSnapshot;
     private ShaderMaterial? _handoffMaterial;
     private double _leadInElapsed;
     private double _returnElapsed;
@@ -77,17 +76,13 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
             _standupView.GuiSnapControlsToPixels = false;
             _seatedView = CreateHandoffView();
             _attackView = CreateHandoffView();
-            _standup = new DeniaPinkStandupVisual { Name = "Standup", Visible = false,
-                VideoClip = UsingVideo ? "pink_standup" : null };
+            _standup = new DeniaPinkStandupVisual { Name = "Standup", Visible = false };
             _standupView.AddChild(_standup);
             _standup.SetProcess(false);
-            _seated = new DeniaPinkIdleVisual { Name = "SeatedHandoff", Visible = false,
-                VideoClip = UsingVideo ? "pink_idle" : null };
+            _seated = new DeniaPinkIdleVisual { Name = "SeatedHandoff", Visible = false };
             _seatedView.AddChild(_seated);
             _seated.SetProcess(false);
-            _videoSnapshot = new Sprite2D { Centered = false, Visible = false };
-            _attackView.AddChild(_videoSnapshot);
-            _attackSnapshot = new ColorRect { Size = CanvasSize, Visible = false,
+            _attackSnapshot = new ColorRect { Size = CanvasSize,
                 MouseFilter = Control.MouseFilterEnum.Ignore };
             _attackView.AddChild(_attackSnapshot);
             _handoffMaterial = new ShaderMaterial { Shader = GD.Load<Shader>("res://shaders/denia_pink_handoff.gdshader") };
@@ -152,14 +147,8 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         }
         _handoff!.Position = -origin / scale;
         _handoff.Size = (Vector2)size / scale;
-        _videoSnapshot!.Visible = UsingVideo;
-        _attackSnapshot!.Visible = !UsingVideo;
-        if (UsingVideo) CopyVideoFrame(_videoSnapshot);
-        else
-        {
-            _attackSnapshot.Material = FlowMaterial;
-            _attackSnapshot.Position = Flip ? new Vector2(DesignOrigin.X - CanvasSize.X, -DesignOrigin.Y) : -DesignOrigin;
-        }
+        _attackSnapshot!.Material = FlowMaterial;
+        _attackSnapshot.Position = Flip ? new Vector2(DesignOrigin.X - CanvasSize.X, -DesignOrigin.Y) : -DesignOrigin;
     }
 
     private void SetAttackOpacity(float alpha)
@@ -184,8 +173,7 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         // 先对齐待机坐姿，再连续过渡到攻击侧身站姿的脚底锚点与身高。
         float align = Mathf.SmoothStep(0, 1, Mathf.Clamp((t - 0.3f) / 2.4f, 0, 1));
         float height = Mathf.Lerp(DeniaPinkStandupVisual.SeatedHeight, _standup!.LayoutHeight, align);
-        Vector2 standingOrigin = _standup.UsingVideo ? _standup.DesignOrigin : PinkStandupEndOrigin;
-        Vector2 origin = DeniaPinkStandupVisual.SeatedOrigin.Lerp(standingOrigin, align);
+        Vector2 origin = DeniaPinkStandupVisual.SeatedOrigin.Lerp(PinkStandupEndOrigin, align);
         float scale = LayoutHeight / height;
         _standup.Scale = Vector2.One * scale;
         var offset = (_standup.DesignOrigin - origin) * scale;
@@ -270,15 +258,17 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
             Seek(_holdAtImpact && _heldImpact < _impacts.Length ? Math.Min(next, GetPlaybackImpactTime(_heldImpact)) : next);
             advance = Clock >= PlaybackDuration ? Math.Max(0, advance - (Clock - before)) : 0;
         }
+        if (VideoPlaybackRequested && !UsingVideo)
+        {
+            Stop();
+            Finished?.Invoke();
+            return;
+        }
         for (int i = 0; i < _impacts.Length && ReferenceEquals(first, Impact); i++)
             if (Clock >= GetPlaybackImpactTime(i)) _impacts[i].TrySetResult();
         if (!Playing || !ReferenceEquals(first, Impact)) return;
         bool held = _holdAtImpact && _heldImpact < _impacts.Length && Clock >= GetPlaybackImpactTime(_heldImpact);
-        if (IsPreparing)
-        {
-            SyncVideoAudio(_standup?.GetVideoAudio(), _leadInElapsed, _speed, false);
-            return;
-        }
+        if (IsPreparing) return;
         if (Clock < PlaybackDuration)
         {
             SyncVideoAudio(GetVideoAudio(), Clock, _speed, held);
@@ -288,11 +278,7 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
         {
             _returnElapsed = Math.Min(ReturnDuration, _returnElapsed + advance);
             UpdatePreparation();
-            if (_returnElapsed < ReturnDuration)
-            {
-                SyncVideoAudio(_standup?.GetVideoAudio(reversed: true), _returnElapsed, _speed, false);
-                return;
-            }
+            if (_returnElapsed < ReturnDuration) return;
         }
         Stop();
         Finished?.Invoke();

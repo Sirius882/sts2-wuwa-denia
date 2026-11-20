@@ -25,7 +25,9 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
     private bool _videoUnavailable;
     internal string? VideoClip { get; init; }
     internal bool LoadVideoOnReady { get; init; } = true;
+    internal bool VideoPlaybackRequested => _requestedVideo;
     internal bool UsingVideo => _video != null && _requestedVideo && !_videoUnavailable;
+    internal bool HasBody => _requestedVideo ? _video != null : _body != null;
     internal double PlaybackDuration => _video != null && _requestedVideo ? _video.Duration : DurationSeconds;
     protected double[]? VideoImpacts => _video?.Impacts;
     private AudioStreamPlayer? _videoAudio;
@@ -55,9 +57,9 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
             if (_video != null) AddChild(_video.Sprite);
             else _videoUnavailable = true;
         }
-        if (!UsingVideo && _body == null) InitializeCodeBody();
-        if (_body != null) _body.Visible = !UsingVideo;
-        if (_video != null) _video.Sprite.Visible = UsingVideo;
+        if (!enable && _body == null) InitializeCodeBody();
+        if (_body != null) _body.Visible = !enable;
+        if (_video != null) _video.Sprite.Visible = enable;
         SetFacing(Flip);
         Seek(_clock);
     }
@@ -90,8 +92,8 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
     public virtual void SetFacing(bool flip)
     {
         Flip = flip;
-        if (UsingVideo) _video!.SetFacing(flip);
-        if (_body != null)
+        if (_requestedVideo) _video?.SetFacing(flip);
+        else if (_body != null)
         {
             FlowMaterial.SetShaderParameter("flip_h", flip);
             // 黑态原素材的内容中心偏左，镜像必须围绕角色锚点而非画布中央。
@@ -107,34 +109,22 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
         if (_video != null) _video.Sprite.Modulate = color;
     }
 
-    protected void CopyVideoFrame(Sprite2D snapshot)
-    {
-        var sprite = _video!.Sprite;
-        snapshot.Texture = sprite.Texture;
-        snapshot.Scale = sprite.Scale;
-        snapshot.Position = sprite.Position;
-        snapshot.FlipH = sprite.FlipH;
-    }
-
     public void Seek(double seconds)
     {
         if (!double.IsFinite(seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
         double duration = PlaybackDuration;
         _clock = Loop ? ((seconds % duration) + duration) % duration : Math.Clamp(seconds, 0, duration);
-        if (UsingVideo)
+        if (_requestedVideo)
         {
+            if (!UsingVideo) return;
             try { _video!.Seek(_clock, Flip); }
             catch (Exception exception)
             {
                 GD.PrintErr($"[DeniaBattleVideo] {VideoClip}: {exception.Message}");
-                _video!.Sprite.Hide();
                 StopVideoAudio();
                 _videoUnavailable = true;
-                if (_body == null) InitializeCodeBody();
-                _body!.Show();
-                SetFacing(Flip);
             }
-            if (UsingVideo) return;
+            return;
         }
         double frame = _clock / PlaybackDuration * (WrapFrames ? FrameCount : FrameCount - 1);
         int index = Math.Min((int)frame, FrameCount - 1);
