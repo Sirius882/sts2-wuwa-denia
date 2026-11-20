@@ -623,12 +623,12 @@ public partial class DeniaFormOverlaySync : Node
             }
             EnsureParentAllowsOverflow();
             DeniaFormPatch.SyncOverlayLayout(_creatureNode);
-            float speed = DeniaFormPatch.IsFastMode() ? 3 : 1;
+            bool fast = DeniaFormPatch.IsFastMode();
+            float speed = fast ? 3 : 1;
             if (isBlack) _singleHit.Play(speed, holdAtImpact: true);
             else _singleHit.PlayWithPinkStandup(speed,
                 overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Clock ?? 0, holdAtImpact: true);
-            _singleHit.ConfigureCombatPlayback(waitForDamage: _singleHit.UsingVideo || isBlack || speed == 1,
-                allowEarlyInterruption: speed > 1);
+            _singleHit.ConfigureCombatPlayback(waitForDamage: isBlack || !fast, allowEarlyInterruption: fast);
             SetBodyVisible(overlay, false);
             return _singleHit;
         }

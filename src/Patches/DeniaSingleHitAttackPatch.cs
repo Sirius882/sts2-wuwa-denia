@@ -24,12 +24,12 @@ internal static class DeniaSingleHitAttackPatch
             ____hitCount)) return;
         var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!, ____hitCount >= 2, ____hitCount >= 4, ____hitCount == 3);
         if (visual == null) return;
-        // 代码动画的粉态Fast仅播放动作，原攻击回调和伤害时序完全保留，不安装任何命中等待。
+        // 粉态Fast仅播放动作，原攻击回调和伤害时序完全保留，不安装任何命中等待。
         if (!visual.WaitForDamage) return;
         var previous = ____beforeDamage;
         var afterAnimation = ____afterAttackerAnim;
         var impact = visual.Impact;
-        var impacts = new Task[visual.PlaybackImpactCount];
+        var impacts = new Task[visual.DamageImpactCount];
         for (int i = 0; i < impacts.Length; i++) impacts[i] = visual.ImpactAt(i);
         int damageIndex = 0;
         __state = new WaitState(previous, afterAnimation, visual, impact);
