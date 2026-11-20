@@ -26,8 +26,7 @@ public partial class Preview
             {
                 DeniaFormPatch.Fast = speed == 3;
                 var attack = node.Sync.PlaySingleHit(false, multi)!;attack.SetProcess(false);
-                // 此循环专测光流时间轴／保持；Fast粉态的非阻塞策略另在catalog逐项验证。
-                attack.ConfigureCombatPlayback(true, speed == 3);
+                // 此循环专测两档速度的起身时间轴与命中帧保持。
                 Check(attack.LeadInDuration == lead && attack.IsPreparing && attack.Clock == 0,
                     tag + " begins with full native standup");
                 Check(!legacy.IsVisibleInTree() && !idle.IsVisibleInTree(), "legacy and idle body stay exclusive");

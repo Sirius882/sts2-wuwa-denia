@@ -55,7 +55,7 @@ def main():
             raise RuntimeError('Run tools/visuals/prepare_battle_videos.py before testing the video catalog')
         paths.extend(videos)
     if args.form in ('bubbles', 'map_brush'):
-        paths = []  # The particle regression needs no character textures or scenes.
+        paths = [MOD / 'images/ui/combat/denia_energy_icon_big.png']
     for source in set(paths):
         target = runtime / source.relative_to(MOD)
         target.parent.mkdir(parents=True, exist_ok=True)
