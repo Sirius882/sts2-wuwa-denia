@@ -15,21 +15,27 @@ public partial class Preview
         {
             var brush = new DeniaMapBrushVisual();_viewport.AddChild(brush);
             brush.Advance(0, false, Vector2.Zero, 1);
-            Check(brush.GetChildCount() == 0, "no selected/down brush means no emission");
+            Check(brush.ActiveParticleCount == 0, "inactive brush starts empty");
             brush.Advance(0, true, new Vector2(50, 60), 1);
-            var burst = brush.GetChild<DeniaBubbleBurst>(0);burst.SetProcess(false);
-            Check(!burst.IsBlack && burst.Position == new Vector2(50, 60), "brush uses pink click bubbles at pointer");
-            for (int i = 0; i < fps; i++) burst._Process(1.0 / fps);
-            Check(Math.Abs(burst.Elapsed - 0.55) < 1e-6, "map bubbles run slowly at " + fps + " FPS");
-            for (int i = 0; i < fps * 2; i++) brush.Advance(1.0 / fps, true, new Vector2(100, 100), 1);
-            Check(brush.GetChildCount() is >= 7 and <= 8, "stationary held brush emits slowly and continuously");
-            int before = brush.GetChildCount();
-            brush.Advance(10, false, Vector2.Zero, 1);
-            Check(brush.GetChildCount() == before, "releasing brush/erasing cannot emit");
+            Check(brush.ActiveParticleCount == 1, "pen down emits one particle immediately");
+            int previous = brush.ActiveParticleCount;
+            for (int i = 0; i < fps; i++)
+            {
+                brush.Advance(1.0 / fps, true, new Vector2(50, 60), 1);
+                int current = brush.ActiveParticleCount;
+                Check(current - previous is >= 0 and <= 2, "regular frames emit at most two individual particles");
+                previous = current;
+            }
+            Check(brush.ActiveParticleCount is 48 or 49, "stationary held brush emits 48 particles per second at " + fps + " FPS");
+            int before = brush.ActiveParticleCount;
+            brush.Advance(0.1, false, Vector2.Zero, 1);
+            Check(brush.ActiveParticleCount == before, "pen up stops emission and leaves particles to fade");
             brush.Advance(0, true, Vector2.Zero, 1);
-            Check(brush.GetChildCount() == before + 1, "next pen down emits immediately");
+            Check(brush.ActiveParticleCount == before + 1, "next pen down emits immediately");
             brush.Advance(10, true, Vector2.Zero, 1);
-            Check(brush.GetChildCount() == before + 2, "lag does not accumulate a large emission burst");
+            Check(brush.ActiveParticleCount is >= 1 and <= 3, "lag ages old particles and skips the emission backlog");
+            brush.Advance(3, false, Vector2.Zero, 1);
+            Check(brush.ActiveParticleCount == 0 && brush.GetChildCount() == 0, "particles fully fade without child node allocations");
             brush.Free();
         }
         var line = new Line2D { Points = [new(70, 200), new(200, 125), new(330, 230), new(475, 140), new(610, 235), new(760, 165), new(880, 225)],
@@ -47,10 +53,7 @@ public partial class Preview
             {
                 float t = frame / 60f;
                 Vector2 point = new(120 + 210 * t, 450 + Mathf.Sin(t * 2.8f) * 50);
-                foreach (Node child in visual.GetChildren())
-                    if (child is DeniaBubbleBurst bubble) bubble._Process(1.0 / 60);
                 visual.Advance(1.0 / 60, frame < 120, point, 1);
-                foreach (Node child in visual.GetChildren()) child.SetProcess(false);
                 await Capture($"map_brush_{frame:D4}");
             }
         }

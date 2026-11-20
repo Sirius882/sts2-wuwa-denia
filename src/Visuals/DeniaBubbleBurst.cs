@@ -9,7 +9,7 @@ public partial class DeniaBubbleBurst : Node2D
     private readonly float[] _radii = new float[10], _lifetimes = new float[10];
     private static readonly Vector2[] PinkStar = [new(0, -1.5f), new(0.35f, -0.35f), new(1.5f, 0), new(0.35f, 0.35f),
         new(0, 1.5f), new(-0.35f, 0.35f), new(-1.5f, 0), new(-0.35f, -0.35f)];
-    private const string EnergyIconPath = "res://images/ui/combat/denia_energy_icon_big.png";
+    internal const string EnergyIconPath = "res://images/ui/combat/denia_energy_icon_big.png";
     private Texture2D? _energyIcon;
 
     public bool IsBlack { get; init; }
@@ -51,12 +51,7 @@ public partial class DeniaBubbleBurst : Node2D
             if (i % 2 == 0)
             {
                 radius *= IsBlack ? 1.1f - ratio * 0.2f : 1.15f - ratio * 0.25f;
-                if (_energyIcon != null)
-                {
-                    Vector2 size = _energyIcon.GetSize();
-                    size *= 2 * radius / Mathf.Max(size.X, size.Y);
-                    DrawTextureRect(_energyIcon, new Rect2(p - size / 2, size), false, new Color(1, 1, 1, ratio));
-                }
+                DrawEnergyIcon(this, _energyIcon, p, radius, ratio);
             }
             else if (IsBlack)
             {
@@ -65,12 +60,25 @@ public partial class DeniaBubbleBurst : Node2D
             }
             else
             {
-                // 在单位星形上三角剖分，避免寿命末端缩小／平移后的顶点退化。
-                // 绘制变换保留原位置、大小和透明度，随后恢复以免影响下个泡泡。
-                DrawSetTransform(p, 0, Vector2.One * (radius * 0.75f * ratio));
-                DrawColoredPolygon(PinkStar, new Color(1, 225 / 255f, 252 / 255f, ratio));
-                DrawSetTransform(Vector2.Zero);
+                DrawPinkStar(this, p, radius, ratio);
             }
         }
+    }
+
+    internal static void DrawEnergyIcon(Node2D canvas, Texture2D? texture, Vector2 center, float radius, float opacity)
+    {
+        if (texture == null) return;
+        Vector2 size = texture.GetSize();
+        size *= 2 * radius / Mathf.Max(size.X, size.Y);
+        canvas.DrawTextureRect(texture, new Rect2(center - size / 2, size), false, new Color(1, 1, 1, opacity));
+    }
+
+    internal static void DrawPinkStar(Node2D canvas, Vector2 center, float radius, float opacity)
+    {
+        // 在单位星形上三角剖分，避免寿命末端缩小／平移后的顶点退化。
+        // 绘制变换保留原位置、大小和透明度，随后恢复以免影响下个泡泡。
+        canvas.DrawSetTransform(center, 0, Vector2.One * (radius * 0.75f * opacity));
+        canvas.DrawColoredPolygon(PinkStar, new Color(1, 225 / 255f, 252 / 255f, opacity));
+        canvas.DrawSetTransform(Vector2.Zero);
     }
 }
