@@ -14,16 +14,26 @@ public partial class Preview
         bool video = Array.IndexOf(OS.GetCmdlineUserArgs(), "video") >= 0;
         DeniaModConfig.UseCodeAnimation = !video;
         CheckCombatAnimationPolicy();
+        if (video) CheckVideoCuts();
         foreach (bool black in new[] { false, true })
         foreach (bool fast in new[] { false, true })
         foreach (var kind in Enum.GetValues<DeniaAnimationPreviewKind>())
         {
-            if (kind == DeniaAnimationPreviewKind.Execution || (!video
-                && kind is DeniaAnimationPreviewKind.BlackTriple or DeniaAnimationPreviewKind.PinkCollapse)) continue;
+            if (kind == DeniaAnimationPreviewKind.Execution) continue;
+            bool unavailable = video
+                ? kind is DeniaAnimationPreviewKind.PinkStandup or DeniaAnimationPreviewKind.PinkSitdown or DeniaAnimationPreviewKind.BlackRise
+                : kind is DeniaAnimationPreviewKind.BlackTriple or DeniaAnimationPreviewKind.PinkCollapse;
             DeniaFormPatch.Fast = fast;
             var node = ControllerFixture.Create(_viewport);
             node.Entity.Black = black; node.Sync.SetForm(black);
             var playing = node.Sync.PlayAnimationPreview(kind);
+            if (unavailable)
+            {
+                Check(playing.IsCompletedSuccessfully && !node.Visuals.HasNode("AnimationPreview"),
+                    $"{kind}: no preview from the other renderer");
+                node.Free();
+                continue;
+            }
             var preview = node.Visuals.GetNode<DeniaAnimationPreview>("AnimationPreview");
             preview.SetProcess(false);
             Check(!playing.IsCompleted, $"{kind}: preview awaits playback");
@@ -46,13 +56,11 @@ public partial class Preview
                 _ => 1.5 };
             if (video)
             {
-                const double standup = 3.083333;
                 expected = kind switch {
                     DeniaAnimationPreviewKind.PinkIdle => 14.5,
                     DeniaAnimationPreviewKind.BlackIdle => 2.983333,
-                    DeniaAnimationPreviewKind.PinkStandup or DeniaAnimationPreviewKind.PinkSitdown => standup / speed,
-                    DeniaAnimationPreviewKind.PinkSingle => (2 * standup + 4.566667) / speed,
-                    DeniaAnimationPreviewKind.PinkMulti => (2 * standup + 7.016667) / speed,
+                    DeniaAnimationPreviewKind.PinkSingle => 4.566667 / speed,
+                    DeniaAnimationPreviewKind.PinkMulti => 7.016667 / speed,
                     DeniaAnimationPreviewKind.PinkCollapse => 7.183333,
                     DeniaAnimationPreviewKind.BlackSingle => 9.783333 / speed,
                     DeniaAnimationPreviewKind.BlackMulti => 8.166667 / speed,
@@ -94,6 +102,47 @@ public partial class Preview
         File.WriteAllText(Path.Combine(_output, "checks.json"),
             $"{{\"checks\":{_checks},\"form\":\"catalog\",\"render\":{_render.ToString().ToLowerInvariant()}}}");
         GD.Print($"PASS: {_checks} animation catalog checks, render={_render}");
+    }
+
+    private void CheckVideoCuts()
+    {
+        foreach (bool fast in new[] { false, true })
+        foreach (bool multi in new[] { false, true })
+        {
+            DeniaFormPatch.Fast = fast;
+            var node = ControllerFixture.Create(_viewport);
+            var idle = node.Pink.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle");
+            idle.Seek(0.75);
+            double idleClock = idle.Clock;
+            var attack = node.Sync.PlaySingleHit(false, multi)!;
+            attack.SetProcess(false);
+            Check(attack.Clock == 0 && attack.LeadInDuration == 0 && attack.ReturnDuration == 0,
+                "pink video has only the attack timeline");
+            Check(!idle.IsVisibleInTree() && attack.IsVisibleInTree() && !attack.HasNode("PinkHandoff"),
+                "first attack frame directly replaces idle without a handoff viewport");
+            double speed = fast ? 3 : 1;
+            attack._Process(0.01 / speed);
+            Check(Math.Abs(attack.Clock - 0.01) < 1e-6, "the first tick advances the attack itself");
+            attack.ReleaseRemainingImpacts(attack.Impact);
+            attack._Process((attack.PlaybackDuration - attack.Clock - 0.001) / speed);
+            Check(attack.IsVisibleInTree() && !idle.IsVisibleInTree(), "last attack frame still owns the body");
+            attack._Process(0.002 / speed);
+            Check(!attack.IsVisibleInTree() && idle.IsVisibleInTree() && idle.Clock == idleClock,
+                "end of video restores the same idle clock with a hard cut");
+            node.Free();
+        }
+        DeniaFormPatch.Fast = false;
+
+        var missing = new DeniaPinkIdleVisual { VideoClip = "missing_fixture_clip" };
+        _viewport.AddChild(missing);
+        missing.Seek(0.5);
+        Check(missing.VideoPlaybackRequested && !missing.UsingVideo && !missing.HasBody && !missing.HasNode("FlowBody"),
+            "missing video does not initialize a code animation");
+        missing.SetVideoPlayback(false);
+        Check(missing.HasBody && missing.GetNode<ColorRect>("FlowBody").Visible, "code body initializes when explicitly selected");
+        missing.SetVideoPlayback(true);
+        Check(!missing.GetNode<ColorRect>("FlowBody").Visible, "returning to video keeps the code body hidden on load failure");
+        missing.Free();
     }
 
     private void CheckCombatAnimationPolicy()

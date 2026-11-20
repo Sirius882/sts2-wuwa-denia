@@ -33,7 +33,7 @@ public partial class DeniaPinkAttackVisual : DeniaSingleHitVisual
 
     public override void _Draw()
     {
-        if (UsingVideo || !Initialized) return;
+        if (VideoPlaybackRequested || !Initialized) return;
         float t = (float)Clock;
         Vector2 origin = new(Flip ? DesignOrigin.X : -DesignOrigin.X, -DesignOrigin.Y);
         Vector2 facing = new(Flip ? -1 : 1, 1);
