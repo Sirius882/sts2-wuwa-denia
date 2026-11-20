@@ -57,6 +57,12 @@ uses the matching alpha atlas to reverse its opening zoom and reconstruct the
 checkerboard-composited edges. Each DBV2 asset includes the primary stereo stream;
 stand-up also contains a reversed stream for the sit-down phase.
 
+Battle videos and code animations share damage-wait and interruption rules.
+Normal mode protects the attack until the required damage rounds settle. Fast
+pink attacks use the original card timing. Fast black attacks wait at the video
+impact times at 3× speed and release outstanding waits when replaced. The black
+triple clip retains its third swing, with two damage waits as in the code attack.
+
 The local `战斗视频运行时` directory contains the reusable output masters and their
 fingerprints. Both pack scripts call the preparation step and export the DBV2
 assets. A fresh conversion needs FFmpeg with libvorbis, NumPy, OpenCV and Pillow.

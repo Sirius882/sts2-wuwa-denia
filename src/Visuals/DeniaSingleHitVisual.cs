@@ -13,6 +13,8 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
     public virtual int ImpactCount => 1;
     public virtual double GetImpactTime(int index) => DamageTime;
     internal int PlaybackImpactCount => VideoImpacts is { Length: > 0 } impacts ? impacts.Length : ImpactCount;
+    // 视频决定命中时点，原动作决定几轮伤害需要等待。黑态专用三连的第三挥不加等待。
+    internal int DamageImpactCount => Math.Min(ImpactCount, PlaybackImpactCount);
     internal double GetPlaybackImpactTime(int index) => VideoImpacts is { Length: > 0 } impacts
         ? impacts[index] : GetImpactTime(index);
     protected virtual Vector2 PinkStandupEndOrigin => new(247.5f, 750);
@@ -22,7 +24,7 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
     private bool _protectUntilDamage;
     private int _confirmedImpacts;
     public bool WaitForDamage { get; private set; } = true;
-    public bool CanBeInterrupted => !Playing || !_protectUntilDamage || _confirmedImpacts >= PlaybackImpactCount;
+    public bool CanBeInterrupted => !Playing || !_protectUntilDamage || _confirmedImpacts >= DamageImpactCount;
     private TaskCompletionSource[] _impacts = [];
     private int _heldImpact;
     private DeniaPinkStandupVisual? _standup;
@@ -49,7 +51,7 @@ public abstract partial class DeniaSingleHitVisual : DeniaFlowIdleVisual
     {
         if (!float.IsFinite(speed) || speed <= 0) throw new ArgumentOutOfRangeException(nameof(speed));
         foreach (var impact in _impacts) impact.TrySetResult();
-        _impacts = new TaskCompletionSource[PlaybackImpactCount];
+        _impacts = new TaskCompletionSource[DamageImpactCount];
         for (int i = 0; i < _impacts.Length; i++) _impacts[i] = new TaskCompletionSource();
         StopVideoAudio();
         _heldImpact = 0;
