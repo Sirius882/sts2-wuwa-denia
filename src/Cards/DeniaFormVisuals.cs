@@ -989,7 +989,7 @@ public static class DeniaBeforeCardPlayedAnimPatch
                 return;
 
             // 粉态等攻击指令确定段数后只启动一种动作；黑态现在共用此入口。
-            DeniaPinkAttackRule.Begin(card, creature, true);
+            DeniaPinkAttackRule.Begin(card, creature, true, cardPlay);
         }
         catch { }
     }
