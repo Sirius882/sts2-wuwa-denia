@@ -172,65 +172,30 @@ public partial class Preview
                     Check(Math.Abs(expected[i] - attack.GetPlaybackImpactTime(i)) < 1e-6,
                         "impact table follows source frame");
             }
-            int expectedDamageImpacts = hits == 1 ? 1 : black && hits == 4 ? 4 : 2;
+            int expectedDamageImpacts = attack.PlaybackImpactCount;
             double speed = fast ? 3 : 1;
             attack.SetProcess(false);
             var first = attack.Impact;
-            Check(attack.WaitForDamage == (black || !fast), "Fast pink skips damage waits in both renderers");
-            Check(attack.DamageImpactCount == expectedDamageImpacts, "damage gates follow the code attack hit count");
-            Check(attack.CanBeInterrupted == fast, "only Fast permits interruption before damage");
-            if (fast)
+            Check(attack.DamageImpactCount == expectedDamageImpacts, "every visual hit can gate damage");
+            Check(!attack.CanBeInterrupted, "both speeds protect the first swing");
+            Check(node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4, hits == 3) == null && !first.IsCompleted,
+                "next attack cannot replace protected intro or swing");
+            for (int i = 0; i < expectedDamageImpacts; i++)
             {
-                // 模拟下个动作在起身／首挥击之前到来；旧门控必须立即释放，不影响新实例门控。
-                var last = attack.ImpactAt(expectedDamageImpacts - 1);
-                var next = node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4, hits == 3);
-                Check(next != null && first.IsCompleted && last.IsCompleted && next.Impact != first,
-                    "Fast replaces pre-hit animation and releases old waits");
-                attack = next!;
-                attack.SetProcess(false);
-                attack.ReleaseRemainingImpacts(first);
-                first = attack.Impact;
+                double impactTime = attack.GetPlaybackImpactTime(i);
+                attack.SeekTimeline(attack.LeadInDuration + impactTime - 0.001);
+                Check(!attack.ImpactAt(i).IsCompleted, "impact cannot precede the selected frame");
+                attack._Process(0.002 / speed);
+                Check(attack.ImpactAt(i).IsCompleted && Math.Abs(attack.Clock - impactTime) < 1e-6,
+                    "damage gate holds picture at the selected impact");
+                Check(!attack.CanBeInterrupted, "impact frame stays protected until damage settles");
+                attack.ReleaseImpact(attack.ImpactAt(i));
+                Check(attack.CanBeInterrupted == (i + 1 == expectedDamageImpacts),
+                    "both speeds unlock after the last damage round");
             }
-            else
-            {
-                Check(node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4, hits == 3) == null && !first.IsCompleted,
-                    "Normal cannot replace protected intro or swing");
-            }
-
-            if (!attack.WaitForDamage)
-            {
-                double lastImpact = attack.GetPlaybackImpactTime(attack.PlaybackImpactCount - 1);
-                attack._Process((attack.LeadInDuration + lastImpact + 0.3) / speed);
-                Check(attack.Clock > lastImpact, "Fast pink advances through every swing without a damage callback");
-            }
-            else
-            {
-                for (int i = 0; i < expectedDamageImpacts; i++)
-                {
-                    double impactTime = attack.GetPlaybackImpactTime(i);
-                    attack.SeekTimeline(attack.LeadInDuration + impactTime - 0.001);
-                    attack._Process(0.0005 / speed);
-                    Check(!attack.ImpactAt(i).IsCompleted, "damage cannot precede the selected frame");
-                    attack._Process(0.002 / speed);
-                    Check(attack.ImpactAt(i).IsCompleted && Math.Abs(attack.Clock - impactTime) < 1e-6,
-                        "damage gate holds picture at the selected impact");
-                    attack.ReleaseImpact(attack.ImpactAt(i));
-                    Check(attack.CanBeInterrupted == fast, "only Fast can replace before damage is confirmed");
-                    attack.ConfirmDamage(first);
-                    Check(attack.CanBeInterrupted == (fast || i + 1 == expectedDamageImpacts),
-                        "Normal unlocks only after the required actual damage rounds");
-                }
-                Check(attack.ImpactAt(expectedDamageImpacts).IsCompleted, "later damage adds no animation wait");
-                if (attack.PlaybackImpactCount > expectedDamageImpacts)
-                {
-                    double thirdSwing = attack.GetPlaybackImpactTime(expectedDamageImpacts);
-                    attack._Process((thirdSwing - attack.Clock + 0.1) / speed);
-                    Check(attack.Clock > thirdSwing, "video-only third swing has no damage hold");
-                }
-                var next = node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4, hits == 3);
-                Check(next != null && first.IsCompleted, "recovery can be replaced after confirmed numbers");
-                next!.SetProcess(false);
-            }
+            var next = node.Sync.PlaySingleHit(black, hits >= 2, hits >= 4, hits == 3);
+            Check(next != null && first.IsCompleted, "recovery can be replaced after confirmed numbers");
+            next!.SetProcess(false);
             node.Free();
         }
         DeniaFormPatch.Fast = false;
