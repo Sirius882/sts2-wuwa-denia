@@ -25,13 +25,16 @@ def run(command, cwd, log, timeout=180):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--render', action='store_true')
+    parser.add_argument('--video', action='store_true', help='Use prepared video assets for the catalog checks')
     parser.add_argument('--form', choices=('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'dark_4hit', 'pink_standup', 'bubbles', 'map_brush', 'catalog'), default='pink')
     parser.add_argument('--output', type=Path, default=ROOT / '.cache/denia-pink-idle')
     args = parser.parse_args()
+    if args.video and args.form != 'catalog':
+        parser.error('--video requires --form catalog')
     output = args.output.resolve()
     if not output.is_relative_to((ROOT / '.cache').resolve()):
         parser.error('output must stay inside workspace .cache')
-    runtime = output / args.form / ('render' if args.render else 'checks')
+    runtime = output / (args.form + ('-video' if args.video else '')) / ('render' if args.render else 'checks')
     runtime.mkdir(parents=True, exist_ok=True)
     for name in ('captures', 'preview_frames'):
         folder = runtime / name
@@ -46,6 +49,11 @@ def main():
     paths += [MOD / p for p in re.findall(r'path="res://([^"]+)"', scene.read_text())]
     for form in ('pink', 'black', 'black_rise', 'pink_1hit', 'dark_1hit', 'pink_2hit', 'dark_2hit', 'dark_4hit', 'pink_standup'):
         paths += list((MOD / f'images/characters/denia/realtime_{form}').glob('*'))
+    if args.video:
+        videos = sorted((MOD / 'videos').glob('*.dbv'))
+        if len(videos) != 10:
+            raise RuntimeError('Run tools/visuals/prepare_battle_videos.py before testing the video catalog')
+        paths.extend(videos)
     if args.form in ('bubbles', 'map_brush'):
         paths = []  # The particle regression needs no character textures or scenes.
     for source in set(paths):
@@ -81,7 +89,7 @@ project/assembly_name="PinkIdlePreview"
 script=ExtResource("1")
 ''', encoding='utf-8')
     links = ''.join(f'<Compile Include="{MOD / "src/Visuals" / (name + ".cs")}" Link="{name}.cs" />'
-                    for name in ('DeniaAnimationPreviewKind', 'DeniaAnimationPreview', 'DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
+                    for name in ('DeniaAnimationPreviewKind', 'DeniaAnimationPreview', 'DeniaBattleVideo', 'DeniaPinkCollapseVisual', 'DeniaFlowIdleVisual', 'DeniaPinkIdleVisual', 'DeniaBlackIdleVisual',
                                  'DeniaBubbleBurst', 'DeniaMapBrushVisual', 'DeniaBlankClick', 'DeniaBlackRiseVisual', 'DeniaPinkStandupVisual', 'DeniaSingleHitVisual', 'DeniaPinkAttackVisual', 'DeniaDarkAttackVisual', 'DeniaPinkMultiAttackVisual', 'DeniaDarkMultiAttackVisual', 'DeniaDarkFourAttackVisual'))
     (runtime / 'PinkIdlePreview.csproj').write_text(f'''<Project Sdk="Godot.NET.Sdk/4.5.1">
 <PropertyGroup><TargetFramework>net9.0</TargetFramework><Nullable>enable</Nullable>
@@ -96,6 +104,8 @@ script=ExtResource("1")
     command += ['--display-driver', 'windows', '--position', '-16000,-16000',
                 '--rendering-method', 'forward_plus', '--rendering-driver', 'd3d12'] if args.render else ['--headless']
     command += ['--', args.form]
+    if args.video:
+        command.append('video')
     run(command, ROOT, runtime / 'process.log', timeout=420)
     report = json.loads((runtime / 'captures/checks.json').read_text())
     if args.form == 'catalog':

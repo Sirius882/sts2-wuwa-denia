@@ -64,7 +64,7 @@ public partial class DeniaDarkAttackVisual : DeniaSingleHitVisual
 
     public override void _Draw()
     {
-        if (!Initialized) return;
+        if (UsingVideo || !Initialized) return;
         float t = (float)Clock;
         DrawSetTransform(new Vector2(Flip ? DesignOrigin.X : -DesignOrigin.X, -DesignOrigin.Y), 0,
             new Vector2(Flip ? -1 : 1, 1));

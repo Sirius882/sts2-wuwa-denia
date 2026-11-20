@@ -22,14 +22,14 @@ internal static class DeniaSingleHitAttackPatch
         if (NonInteractiveMode.IsActive) return;
         if (!DeniaPinkAttackRule.TryStart(__instance.ModelSource as CardModel, __instance.Attacker,
             ____hitCount)) return;
-        var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!, ____hitCount >= 2, ____hitCount >= 4);
+        var visual = DeniaFormPatch.PlaySingleHit(__instance.Attacker!, ____hitCount >= 2, ____hitCount >= 4, ____hitCount == 3);
         if (visual == null) return;
-        // 粉态Fast仅播放动作，原攻击回调和伤害时序完全保留，不安装任何命中等待。
+        // 代码动画的粉态Fast仅播放动作，原攻击回调和伤害时序完全保留，不安装任何命中等待。
         if (!visual.WaitForDamage) return;
         var previous = ____beforeDamage;
         var afterAnimation = ____afterAttackerAnim;
         var impact = visual.Impact;
-        var impacts = new Task[visual.ImpactCount];
+        var impacts = new Task[visual.PlaybackImpactCount];
         for (int i = 0; i < impacts.Length; i++) impacts[i] = visual.ImpactAt(i);
         int damageIndex = 0;
         __state = new WaitState(previous, afterAnimation, visual, impact);

@@ -37,7 +37,7 @@ public partial class DeniaBlackIdleVisual : DeniaFlowIdleVisual
 
     public override void _Draw()
     {
-        if (BubbleCy == null) return;
+        if (UsingVideo || BubbleCy == null) return;
         float t = (float)Clock, cy = Track(BubbleCy);
         DrawSetTransform(new Vector2(Flip ? Origin.X : -Origin.X, -Origin.Y), 0,
             new Vector2(Flip ? -1 : 1, 1));

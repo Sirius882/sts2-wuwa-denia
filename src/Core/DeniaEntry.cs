@@ -1,3 +1,4 @@
+using BaseLib.Config;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Modding;
 using TuneStrain.EntryPoint;
@@ -45,6 +46,7 @@ public static class DeniaEntry
 
             // 仅当 TuneStrain、Harmony 和所有 Denia 规则均成功初始化后才提交幂等状态。
             // 若其中任一步骤抛异常，后续 ModManager 调用仍可重新尝试完整初始化。
+            ModConfigRegistry.Register("denia", new DeniaModConfig());
             _initialized = true;
         }
     }

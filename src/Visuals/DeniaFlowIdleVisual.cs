@@ -19,13 +19,50 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
     protected ShaderMaterial FlowMaterial = null!;
     protected float[] BubbleCy = null!, OrbX = null!, OrbY = null!;
     protected bool Flip;
-    private ColorRect _body = null!;
+    private ColorRect? _body;
+    private DeniaBattleVideo? _video;
+    private bool _requestedVideo;
+    private bool _videoUnavailable;
+    internal string? VideoClip { get; init; }
+    internal bool LoadVideoOnReady { get; init; } = true;
+    internal bool UsingVideo => _video != null && _requestedVideo && !_videoUnavailable;
+    internal double PlaybackDuration => _video != null && _requestedVideo ? _video.Duration : DurationSeconds;
+    protected double[]? VideoImpacts => _video?.Impacts;
+    private AudioStreamPlayer? _videoAudio;
+    private AudioStream? _playingStream;
+    private float _videoAudioSpeed = 1;
+    private double _lastAudioClock;
+    internal AudioStream? GetVideoAudio(bool reversed = false) => UsingVideo ? _video!.GetAudio(reversed) : null;
     private double _clock;
 
     public double Clock => _clock;
     public bool Initialized { get; private set; }
 
     public override void _Ready()
+    {
+        SetVideoPlayback(LoadVideoOnReady && VideoClip != null);
+        Initialized = true;
+    }
+
+    internal void SetVideoPlayback(bool enable)
+    {
+        if (Initialized && _requestedVideo == enable) return;
+        _requestedVideo = enable;
+        if (!enable) StopVideoAudio();
+        if (enable && VideoClip != null && _video == null && !_videoUnavailable)
+        {
+            _video = DeniaBattleVideo.TryOpen(VideoClip, LayoutHeight);
+            if (_video != null) AddChild(_video.Sprite);
+            else _videoUnavailable = true;
+        }
+        if (!UsingVideo && _body == null) InitializeCodeBody();
+        if (_body != null) _body.Visible = !UsingVideo;
+        if (_video != null) _video.Sprite.Visible = UsingVideo;
+        SetFacing(Flip);
+        Seek(_clock);
+    }
+
+    private void InitializeCodeBody()
     {
         var tracking = GD.Load<Resource>(Assets + "tracking.tres")
             ?? throw new InvalidOperationException($"Idle tracking resource is missing: {Assets}");
@@ -48,27 +85,58 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
             Name = "FlowBody", Position = -DesignOrigin, Size = CanvasSize,
             MouseFilter = Control.MouseFilterEnum.Ignore, Material = FlowMaterial, ShowBehindParent = true };
         AddChild(_body);
-        Seek(0);
-        Initialized = true;
     }
 
     public virtual void SetFacing(bool flip)
     {
         Flip = flip;
-        FlowMaterial.SetShaderParameter("flip_h", flip);
-        // 黑态原素材的内容中心偏左，镜像必须围绕角色锚点而非画布中央。
-        _body.Position = flip ? new Vector2(DesignOrigin.X - CanvasSize.X, -DesignOrigin.Y) : -DesignOrigin;
+        if (UsingVideo) _video!.SetFacing(flip);
+        if (_body != null)
+        {
+            FlowMaterial.SetShaderParameter("flip_h", flip);
+            // 黑态原素材的内容中心偏左，镜像必须围绕角色锚点而非画布中央。
+            _body.Position = flip ? new Vector2(DesignOrigin.X - CanvasSize.X, -DesignOrigin.Y) : -DesignOrigin;
+        }
         QueueRedraw();
     }
 
-    protected void SetBodyOpacity(float alpha) => _body.Modulate = new Color(1, 1, 1, alpha);
+    protected void SetBodyOpacity(float alpha)
+    {
+        var color = new Color(1, 1, 1, alpha);
+        if (_body != null) _body.Modulate = color;
+        if (_video != null) _video.Sprite.Modulate = color;
+    }
+
+    protected void CopyVideoFrame(Sprite2D snapshot)
+    {
+        var sprite = _video!.Sprite;
+        snapshot.Texture = sprite.Texture;
+        snapshot.Scale = sprite.Scale;
+        snapshot.Position = sprite.Position;
+        snapshot.FlipH = sprite.FlipH;
+    }
 
     public void Seek(double seconds)
     {
         if (!double.IsFinite(seconds)) throw new ArgumentOutOfRangeException(nameof(seconds));
-        _clock = Loop ? ((seconds % DurationSeconds) + DurationSeconds) % DurationSeconds
-            : Math.Clamp(seconds, 0, DurationSeconds);
-        double frame = _clock / DurationSeconds * (WrapFrames ? FrameCount : FrameCount - 1);
+        double duration = PlaybackDuration;
+        _clock = Loop ? ((seconds % duration) + duration) % duration : Math.Clamp(seconds, 0, duration);
+        if (UsingVideo)
+        {
+            try { _video!.Seek(_clock, Flip); }
+            catch (Exception exception)
+            {
+                GD.PrintErr($"[DeniaBattleVideo] {VideoClip}: {exception.Message}");
+                _video!.Sprite.Hide();
+                StopVideoAudio();
+                _videoUnavailable = true;
+                if (_body == null) InitializeCodeBody();
+                _body!.Show();
+                SetFacing(Flip);
+            }
+            if (UsingVideo) return;
+        }
+        double frame = _clock / PlaybackDuration * (WrapFrames ? FrameCount : FrameCount - 1);
         int index = Math.Min((int)frame, FrameCount - 1);
         FlowMaterial.SetShaderParameter("frame_index", index);
         FlowMaterial.SetShaderParameter("fraction", (float)(frame - index));
@@ -80,12 +148,60 @@ public abstract partial class DeniaFlowIdleVisual : Node2D
 
     public override void _Process(double delta)
     {
-        if (IsVisibleInTree()) Seek(_clock + delta);
+        if (IsVisibleInTree())
+        {
+            Seek(_clock + delta);
+            if (UsingVideo) SyncVideoAudio(GetVideoAudio(), _clock, 1, false);
+        }
+        else StopVideoAudio();
+    }
+
+    internal void SyncVideoAudio(AudioStream? stream, double clock, float speed, bool held)
+    {
+        if (stream == null)
+        {
+            StopVideoAudio();
+            return;
+        }
+        if (_videoAudio == null)
+        {
+            _videoAudio = new AudioStreamPlayer { Name = "VideoAudio", Bus = "SFX" };
+            AddChild(_videoAudio);
+        }
+        if (!ReferenceEquals(_playingStream, stream) || clock < _lastAudioClock)
+        {
+            _playingStream = stream;
+            _videoAudio.Stream = stream;
+            _videoAudioSpeed = speed;
+            _videoAudio.PitchScale = speed;
+            _videoAudio.Play((float)clock);
+        }
+        if (_videoAudio.Playing)
+        {
+            // Correct drift after a slow render frame and pause the soundtrack while a damage callback holds the picture.
+            double position = _videoAudio.GetPlaybackPosition();
+            if (Math.Abs(position - clock) > 0.075 * _videoAudioSpeed)
+                _videoAudio.Seek((float)clock);
+            _videoAudio.StreamPaused = held;
+        }
+        _lastAudioClock = clock;
+    }
+
+    protected void StopVideoAudio()
+    {
+        if (_videoAudio == null || !GodotObject.IsInstanceValid(_videoAudio)) return;
+        _videoAudio.Stop();
+        _playingStream = null;
+    }
+
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPredelete) _video?.Dispose();
     }
 
     protected float Track(float[] values)
     {
-        double frame = _clock / DurationSeconds * (WrapFrames ? FrameCount : FrameCount - 1);
+        double frame = _clock / PlaybackDuration * (WrapFrames ? FrameCount : FrameCount - 1);
         int i = Math.Min((int)frame, FrameCount - 1);
         float f = (float)(frame - i);
         int Index(int n) => WrapFrames ? (n + FrameCount) % FrameCount : Math.Clamp(n, 0, FrameCount - 1);
