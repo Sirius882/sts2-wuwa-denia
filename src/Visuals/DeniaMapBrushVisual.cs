@@ -7,12 +7,11 @@ namespace Denia;
 /// <summary>地图画线与连续落笔粒子；与战斗点击共用能量图标和粉态星芒，不占用玩法随机数。</summary>
 public partial class DeniaMapBrushVisual : Node2D
 {
-    private const double EmissionInterval = 1.0 / 48;
-    private const int MaxEmissionsPerFrame = 3;
+    private const double EmissionInterval = 1.0 / 6;
     private readonly record struct Particle(Vector2 Origin, Vector2 Velocity, float Radius,
         double SpawnTime, double Lifetime, bool IsStar);
 
-    private readonly List<Particle> _particles = new(128);
+    private readonly List<Particle> _particles = new(16);
     private readonly RandomNumberGenerator _random = new();
     private Texture2D? _energyIcon;
     private Vector2 _lastPointer;
@@ -64,8 +63,8 @@ public partial class DeniaMapBrushVisual : Node2D
         else if (drawing && delta > 0)
         {
             // 保留帧间余量并沿笔尖轨迹分散发射。卡顿时只补最近的一小段。
-            _untilNext -= Math.Min(delta, MaxEmissionsPerFrame * EmissionInterval);
-            while (_untilNext <= 0)
+            _untilNext -= Math.Min(delta, EmissionInterval);
+            if (_untilNext <= 0)
             {
                 float fraction = (float)(1 + _untilNext / delta);
                 Emit(_lastPointer.Lerp(pointer, fraction), uiScale, age: -_untilNext);

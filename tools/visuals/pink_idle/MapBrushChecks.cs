@@ -23,17 +23,17 @@ public partial class Preview
             {
                 brush.Advance(1.0 / fps, true, new Vector2(50, 60), 1);
                 int current = brush.ActiveParticleCount;
-                Check(current - previous is >= 0 and <= 2, "regular frames emit at most two individual particles");
+                Check(current - previous is 0 or 1, "only one particle can be emitted on a frame");
                 previous = current;
             }
-            Check(brush.ActiveParticleCount is 48 or 49, "stationary held brush emits 48 particles per second at " + fps + " FPS");
+            Check(brush.ActiveParticleCount is 6 or 7, "stationary held brush emits six particles per second at " + fps + " FPS");
             int before = brush.ActiveParticleCount;
             brush.Advance(0.1, false, Vector2.Zero, 1);
             Check(brush.ActiveParticleCount == before, "pen up stops emission and leaves particles to fade");
             brush.Advance(0, true, Vector2.Zero, 1);
             Check(brush.ActiveParticleCount == before + 1, "next pen down emits immediately");
             brush.Advance(10, true, Vector2.Zero, 1);
-            Check(brush.ActiveParticleCount is >= 1 and <= 3, "lag ages old particles and skips the emission backlog");
+            Check(brush.ActiveParticleCount == 1, "lag ages old particles and emits only one new particle");
             brush.Advance(3, false, Vector2.Zero, 1);
             Check(brush.ActiveParticleCount == 0 && brush.GetChildCount() == 0, "particles fully fade without child node allocations");
             brush.Free();
