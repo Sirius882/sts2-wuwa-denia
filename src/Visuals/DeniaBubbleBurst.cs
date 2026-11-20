@@ -9,12 +9,16 @@ public partial class DeniaBubbleBurst : Node2D
     private readonly float[] _radii = new float[10], _lifetimes = new float[10];
     private static readonly Vector2[] PinkStar = [new(0, -1.5f), new(0.35f, -0.35f), new(1.5f, 0), new(0.35f, 0.35f),
         new(0, 1.5f), new(-0.35f, 0.35f), new(-1.5f, 0), new(-0.35f, -0.35f)];
+    private const string EnergyIconPath = "res://images/ui/combat/denia_energy_icon_big.png";
+    private Texture2D? _energyIcon;
+
     public bool IsBlack { get; init; }
     public float PlaybackSpeed { get; init; } = 1;
     public double Elapsed { get; private set; }
 
     public override void _Ready()
     {
+        _energyIcon = GD.Load<Texture2D>(EnergyIconPath);
         var random = new RandomNumberGenerator();
         random.Randomize(); // 私有表现随机数，不借用战斗RNG。
         for (int i = 0; i < 10; i++)
@@ -47,12 +51,12 @@ public partial class DeniaBubbleBurst : Node2D
             if (i % 2 == 0)
             {
                 radius *= IsBlack ? 1.1f - ratio * 0.2f : 1.15f - ratio * 0.25f;
-                Color fill = IsBlack ? new Color(14 / 255f, 32 / 255f, 92 / 255f, ratio * 0.85f)
-                    : new Color(235 / 255f, 165 / 255f, 1, ratio * 0.28f);
-                Color rim = IsBlack ? new Color(135 / 255f, 220 / 255f, 1, ratio * 0.92f)
-                    : new Color(250 / 255f, 205 / 255f, 1, ratio * 0.9f);
-                DrawCircle(p, radius, fill, true, -1, true);
-                DrawArc(p, radius, 0, Mathf.Tau, 36, rim, IsBlack ? 1.2f : 1.3f, true);
+                if (_energyIcon != null)
+                {
+                    Vector2 size = _energyIcon.GetSize();
+                    size *= 2 * radius / Mathf.Max(size.X, size.Y);
+                    DrawTextureRect(_energyIcon, new Rect2(p - size / 2, size), false, new Color(1, 1, 1, ratio));
+                }
             }
             else if (IsBlack)
             {

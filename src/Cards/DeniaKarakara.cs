@@ -12,7 +12,7 @@ using MegaCrit.Sts2.Core.Models.Powers;
 
 namespace Denia;
 
-/// <summary>喀拉喀拉 — Rare Skill, 2e(upg:1). Gain STR = Vulnerable and stars = ceil(cap/5); VM swaps both bonuses.</summary>
+/// <summary>喀拉喀拉 — Uncommon Skill, 2e(upg:1). Gain STR = Vulnerable and stars = ceil(cap/5); VM swaps both bonuses.</summary>
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaKarakara : DeniaCard
 {
@@ -23,7 +23,7 @@ public sealed class DeniaKarakara : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_karakara.png";
 
     public DeniaKarakara()
-        : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "喀拉喀拉",
             Description: "获得等同于目标身上易伤层数的力量、聚爆上限1/5的蔽星。\n虚质强化：再获得聚爆上限1/5的力量、易伤层数的蔽星。");

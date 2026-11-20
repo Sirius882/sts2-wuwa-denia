@@ -116,9 +116,7 @@ public sealed class DeniaUnderMeltingNightSkyEvent : DeniaExclusiveEvent
 
     public override ActModel[] Acts => new[] { ModelDb.Act<Glory>() };
 
-    public override bool IsAllowed(IRunState runState) =>
-        HasOnlyDeniaPlayers(runState)
-        && runState.Players.All(player => player.Creature.CurrentHp * 2 < player.Creature.MaxHp);
+    public override bool IsAllowed(IRunState runState) => HasOnlyDeniaPlayers(runState);
 
     protected override IReadOnlyList<EventOption> GenerateInitialOptions() => new EventOption[]
     {

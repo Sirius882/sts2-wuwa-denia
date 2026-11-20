@@ -31,6 +31,8 @@ public static class DeniaResourceState
     {
         if (amount <= 0) return;
         if (creature.GetPower<DeniaVirtualMatterLockedPower>() != null) return;
+        if (DeniaFormHelper.IsPink(creature) && creature.GetPower<DeniaRainbowCandyJumpPower>() is { Amount: > 0 })
+            amount += 2;
         int current = GetVirtualMatter(creature);
         int actual = Math.Min(amount, VirtualMatterMax - current);
         if (actual <= 0) return;

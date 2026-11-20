@@ -202,6 +202,14 @@ public abstract class DeniaCard(
         return owner != null;
     }
 
+    /// <summary>形态不符时由原版手牌提示显示红光。</summary>
+    protected virtual bool? RequiresBlackForm => null;
+
+    protected override bool ShouldGlowRedInternal => RequiresBlackForm is bool black
+        && TryGetOwner(out var owner)
+        && owner!.Creature.CombatState != null
+        && DeniaFormHelper.IsBlack(owner.Creature) != black;
+
     /// <summary>尝试消耗虚质。仅在[gold]黑色形态[/gold]且虚质足够时返回 true 并实际扣除。</summary>
     protected async Task<bool> TrySpendVirtualMatter(CardPlay cardPlay)
     {

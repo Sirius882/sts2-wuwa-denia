@@ -18,34 +18,24 @@ public sealed class DeniaUnfinishedLie : DeniaCard
     public DeniaUnfinishedLie() : base(1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override System.Collections.Generic.List<(string, string)>? Localization => new CardLoc(Title: "未竟的谎言",
-            Description: "附加{IfUpgraded:show:5|3}聚爆上限和上限{IfUpgraded:show:1/2|1/3}的[color=#9A6A18]聚爆[/color]。若这张牌触发引爆，获得1点能量。\n虚质强化：附加的[color=#9A6A18]聚爆[/color]层数和聚爆上限都+2。");
+            Description: "提高聚爆上限{IfUpgraded:show:5|3}，附加{IfUpgraded:show:12|8}[color=#9A6A18]聚爆[/color]。若这张牌触发引爆，获得1点能量。\n虚质强化：附加的[color=#9A6A18]聚爆[/color]层数和聚爆上限都+2。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
         int cu = IsUpgraded ? 5 : 3;
-        int flatBurstBonus = 0;
+        int bu = IsUpgraded ? 12 : 8;
         if (await TrySpendVirtualMatter(play))
         {
             cu += 2;
-            flatBurstBonus += 2;
+            bu += 2;
         }
 
         await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, cu, Owner.Creature, this);
 
-        int ratioBurst = IsUpgraded
-            ? DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 2)
-            : DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 3);
-        int bu = ratioBurst + flatBurstBonus;
-
-        int before = AemeathFusionBurstState.GetFusionBurst(play.Target);
-        int cap = DeniaFusionBurstMath.GetCanonicalCap(play.Target);
-        if (bu > 0)
-            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, bu, Owner.Creature, this);
-        int after = AemeathFusionBurstState.GetFusionBurst(play.Target);
-        bool burstTriggered = before + bu >= cap && after < before + bu;
-        if (burstTriggered)
+        await AemeathFusionBurstState.TryAddFusionBurstWithoutAutoBurst(play.Target, bu, Owner.Creature, this);
+        if (await AemeathFusionBurstState.TryTriggerAutoBurst(play.Target, Owner.Creature, this))
             await PlayerCmd.GainEnergy(1, Owner);
     }
 

@@ -15,7 +15,7 @@ namespace Denia;
 /// </summary>
 public sealed class DeniaEtchingStake : DeniaMonsterModel
 {
-    public override int MinInitialHp => 200;
+    public override int MinInitialHp => 100;
 
     public override int MaxInitialHp => MinInitialHp;
 

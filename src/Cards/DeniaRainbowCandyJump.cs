@@ -28,7 +28,7 @@ public sealed class DeniaRainbowCandyJump : DeniaCard
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "彩虹豆豆跳跳糖",
-            Description: "通过在[color=#9A6A18]粉色形态[/color]下打出攻击牌获得[color=#9A6A18]虚质[/color]时，额外获得2虚质。不可叠加。");
+            Description: "在[color=#9A6A18]粉色形态[/color]下获得[color=#9A6A18]虚质[/color]时，额外获得2虚质。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -54,6 +54,6 @@ public sealed class DeniaRainbowCandyJumpPower : CustomPowerModel
     public override List<(string, string)>? Localization =>
         new PowerLoc(
         Title: "彩虹豆豆跳跳糖",
-        Description: "通过粉色形态的攻击牌获得虚质时，额外获得2虚质。不可叠加。",
-        SmartDescription: "通过粉色形态的攻击牌获得虚质时，额外获得2虚质。不可叠加。");
+        Description: "在粉色形态下获得虚质时，额外获得2虚质。不可叠加。",
+        SmartDescription: "在粉色形态下获得虚质时，额外获得2虚质。不可叠加。");
 }

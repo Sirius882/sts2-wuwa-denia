@@ -30,7 +30,7 @@ public sealed class DeniaItsMyTurn : DeniaCard
         : base(1, CardType.Attack, CardRarity.Rare, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "到我的回合啦",
-            Description: "造成{Damage:diff()}点伤害并附加{IfUpgraded:show:13|10}层聚爆、{IfUpgraded:show:6|3}聚爆上限。抽{IfUpgraded:show:3|2}张牌。若处于黑色形态，切换到粉色形态。");
+            Description: "造成{Damage:diff()}点伤害并附加{IfUpgraded:show:13|10}层聚爆{IfUpgraded:show:、6点聚爆上限|}。抽{IfUpgraded:show:3|2}张牌。若处于黑色形态，切换到粉色形态。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -38,7 +38,8 @@ public sealed class DeniaItsMyTurn : DeniaCard
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this, play).Targeting(play.Target).Execute(ctx);
         if (!play.Target.IsDead)
         {
-            await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, IsUpgraded ? 6 : 3, Owner.Creature, this);
+            if (IsUpgraded)
+                await AemeathFusionBurstState.TryIncreaseFusionBurstCap(play.Target, 6, Owner.Creature, this);
             await AemeathFusionBurstState.TryAddFusionBurst(play.Target, IsUpgraded ? 13 : 10, Owner.Creature, this);
         }
         await CardPileCmd.Draw(ctx, IsUpgraded ? 3 : 2, Owner);

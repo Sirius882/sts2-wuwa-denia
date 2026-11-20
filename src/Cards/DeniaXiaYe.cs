@@ -16,6 +16,8 @@ namespace Denia;
 [Pool(typeof(DeniaCardPool))]
 public sealed class DeniaXiaYe : DeniaCard
 {
+    protected override bool? RequiresBlackForm => true;
+
     public override int CurrentDarkCoreCost => 2;
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_xia_ye.png";
@@ -24,12 +26,10 @@ public sealed class DeniaXiaYe : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "夏耶",
-            Description: "黯核强化：每次切换形态时，获得1黯核。不可叠加。");
+            Description: "黯核强化：每次切换形态时，获得1黯核。可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        if (Owner.Creature.GetPower<DeniaXiaYePower>() != null) return;
-
         if (await TrySpendDarkCore(play))
             await PowerCmd.Apply<DeniaXiaYePower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
     }
@@ -43,7 +43,7 @@ public sealed class DeniaXiaYe : DeniaCard
 public sealed class DeniaXiaYePower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Counter;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_xia_ye_power.png";
