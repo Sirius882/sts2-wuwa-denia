@@ -27,14 +27,14 @@ public sealed class DeniaSorrow : DeniaCard
         : base(1, CardType.Attack, CardRarity.Basic, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "哀",
-            Description: "附加1点集谐·偏移、{IfUpgraded:show:5|3}点聚爆上限和{IfUpgraded:show:5|3}聚爆。\n黯核强化：无条件谐度破坏。");
+            Description: "附加1点集谐·偏移、{IfUpgraded:show:2|1}点聚爆上限和{IfUpgraded:show:5|3}聚爆。\n黯核强化：无条件谐度破坏。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         ArgumentNullException.ThrowIfNull(play.Target);
 
         int bias = 1;
-        int cap = IsUpgraded ? 5 : 3;
+        int cap = IsUpgraded ? 2 : 1;
         int burst = IsUpgraded ? 5 : 3;
 
         await TuneStrainState.TryAddBias(play.Target, bias, Owner.Creature, this);

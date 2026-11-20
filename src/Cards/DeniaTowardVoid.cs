@@ -25,7 +25,7 @@ public sealed class DeniaTowardVoid : DeniaCard
         : base(1, CardType.Power, CardRarity.Uncommon, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "向虚而行",
-            Description: "触发[color=#9A6A18]黯核强化[/color]时，获得{IfUpgraded:show:4|3}点[color=#9A6A18]格挡[/color]。每回合最多触发3次。不可叠加。");
+            Description: "触发[color=#9A6A18]黯核强化[/color]时，获得{IfUpgraded:show:7|6}点[color=#9A6A18]格挡[/color]。每回合最多触发3次。不可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
@@ -42,7 +42,7 @@ public sealed class DeniaTowardVoid : DeniaCard
 public class DeniaTowardVoidPower : CustomPowerModel
 {
     private const int MaxTriggersPerTurn = 3;
-    public virtual int BlockPerTrigger => 3;
+    public virtual int BlockPerTrigger => 6;
 
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Single;
@@ -76,5 +76,5 @@ public class DeniaTowardVoidPower : CustomPowerModel
 
 public sealed class DeniaTowardVoidPlusPower : DeniaTowardVoidPower
 {
-    public override int BlockPerTrigger => 4;
+    public override int BlockPerTrigger => 7;
 }

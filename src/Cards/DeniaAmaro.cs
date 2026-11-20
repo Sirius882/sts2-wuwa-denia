@@ -23,12 +23,10 @@ public sealed class DeniaAmaro : DeniaCard
         : base(1, CardType.Power, CardRarity.Rare, TargetType.Self) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "阿马罗",
-            Description: "切换形态时，抽1张牌。不可叠加。");
+            Description: "切换形态时，抽1张牌。可叠加。");
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
-        if (Owner.Creature.GetPower<DeniaAmaroPower>() != null) return;
-
         await PowerCmd.Apply<DeniaAmaroPower>(ctx, Owner.Creature, 1m, Owner.Creature, this);
     }
 
@@ -41,7 +39,7 @@ public sealed class DeniaAmaro : DeniaCard
 public sealed class DeniaAmaroPower : CustomPowerModel
 {
     public override PowerType Type => PowerType.Buff;
-    public override PowerStackType StackType => PowerStackType.Single;
+    public override PowerStackType StackType => PowerStackType.Counter;
     protected override bool IsVisibleInternal => true;
 
     public override string? CustomPackedIconPath => "res://images/ui/powers/denia_amaro_power.png";

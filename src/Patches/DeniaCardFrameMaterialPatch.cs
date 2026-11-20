@@ -13,6 +13,7 @@ using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Models;
 using MegaCrit.Sts2.Core.Models.Cards;
 using MegaCrit.Sts2.Core.Nodes.Cards;
+using MegaCrit.Sts2.Core.Nodes.Cards.Holders;
 
 namespace Denia;
 
@@ -124,7 +125,12 @@ public static class DeniaCardFrameMaterialPatch
                 {
                     CardModel? model = card.Model;
                     if (model?.Pool is DeniaCardPool && model.IsMutable && model.Owner?.Creature == creature)
-                        card.UpdateVisuals(card.DisplayingPile, CardPreviewMode.Normal);
+                    {
+                        if (card.GetParent() is NHandCardHolder holder && holder.CardNode == card)
+                            holder.UpdateCard();
+                        else
+                            card.UpdateVisuals(card.DisplayingPile, CardPreviewMode.Normal);
+                    }
                 }
                 catch (Exception)
                 {

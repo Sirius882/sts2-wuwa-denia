@@ -13,6 +13,8 @@ namespace Denia;
 /// <summary>请您不要···宽恕我 — Common Skill</summary>
 public sealed class DeniaPleaseDoNotForgiveMe : DeniaCard
 {
+    protected override bool? RequiresBlackForm => false;
+
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { TuneStrainKeywords.TuneStrainResponse };
 

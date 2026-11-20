@@ -23,8 +23,10 @@ namespace Denia;
 /// </summary>
 public sealed class DeniaEtchingStakeHealPower : CustomPowerModel
 {
-    /// <summary>每根木桩被玩家击杀时的单人回血量（多次打出时 Single 叠层只合并 Amount，单价以最新一发为准）。</summary>
-    internal decimal HealPerStake;
+    /// <summary>每根木桩被玩家击杀时的单人回血量，保留生成该木桩时的升级和强化状态。</summary>
+    private Dictionary<Creature, int>? _healingByStake;
+
+    internal void Register(Creature stake, int heal) => (_healingByStake ??= new()).Add(stake, heal);
 
     public override PowerType Type => PowerType.Buff;
 
@@ -40,13 +42,14 @@ public sealed class DeniaEtchingStakeHealPower : CustomPowerModel
     {
         if (target.Monster is DeniaEtchingStake
             && result.WasTargetKilled
-            && dealer?.Side == CombatSide.Player)
+            && dealer?.Side == CombatSide.Player
+            && _healingByStake?.Remove(target, out int heal) == true)
         {
             foreach (var player in Owner.CombatState?.Players ?? [])
             {
                 if (!player.Creature.IsDead)
                 {
-                    await CreatureCmd.Heal(player.Creature, HealPerStake);
+                    await CreatureCmd.Heal(player.Creature, heal);
                 }
             }
         }

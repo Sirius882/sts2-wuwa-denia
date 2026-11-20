@@ -34,19 +34,15 @@ public sealed class DeniaPhantomForm : DeniaCard
         ArgumentNullException.ThrowIfNull(play.Target, "play.Target");
 
         bool vm = await TrySpendVirtualMatter(play);
-        // 附加上限 1/2 的聚爆；虚质强化 +3 固定层
-        int burstAdd = DeniaFusionBurstMath.CeilRatioOfCap(play.Target, 1, 2);
+        // 附加固定聚爆层数；虚质强化再加 3 层。
+        int burstAdd = IsUpgraded ? 10 : 6;
         if (vm) burstAdd += 3;
 
-        int cap = DeniaFusionBurstMath.GetCanonicalCap(play.Target);
-        int current = AemeathFusionBurstState.GetFusionBurst(play.Target);
-        bool willBurst = current + burstAdd >= cap;
-
-        if (burstAdd > 0)
-            await AemeathFusionBurstState.TryAddFusionBurst(play.Target, burstAdd, Owner.Creature, this);
+        await AemeathFusionBurstState.TryAddFusionBurstWithoutAutoBurst(play.Target, burstAdd, Owner.Creature, this);
+        bool didBurst = await AemeathFusionBurstState.TryTriggerAutoBurst(play.Target, Owner.Creature, this);
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
 
-        if (willBurst)
+        if (didBurst)
             await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, play);
     }
 
@@ -57,5 +53,5 @@ public sealed class DeniaPhantomForm : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "幻灭之形",
-            Description: "附加上限1/2的[color=#9A6A18]聚爆[/color]，获得{Block:diff()}点[color=#9A6A18]格挡[/color]。如果这张牌触发[color=#9A6A18]引爆[/color]，再获得{Block:diff()}点[color=#9A6A18]格挡[/color]。\n虚质强化：附加的[color=#9A6A18]聚爆[/color]层数+3。");
+            Description: "附加{IfUpgraded:show:10|6}[color=#9A6A18]聚爆[/color]，获得{Block:diff()}点[color=#9A6A18]格挡[/color]。如果这张牌触发[color=#9A6A18]引爆[/color]，再获得{Block:diff()}点[color=#9A6A18]格挡[/color]。\n虚质强化：附加的[color=#9A6A18]聚爆[/color]层数+3。");
 }

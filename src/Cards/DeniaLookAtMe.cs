@@ -11,6 +11,8 @@ namespace Denia;
 
 public sealed class DeniaLookAtMe : DeniaCard
 {
+    protected override bool? RequiresBlackForm => true;
+
     public override int CurrentVirtualMatterCost => 2;
     public override IEnumerable<CardKeyword> CanonicalKeywords =>
         new[] { CardKeyword.Ethereal };

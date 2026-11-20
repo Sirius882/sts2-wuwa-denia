@@ -629,7 +629,6 @@ public partial class DeniaFormOverlaySync : Node
             if (isBlack || video) _singleHit.Play(speed, holdAtImpact: true);
             else _singleHit.PlayWithPinkStandup(speed,
                 overlay.GetNodeOrNull<DeniaFlowIdleVisual>("Body/RealtimeIdle")?.Clock ?? 0, holdAtImpact: true);
-            _singleHit.ConfigureCombatPlayback(waitForDamage: isBlack || !fast, allowEarlyInterruption: fast);
             SetBodyVisible(overlay, false);
             return _singleHit;
         }

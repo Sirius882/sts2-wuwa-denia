@@ -18,6 +18,7 @@ public abstract class DeniaResourceRelic : CustomRelicModel, IOnAutoBurstRelic
 {
     protected abstract int PinkVirtualMatter { get; }
     protected abstract int ResponseThreshold { get; }
+    protected virtual int PinkReturnDrawThreshold => 7;
     protected virtual bool GainDarkCoreInBlack => false;
 
     public static DeniaResourceRelic? Get(Creature creature)
@@ -34,34 +35,27 @@ public abstract class DeniaResourceRelic : CustomRelicModel, IOnAutoBurstRelic
             await DeniaResourceState.GainVirtualMatter(creature, 10, applier, source);
         else if (clearVM)
         {
-            // 切换前拥有7虚质 → 抽1张牌
-            if (DeniaResourceState.GetVirtualMatter(creature) >= 7)
+            // 切换前达到遗物所需虚质 → 抽1张牌
+            if (DeniaResourceState.GetVirtualMatter(creature) >= PinkReturnDrawThreshold)
                 await CardPileCmd.Draw(new ThrowingPlayerChoiceContext(), 1, Owner);
             await DeniaResourceState.ClearVirtualMatter(creature, applier, source);
         }
     }
 
     /// <summary>粉态行动虚质：攻击 / 熔解 / 聚爆引爆各触发一次；数值由持有的遗物决定。</summary>
-    public async Task GainFromPinkAction(bool fromAttackCard = false)
+    public async Task GainFromPinkAction()
     {
         var creature = Owner.Creature;
         if (creature.IsDead || !DeniaFormHelper.IsPink(creature)) return;
-        int vmAmount = PinkVirtualMatter;
-        // 彩虹糖仅加成「打出攻击牌」路径（见 DeniaRainbowCandyJump 文案）。
-        if (fromAttackCard)
-        {
-            var candyPower = creature.GetPower<DeniaRainbowCandyJumpPower>();
-            if (candyPower != null && candyPower.Amount > 0)
-                vmAmount += 2 * candyPower.Amount;
-        }
-        await DeniaResourceState.GainVirtualMatter(creature, vmAmount, creature, null!);
+        // 彩虹糖的加成在统一的虚质获得入口结算，覆盖粉态的所有来源。
+        await DeniaResourceState.GainVirtualMatter(creature, PinkVirtualMatter, creature, null!);
     }
 
     public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         if (cardPlay.Card.Owner != Owner || Get(Owner.Creature) != this) return;
         bool attack = cardPlay.Card.Type == CardType.Attack;
-        if (attack) await GainFromPinkAction(fromAttackCard: true);
+        if (attack) await GainFromPinkAction();
         await TryTriggerRelicRandomResponse(Owner, ResponseThreshold, attack ? 2 : 1);
     }
 

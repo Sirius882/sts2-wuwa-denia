@@ -13,7 +13,7 @@ namespace Denia;
 [HarmonyPatch(typeof(NMerchantRoom), nameof(NMerchantRoom._Ready))]
 public static class DeniaMerchantPatch
 {
-    private const string PortraitPath = "res://images/packed/character_select/denia_pink.png";
+    private const string PortraitPath = "res://images/packed/character_select/denia_pink_idle_portrait.png";
 
     private static readonly AccessTools.FieldRef<NMerchantRoom, List<Player>> PlayersRef =
         AccessTools.FieldRefAccess<NMerchantRoom, List<Player>>("_players");
@@ -40,13 +40,13 @@ public static class DeniaMerchantPatch
                     n2d.Visible = false;
 
             // 缩放匹配容器 — 以 447x700 为基准
-            float scale = 320f / tex.GetWidth();
+            float scale = Mathf.Min(420f / tex.GetWidth(), 430f / tex.GetHeight());
             var sprite = new Sprite2D
             {
                 Name = "DeniaMerchSprite",
                 Texture = tex,
                 Centered = true,
-                Position = new Vector2(0, -50f),
+                Position = new Vector2(0, -tex.GetHeight() * scale * 0.45f),
                 Scale = new Vector2(scale, scale)
             };
             container.AddChild(sprite);
@@ -57,7 +57,7 @@ public static class DeniaMerchantPatch
 [HarmonyPatch(typeof(NFakeMerchant), nameof(NFakeMerchant._Ready))]
 public static class DeniaFakeMerchantPatch
 {
-    private const string PortraitPath = "res://images/packed/character_select/denia_pink.png";
+    private const string PortraitPath = "res://images/packed/character_select/denia_pink_idle_portrait.png";
 
     private static readonly AccessTools.FieldRef<NFakeMerchant, List<Player>> PlayersRef =
         AccessTools.FieldRefAccess<NFakeMerchant, List<Player>>("_players");

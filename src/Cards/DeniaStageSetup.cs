@@ -51,7 +51,7 @@ public sealed class DeniaStageSetup : DeniaCard
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
     {
         int dmg = IsUpgraded ? 13 : 10;
-        int capGain = IsUpgraded ? 7 : 5;
+        int capGain = IsUpgraded ? 5 : 3;
         await TrySpendDarkCore(play);
         var snapshot = Owner.Creature.CombatState.Enemies.Where(e => !e.IsDead).ToArray();
         foreach (var enemy in snapshot)
@@ -71,5 +71,5 @@ public sealed class DeniaStageSetup : DeniaCard
 
     public override List<(string, string)>? Localization =>
         new CardLoc(Title: "布景之形",
-            Description: "对所有敌人造成{IfUpgraded:show:13|10}点伤害，提高聚爆上限{IfUpgraded:show:7|5}，然后附加{IfUpgraded:show:9|6}聚爆。\n黯核强化：能耗-1。");
+            Description: "对所有敌人造成{IfUpgraded:show:13|10}点伤害，提高聚爆上限{IfUpgraded:show:5|3}，然后附加{IfUpgraded:show:9|6}聚爆。\n黯核强化：能耗-1。");
 }

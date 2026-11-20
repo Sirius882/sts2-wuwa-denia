@@ -80,17 +80,18 @@ public sealed class DeniaEtchedIridescent : DeniaCard
 
         if (IsUpgraded)
         {
-            // 基础 200 → 升级 150：按 3/4 比例收缩，兼容多人血量缩放。
-            stake.SetMaxHpInternal(stake.MaxHp * 3m / 4m);
+            // 基础 100 → 升级 50：按 1/2 比例收缩，兼容多人血量缩放。
+            stake.SetMaxHpInternal(stake.MaxHp / 2m);
         }
 
         await PowerCmd.Apply<MinionPower>(ctx, stake, 1m, Owner.Creature, this);
         await PowerCmd.Apply<DeniaEtchingStakePower>(ctx, stake, heal, Owner.Creature, this);
         // 回血载体挂玩家侧（木桩死亡即被移出战斗名单，其 power 收不到结算钩子）：
         // 击杀当场结算，见 DeniaEtchingStakeHealPower。重复打出时 Single 叠层只合并
-        // Amount，回血单价存 HealPerStake（每次以最新一发为准）。
-        await PowerCmd.Apply<DeniaEtchingStakeHealPower>(ctx, Owner.Creature, heal, Owner.Creature, this);
-        Owner.Creature.GetPower<DeniaEtchingStakeHealPower>()!.HealPerStake = heal;
+        // Amount，每根木桩的回血量由对应的登记项独立保存。
+        if (Owner.Creature.GetPower<DeniaEtchingStakeHealPower>() == null)
+            await PowerCmd.Apply<DeniaEtchingStakeHealPower>(ctx, Owner.Creature, 1, Owner.Creature, this);
+        Owner.Creature.GetPower<DeniaEtchingStakeHealPower>()!.Register(stake, heal);
     }
 
     /// <summary>
@@ -132,16 +133,16 @@ public sealed class DeniaEtchedIridescent : DeniaCard
 
     /// <summary>
     /// 木桩生命的显示变量，按引擎实际结算路径等价计算：
-    /// ① 基础 200（DeniaEtchingStake Min==Max==200，SetUniqueMonsterHpValue 恒取 200，
-    ///    同数值怪在场时回退 NextInt(200,201) 仍为 200，无随机浮动）；
+    /// ① 基础 100（DeniaEtchingStake Min==Max==100，SetUniqueMonsterHpValue 恒取 100，
+    ///    同数值怪在场时回退 NextInt(100,101) 仍为 100，无随机浮动）；
     /// ② 多人时 CombatState.CreateCreature → ScaleMonsterHpForMultiplayer：再乘 玩家数×幕系数
     ///    （MultiplayerScalingModel.GetMultiplayerScaling：第1幕 1.1、第2幕 1.2、第3幕 1.2、
     ///    第3幕 Boss 房 1.3；单人=1）；
-    /// ③ 升级版由卡牌在生成后按 3/4 比例收缩（SetMaxHpInternal(MaxHp*3/4)，发生在缩放之后）。
+    /// ③ 升级版由卡牌在生成后按 1/2 比例收缩（SetMaxHpInternal(MaxHp/2)，发生在缩放之后）。
     /// 进阶（ToughEnemies）不影响：本体的进阶血量由各怪物类写进 Min/MaxInitialHp，木桩未启用。
     /// 战斗外预览（牌组查看等）无 Encounter，第3幕按非 Boss 的 1.2 计。
     /// </summary>
-    private sealed class StakeHpVar(string name, bool assumeUpgraded) : DynamicVar(name, assumeUpgraded ? 150m : 200m)
+    private sealed class StakeHpVar(string name, bool assumeUpgraded) : DynamicVar(name, assumeUpgraded ? 50m : 100m)
     {
         public override void SetOwner(AbstractModel owner)
         {
@@ -157,7 +158,7 @@ public sealed class DeniaEtchedIridescent : DeniaCard
         private decimal CalculateHp()
         {
             var card = _owner as DeniaEtchedIridescent;
-            decimal hp = 200m;
+            decimal hp = 100m;
 
             var run = card?.RunState;
             if (run != null && run.Players.Count > 1)
@@ -174,7 +175,7 @@ public sealed class DeniaEtchedIridescent : DeniaCard
 
             if (assumeUpgraded || (card?.IsUpgraded ?? false))
             {
-                hp = hp * 3m / 4m;
+                hp /= 2m;
             }
 
             return hp;

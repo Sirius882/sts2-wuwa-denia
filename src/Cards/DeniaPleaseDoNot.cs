@@ -12,6 +12,8 @@ namespace Denia;
 [BaseLib.Utils.Pool(typeof(DeniaCardPool))]
 public sealed class DeniaPleaseDoNot : DeniaCard, ITranscendenceCard
 {
+    protected override bool? RequiresBlackForm => false;
+
     public override string PortraitPath =>
         "res://images/packed/card_portraits/denia/card_face_please_do_not.png";
 
