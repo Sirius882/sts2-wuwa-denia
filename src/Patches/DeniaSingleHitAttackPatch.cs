@@ -69,7 +69,7 @@ internal static class DeniaSingleHitAttackPatch
         __state = null;
         if (NonInteractiveMode.IsActive) return;
         var attacker = __instance.Attacker;
-        if (!DeniaPinkAttackRule.TryStart(__instance.ModelSource as CardModel, attacker, ____hitCount)) return;
+        if (!DeniaPinkAttackRule.TryStart(__instance.ModelSource as CardModel, attacker, ____hitCount, __instance.CardPlay)) return;
         var visual = PlayRemaining(__instance, ____hitCount);
         if (visual == null) return;
 
