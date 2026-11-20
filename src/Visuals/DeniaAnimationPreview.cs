@@ -21,16 +21,19 @@ internal partial class DeniaAnimationPreview : Node2D
 
     public override void _Ready()
     {
+        string? Clip(string video) => DeniaModConfig.UseCodeAnimation ? null : video;
         _visual = Kind switch {
-            DeniaAnimationPreviewKind.PinkIdle => new DeniaPinkIdleVisual(),
-            DeniaAnimationPreviewKind.BlackIdle => new DeniaBlackIdleVisual(),
-            DeniaAnimationPreviewKind.PinkStandup or DeniaAnimationPreviewKind.PinkSitdown => new DeniaPinkStandupVisual(),
+            DeniaAnimationPreviewKind.PinkIdle => new DeniaPinkIdleVisual { VideoClip = Clip("pink_idle") },
+            DeniaAnimationPreviewKind.BlackIdle => new DeniaBlackIdleVisual { VideoClip = Clip("dark_idle") },
+            DeniaAnimationPreviewKind.PinkStandup or DeniaAnimationPreviewKind.PinkSitdown => new DeniaPinkStandupVisual { VideoClip = Clip("pink_standup") },
             DeniaAnimationPreviewKind.BlackRise => new DeniaBlackRiseVisual(),
-            DeniaAnimationPreviewKind.PinkSingle => new DeniaPinkAttackVisual(),
-            DeniaAnimationPreviewKind.PinkMulti => new DeniaPinkMultiAttackVisual(),
-            DeniaAnimationPreviewKind.BlackSingle => new DeniaDarkAttackVisual(),
-            DeniaAnimationPreviewKind.BlackMulti => new DeniaDarkMultiAttackVisual(),
-            DeniaAnimationPreviewKind.BlackFour => new DeniaDarkFourAttackVisual(),
+            DeniaAnimationPreviewKind.PinkSingle => new DeniaPinkAttackVisual { VideoClip = Clip("pink_1hit") },
+            DeniaAnimationPreviewKind.PinkMulti => new DeniaPinkMultiAttackVisual { VideoClip = Clip("pink_2hit") },
+            DeniaAnimationPreviewKind.BlackSingle => new DeniaDarkAttackVisual { VideoClip = Clip("dark_1hit") },
+            DeniaAnimationPreviewKind.BlackMulti => new DeniaDarkMultiAttackVisual { VideoClip = Clip("dark_2hit") },
+            DeniaAnimationPreviewKind.BlackTriple => new DeniaDarkMultiAttackVisual { VideoClip = Clip("dark_3hit") },
+            DeniaAnimationPreviewKind.PinkCollapse => new DeniaPinkCollapseVisual { VideoClip = Clip("pink_collapse") },
+            DeniaAnimationPreviewKind.BlackFour => new DeniaDarkFourAttackVisual { VideoClip = Clip("dark_4hit") },
             _ => null };
         if (_visual != null)
         {
@@ -43,7 +46,7 @@ internal partial class DeniaAnimationPreview : Node2D
                 else attack.Play(Speed);
                 Duration = attack.TotalDuration / Speed;
             }
-            else Duration = _visual.DurationSeconds / PlaybackSpeed;
+            else Duration = _visual.PlaybackDuration / PlaybackSpeed;
             _visual.SetProcess(false);
             Advance(0);
         }
@@ -70,8 +73,10 @@ internal partial class DeniaAnimationPreview : Node2D
         if (_visual is DeniaSingleHitVisual attack) attack._Process(delta);
         else if (_visual != null)
         {
-            double clock = Math.Min(Elapsed * PlaybackSpeed, _visual.DurationSeconds);
-            _visual.Seek(Kind == DeniaAnimationPreviewKind.PinkSitdown ? _visual.DurationSeconds - clock : clock);
+            double clock = Math.Min(Elapsed * PlaybackSpeed, _visual.PlaybackDuration);
+            bool reversed = Kind == DeniaAnimationPreviewKind.PinkSitdown;
+            _visual.Seek(reversed ? _visual.PlaybackDuration - clock : clock);
+            _visual.SyncVideoAudio(_visual.GetVideoAudio(reversed), clock, PlaybackSpeed, false);
         }
     }
 

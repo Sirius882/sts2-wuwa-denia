@@ -16,6 +16,7 @@ obj/
 # Large runtime videos are prepared locally from artResources before packing.
 /videos/*.ogv
 /videos/*.mp4
+/videos/*.dbv
 
 # Local caches, logs and editor state
 .cache/

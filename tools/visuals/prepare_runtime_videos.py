@@ -17,6 +17,7 @@ def sha(path):
 
 
 def main():
+    subprocess.run([sys.executable, '-B', str(HERE / 'prepare_battle_videos.py')], check=True)
     subprocess.run([sys.executable, '-B', str(HERE / 'prepare_character_select_video.py'), '--ensure'], check=True)
     source = ROOT / 'artResources/Denia/选人界面背景视频.mp4'
     video_manifest = json.loads((HERE / 'character_select_video.json').read_text(encoding='utf-8'))

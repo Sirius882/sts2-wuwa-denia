@@ -46,3 +46,17 @@ was merged into `artResources/Denia/人物形象与动画/`. Video bytes are unc
 `denia_execution_alignment_reference_20261115.ogv` is the earlier quality-8 clip
 kept solely as an alignment reference; it is not restored or packaged by these
 scripts. `denia_character_select_bg.ogv` remains the compatibility fallback.
+
+## Battle clips
+
+`prepare_battle_videos.py` builds transparent character video from the sources in
+`artResources/Denia/人物形象与动画`. The recipe records source frame counts and
+zero-based impact frame indices. It retains the original video timebase, with a
+30 fps sample grid for 60 fps sources plus every marked impact. The stand-up MP4
+uses the matching alpha atlas to reverse its opening zoom and reconstruct the
+checkerboard-composited edges. Each DBV2 asset includes the primary stereo stream;
+stand-up also contains a reversed stream for the sit-down phase.
+
+The local `战斗视频运行时` directory contains the reusable output masters and their
+fingerprints. Both pack scripts call the preparation step and export the DBV2
+assets. A fresh conversion needs FFmpeg with libvorbis, NumPy, OpenCV and Pillow.

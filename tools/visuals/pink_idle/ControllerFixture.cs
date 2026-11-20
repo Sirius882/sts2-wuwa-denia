@@ -2,6 +2,11 @@ using Godot;
 
 namespace Denia;
 
+internal static class DeniaModConfig
+{
+    public static bool UseCodeAnimation { get; set; } = true;
+}
+
 // The production controller is source-linked by run_preview.py; only game services are stand-ins.
 public sealed class PreviewEntity { public bool Black, IsDead, Dying; public NCreature Node = null!; }
 public partial class NCreature : Node2D
@@ -17,6 +22,9 @@ public static class DeniaFormPatch
 {
     public const float PinkDeathDuration = 0;
     public static bool Fast;
+    internal static readonly string[] AttackVisualNames = [DeniaSingleHitVisual.NodeName,
+        DeniaPinkMultiAttackVisual.MultiNodeName, DeniaDarkFourAttackVisual.FourNodeName,
+        "VideoSingleHit", "VideoMultiHit", "VideoTripleHit", "VideoFourHit"];
     public static bool IsFastMode() => Fast;
     public static bool IsDying(NCreature node) => node.Entity.Dying;
     public static void SetDying(NCreature node, bool value) => node.Entity.Dying = value;
@@ -29,9 +37,8 @@ public static class DeniaFormPatch
             bool flip = node.Body.Scale.X < 0;
             overlay.GetNode<AnimatedSprite2D>("Body/Idle").FlipH = flip;
             overlay.GetNode<DeniaFlowIdleVisual>("Body/RealtimeIdle").SetFacing(flip);
-            overlay.GetNodeOrNull<DeniaSingleHitVisual>(DeniaSingleHitVisual.NodeName)?.SetFacing(flip);
-            overlay.GetNodeOrNull<DeniaSingleHitVisual>(DeniaPinkMultiAttackVisual.MultiNodeName)?.SetFacing(flip);
-            overlay.GetNodeOrNull<DeniaSingleHitVisual>(DeniaDarkFourAttackVisual.FourNodeName)?.SetFacing(flip);
+            foreach (var name in AttackVisualNames)
+                overlay.GetNodeOrNull<DeniaSingleHitVisual>(name)?.SetFacing(flip);
         }
     }
     public static void SyncOverlayLayout(NCreature node)
@@ -42,7 +49,8 @@ public static class DeniaFormPatch
             var actions = overlay.GetNode<AnimatedSprite2D>("Body/Idle");
             actions.Position = size * 0.5f;
             actions.Scale = Vector2.One * (size.Y / 512);
-            foreach (string name in new[] { "Body/RealtimeIdle", DeniaPinkAttackVisual.NodeName, DeniaPinkMultiAttackVisual.MultiNodeName, DeniaDarkFourAttackVisual.FourNodeName })
+            string[] names = ["Body/RealtimeIdle", ..AttackVisualNames];
+            foreach (string name in names)
             {
                 var visual = overlay.GetNodeOrNull<DeniaFlowIdleVisual>(name);
                 if (visual == null) continue;
@@ -64,8 +72,8 @@ public static class ControllerFixture
         node.AddChild(node.Visuals);node.AddChild(node.Body);
         foreach (var name in new[] { "Visuals", "PhobiaModeVisuals" })
             node.Visuals.GetNodeOrNull<Node2D>(name)?.Hide();
-        node.Pink = Build(node.Visuals, "PinkVisuals", new DeniaPinkIdleVisual());
-        node.Black = Build(node.Visuals, "DarkVisuals", new DeniaBlackIdleVisual());
+        node.Pink = Build(node.Visuals, "PinkVisuals", new DeniaPinkIdleVisual { VideoClip = "pink_idle", LoadVideoOnReady = !DeniaModConfig.UseCodeAnimation });
+        node.Black = Build(node.Visuals, "DarkVisuals", new DeniaBlackIdleVisual { VideoClip = "dark_idle", LoadVideoOnReady = !DeniaModConfig.UseCodeAnimation });
         node.Corpse = new TextureRect { Texture = GD.Load<Texture2D>("res://images/ui/combat/denia_energy_icon_big.png"),
             Visible = false, MouseFilter = Control.MouseFilterEnum.Ignore };
         node.Visuals.AddChild(node.Corpse);
