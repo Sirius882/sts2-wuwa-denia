@@ -93,3 +93,16 @@ internal static class DeniaReattachSegmentsPatch
                 && !creature.HasPower<ReattachPower>()));
     }
 }
+
+[HarmonyPatch(typeof(CrabRagePower), nameof(CrabRagePower.AfterDeath))]
+internal static class DeniaCrabRageDeathPatch
+{
+    // 瓶中精灵等免死也会进入 AfterDeath。玩家取得的蟹之怒只响应实际阵亡。
+    private static bool Prefix(CrabRagePower __instance, bool wasRemovalPrevented, ref Task __result)
+    {
+        if (!wasRemovalPrevented || !__instance.Owner.IsPlayer) return true;
+
+        __result = Task.CompletedTask;
+        return false;
+    }
+}
