@@ -93,7 +93,12 @@ public sealed class DeniaSendYouIn : DeniaCard
 
         var removeSnapshots = new List<PowerModel>();
         foreach (var t in RemoveOnly)
-            removeSnapshots.AddRange(target.Powers.Where(t.IsInstanceOfType));
+        {
+            var instances = target.Powers.Where(t.IsInstanceOfType);
+            // 同一角色可能被多次拖动，先还原较新的沙坑，最后回到第一次被困的位置。
+            if (t == typeof(SandpitPower)) instances = instances.Reverse();
+            removeSnapshots.AddRange(instances);
+        }
 
         // 移除目标可夺取 buff，并等量给自己
         foreach (var (type, amount) in stealSnapshots)
