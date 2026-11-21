@@ -132,7 +132,7 @@
   "DENIA-DENIA_SEAMLESS.title": "天衣无缝",
   "DENIA-DENIA_SEAMLESS.description": "造成{Damage:diff()}点伤害。\n获得{Block:diff()}点[color=#9A6A18]格挡[/color]。\n虚质强化：伤害和格挡+3。",
   "DENIA-DENIA_SEND_YOU_IN.title": "送你进去",
-  "DENIA-DENIA_SEND_YOU_IN.description": "夺取目标的正面[color=#9A6A18]buff[/color]。",
+  "DENIA-DENIA_SEND_YOU_IN.description": "夺取目标所有的[color=#9A6A18]buff[/color]。",
   "DENIA-DENIA_SMELT.title": "熔毁",
   "DENIA-DENIA_SMELT.description": "获得{Block:diff()}点[color=#9A6A18]格挡[/color]，[color=#9A6A18]熔解[/color]2。\n虚质强化：格挡+2。",
   "DENIA-DENIA_SO_TIRED.title": "好累，让我歇会……",
