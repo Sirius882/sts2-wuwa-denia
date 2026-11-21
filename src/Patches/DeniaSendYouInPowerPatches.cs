@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Commands;
@@ -15,10 +16,13 @@ using MegaCrit.Sts2.Core.Nodes.Rooms;
 
 namespace Denia;
 
-[HarmonyPatch(typeof(SandpitPower), nameof(SandpitPower.AfterRemoved))]
+[HarmonyPatch(typeof(SandpitPower))]
 internal static class DeniaSandpitRemovalPatch
 {
+    private sealed record InitialPosition(float X);
+
     private static readonly HashSet<SandpitPower> Dispelled = new();
+    private static readonly ConditionalWeakTable<SandpitPower, InitialPosition> Positions = new();
 
     internal static async Task RemoveWithoutFinisher(SandpitPower power)
     {
@@ -33,19 +37,28 @@ internal static class DeniaSandpitRemovalPatch
         }
     }
 
+    // 以角色节点的局部坐标记录站位，避免分辨率、镜头和联机两端的变换影响还原。
+    [HarmonyPostfix, HarmonyPatch(nameof(SandpitPower.AfterApplied))]
+    private static void RememberPosition(SandpitPower __instance)
+    {
+        if (__instance.Target is { } target && NCombatRoom.Instance?.GetCreatureNode(target) is { } node)
+            Positions.AddOrUpdate(__instance, new InitialPosition(node.Position.X));
+    }
+
     // 原版在倒计时耗尽时移除沙坑，AfterRemoved 会吞噬被困角色。主动夺取时只解除沙坑。
-    private static bool Prefix(SandpitPower __instance, float ____initialTargetPosition, ref Task __result)
+    [HarmonyPrefix, HarmonyPatch(nameof(SandpitPower.AfterRemoved))]
+    private static bool BeforeRemoved(SandpitPower __instance, ref Task __result)
     {
         if (!Dispelled.Contains(__instance)) return true;
 
         var target = __instance.Target;
         var room = NCombatRoom.Instance;
         var playerNode = target == null ? null : room?.GetCreatureNode(target);
-        if (target != null && playerNode != null)
+        if (target != null && playerNode != null && Positions.TryGetValue(__instance, out var start))
         {
-            var position = playerNode.GlobalPosition;
-            float offset = ____initialTargetPosition - position.X;
-            playerNode.GlobalPosition = position with { X = ____initialTargetPosition };
+            float previousX = playerNode.GlobalPosition.X;
+            playerNode.Position = playerNode.Position with { X = start.X };
+            float offset = playerNode.GlobalPosition.X - previousX;
             foreach (var pet in target.Pets)
             {
                 var node = room?.GetCreatureNode(pet);
@@ -55,6 +68,7 @@ internal static class DeniaSandpitRemovalPatch
             if (LocalContext.IsMe(target))
                 NRunMusicController.Instance?.UpdateMusicParameter(TheInsatiable.TheInsatiableTrackName, 0);
         }
+        Positions.Remove(__instance);
         __result = Task.CompletedTask;
         return false;
     }
