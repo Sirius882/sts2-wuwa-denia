@@ -17,7 +17,7 @@ namespace Denia;
 
 /// <summary>
 /// 送你进去 — Uncommon Skill.
-/// 夺取目标白名单正面 buff：等量给自己，并令目标失去；流电/活力火花只令对方失去。
+/// 夺取目标白名单正面 buff：等量给自己，并令目标失去；流电/活力火花等特殊效果只令对方失去。
 /// 难以杀灭：层数越少越好，多次夺取取较小层数（不叠加）。
 /// </summary>
 [Pool(typeof(DeniaCardPool))]
@@ -30,10 +30,10 @@ public sealed class DeniaSendYouIn : DeniaCard
         "res://images/packed/card_portraits/denia/card_face_send_you_in.png";
 
     public DeniaSendYouIn()
-        : base(2, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy) { }
+        : base(2, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy) { }
 
     public override List<(string, string)>? Localization => new CardLoc(Title: "送你进去",
-            Description: "夺取目标的正面[color=#9A6A18]buff[/color]。");
+            Description: "夺取目标所有的[color=#9A6A18]buff[/color]。");
 
     // 可夺取（自己获得）
     private static readonly Type[] StealAndGain =
@@ -50,6 +50,9 @@ public sealed class DeniaSendYouIn : DeniaCard
         typeof(HardenedShellPower),
         typeof(FlutterPower),
         typeof(PaperCutsPower),
+        typeof(SkittishPower),
+        typeof(CrabRagePower),
+        typeof(SoarPower),
     };
 
     // 只令对方失去
@@ -57,6 +60,16 @@ public sealed class DeniaSendYouIn : DeniaCard
     {
         typeof(GalvanicPower),
         typeof(VitalSparkPower),
+        typeof(InfestedPower),
+        typeof(ReattachPower),
+        typeof(PersonalHivePower),
+        typeof(BackAttackLeftPower),
+        typeof(BackAttackRightPower),
+        typeof(SandpitPower),
+        typeof(RampartPower),
+        typeof(StockPower),
+        typeof(EnragePower),
+        typeof(WitheringPresencePower),
     };
 
     protected override async Task OnPlay(PlayerChoiceContext ctx, CardPlay play)
@@ -80,11 +93,7 @@ public sealed class DeniaSendYouIn : DeniaCard
 
         var removeSnapshots = new List<PowerModel>();
         foreach (var t in RemoveOnly)
-        {
-            var p = target.Powers.FirstOrDefault(x => t.IsInstanceOfType(x));
-            if (p == null) continue;
-            removeSnapshots.Add(p);
-        }
+            removeSnapshots.AddRange(target.Powers.Where(t.IsInstanceOfType));
 
         // 移除目标可夺取 buff，并等量给自己
         foreach (var (type, amount) in stealSnapshots)
@@ -99,7 +108,13 @@ public sealed class DeniaSendYouIn : DeniaCard
 
         // 只移除
         foreach (var p in removeSnapshots)
-            await PowerCmd.Remove(p);
+        {
+            if (!target.Powers.Contains(p)) continue;
+            if (p is SandpitPower sandpit)
+                await DeniaSandpitRemovalPatch.RemoveWithoutFinisher(sandpit);
+            else
+                await PowerCmd.Remove(p);
+        }
     }
 
     private async Task ApplyByType(PlayerChoiceContext ctx, Type type, Creature self, int amount)
@@ -136,6 +151,12 @@ public sealed class DeniaSendYouIn : DeniaCard
             await PowerCmd.Apply<FlutterPower>(ctx, self, amount, self, this);
         else if (type == typeof(PaperCutsPower))
             await PowerCmd.Apply<PaperCutsPower>(ctx, self, amount, self, this);
+        else if (type == typeof(SkittishPower))
+            await PowerCmd.Apply<SkittishPower>(ctx, self, amount, self, this);
+        else if (type == typeof(CrabRagePower))
+            await PowerCmd.Apply<CrabRagePower>(ctx, self, amount, self, this);
+        else if (type == typeof(SoarPower))
+            await PowerCmd.Apply<SoarPower>(ctx, self, amount, self, this);
     }
 
     /// <summary>

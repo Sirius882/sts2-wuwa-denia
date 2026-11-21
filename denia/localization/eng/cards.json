@@ -132,7 +132,7 @@
   "DENIA-DENIA_SEAMLESS.title": "Seamless",
   "DENIA-DENIA_SEAMLESS.description": "Deal {Damage:diff()} damage. Gain {Block:diff()} Block.\nVirtual Matter Enhancement: +3 base damage and Block.",
   "DENIA-DENIA_SEND_YOU_IN.title": "Send You In",
-  "DENIA-DENIA_SEND_YOU_IN.description": "Steal the target's Buffs.",
+  "DENIA-DENIA_SEND_YOU_IN.description": "Steal all of the target's Buffs.",
   "DENIA-DENIA_SMELT.title": "Smelt",
   "DENIA-DENIA_SMELT.description": "Gain {Block:diff()} Block. Melt 2.\nVirtual Matter Enhancement: +2 Block.",
   "DENIA-DENIA_SO_TIRED.title": "So Tired, Let Me Rest...",
