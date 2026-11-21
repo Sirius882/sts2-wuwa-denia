@@ -138,6 +138,7 @@ public static class TuneStrainState
     /// <summary>
     /// 给牌组永久牌及其本场战斗副本附加临时集谐响应。
     /// 真源是 Keywords；处决/战斗结束时 ClearTemporaryResponses 清掉。
+    /// 若战斗被中途切出，下一场在复制永久牌之前再次清理牌组。
     /// </summary>
     public static void AddTemporaryResponse(Player player, CardModel card)
     {
@@ -182,6 +183,11 @@ public static class TuneStrainState
                 RemoveTemporaryResponseKeyword(card);
         }
 
+        ClearDeckTemporaryResponses(player);
+    }
+
+    internal static void ClearDeckTemporaryResponses(Player player)
+    {
         try
         {
             foreach (var card in player.Deck.Cards.ToList())
