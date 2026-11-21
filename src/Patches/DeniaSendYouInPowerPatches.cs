@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using HarmonyLib;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Context;
+using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Models.Monsters;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.Nodes.Audio;
@@ -76,4 +77,19 @@ internal static class DeniaGardenerHitAnimationPatch
     private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions) =>
         instructions.MethodReplacer(HasGainedBlock,
             AccessTools.Method(typeof(DeniaGardenerHitAnimationPatch), nameof(HasGainedBlockOrFalse)));
+}
+
+[HarmonyPatch(typeof(ReattachPower), "GetOtherSegments")]
+internal static class DeniaReattachSegmentsPatch
+{
+    // 接续仍在的节段应能依附于任何存活的同类。否则原版会提前移除失去接续的活节段的节点。
+    private static void Postfix(ReattachPower __instance, ref IEnumerable<Creature> __result)
+    {
+        var owner = __instance.Owner;
+        if (owner.Monster is not DecimillipedeSegment || owner.CombatState == null) return;
+
+        __result = __result.Concat(owner.CombatState.GetTeammatesOf(owner).Where(creature =>
+            creature != owner && creature.IsAlive && creature.Monster is DecimillipedeSegment
+                && !creature.HasPower<ReattachPower>()));
+    }
 }
