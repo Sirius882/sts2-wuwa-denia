@@ -39,7 +39,7 @@ public sealed class DeniaMoonlightSword : DeniaCard
             int loss = enemy.MaxHp * 20 / 100;
             if (loss > 0)
             {
-                enemy.LoseHpInternal(loss, ValueProp.Unblockable | ValueProp.Unpowered);
+                enemy.LoseHpInternal(loss);
                 var runState = enemy.Player?.RunState ?? enemy.CombatState.RunState;
                 await Hook.AfterCurrentHpChanged(runState, enemy.CombatState, enemy, -(decimal)loss);
             }

@@ -104,7 +104,7 @@
   "DENIA-DENIA_MOONLIGHT_SWORD.title": "Adula's Moonblade",
   "DENIA-DENIA_MOONLIGHT_SWORD.description": "Enemies without Frostbite lose 20% of their maximum HP. Apply Frostbite to all enemies.",
   "DENIA-DENIA_OBEY.title": "Obey",
-  "DENIA-DENIA_OBEY.description": "Draw 2 cards. Choose up to {IfUpgraded:show:4|3} cards in your hand to Exhaust. Gain 1 [color=#9A6A18]Artifact[/color] for each card Exhausted.",
+  "DENIA-DENIA_OBEY.description": "Draw {IfUpgraded:show:4|2} cards. Choose up to 3 cards in your hand to Exhaust. For each card Exhausted, remove 1 debuff type from yourself (chosen randomly if fewer cards are Exhausted); gain 1 [color=#9A6A18]Artifact[/color] for each excess card.",
   "DENIA-DENIA_ORANGE_CAKE.title": "Orange Cake",
   "DENIA-DENIA_ORANGE_CAKE.description": "Gain {Block:diff()} Block. Draw {IfUpgraded:show:3|2} cards.\nDark Core Enhancement: Draw 2 additional cards.",
   "DENIA-DENIA_PHANTOM_FORM.title": "Phantom Form",

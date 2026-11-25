@@ -219,14 +219,8 @@ public static class TuneStrainState
 
         await PowerCmd.Remove<TuneStrainBiasPower>(target);
 
-        // 重复处决时保留新旧干涉层数的较大值，持续时间重置为 3 回合而非累加。
-        int currentInterference = target.GetPower<TuneStrainInterferencePower>()?.Amount ?? 0;
-        int interferenceDelta = Math.Max(currentInterference, bias) - currentInterference;
-        if (interferenceDelta > 0)
-            await PowerCmd.Apply<TuneStrainInterferencePower>(Throwing, target, interferenceDelta, applier, source);
-
-        await PowerCmd.Remove<TuneStrainInterferenceDurationPower>(target);
-        await PowerCmd.Apply<TuneStrainInterferenceDurationPower>(Throwing, target, InitialInterferenceDuration, applier, source);
+        // 每次附加各自独立存在与计时；可见层数取存续实例最大值。
+        await ApplyInterference(target, bias, applier, source);
 
         await GrantBreakStrengthReward(applier, bias, source);
 
@@ -236,6 +230,78 @@ public static class TuneStrainState
 
         // 设计：处决清除所有临时响应（全局）
         ClearTemporaryResponses(target.CombatState);
+    }
+
+    public static Task ApplyInterference(Creature target, int stacks, Creature applier, CardModel? source) =>
+        ApplyTimedEffect<TuneStrainInterferencePower, TuneStrainInterferenceDurationPower>(
+            target, stacks, InitialInterferenceDuration, applier, source);
+
+    internal static Task SyncInterferenceVisiblePower(Creature target) =>
+        SyncVisiblePower<TuneStrainInterferencePower, TuneStrainInterferenceDurationPower>(target);
+
+    internal static Task SyncResponseVisiblePower(Creature target) =>
+        SyncVisiblePower<TuneStrainResponsePower, TuneStrainResponseDurationPower>(target);
+
+    private static async Task ApplyTimedEffect<TVisible, TDuration>(
+        Creature target, int stacks, int durationTurns, Creature applier, CardModel? source)
+        where TVisible : PowerModel
+        where TDuration : TuneStrainDurationPower
+    {
+        if (stacks <= 0 || target.IsDead)
+            return;
+
+        var existing = target.GetPower<TVisible>();
+        int effectiveStacks;
+        if (existing == null)
+        {
+            await PowerCmd.Apply<TVisible>(Throwing, target, stacks, applier, source);
+            var applied = target.GetPower<TVisible>();
+            if (applied == null || applied.Amount <= 0)
+                return;
+            effectiveStacks = applied.Amount;
+        }
+        else if (stacks > existing.Amount)
+        {
+            int before = existing.Amount;
+            await PowerCmd.ModifyAmount(Throwing, existing, stacks - before, applier, source);
+            int after = target.GetPower<TVisible>()?.Amount ?? 0;
+            if (after <= before)
+                return;
+            effectiveStacks = after;
+        }
+        else
+        {
+            effectiveStacks = stacks;
+        }
+
+        var duration = (TDuration)ModelDb.Power<TDuration>().ToMutable();
+        duration.Stacks = effectiveStacks;
+        await PowerCmd.Apply(Throwing, duration, target, durationTurns, applier, source);
+    }
+
+    internal static async Task SyncVisiblePower<TVisible, TDuration>(Creature target)
+        where TVisible : PowerModel
+        where TDuration : TuneStrainDurationPower
+    {
+        var visible = target.GetPower<TVisible>();
+        if (visible == null)
+            return;
+
+        int maxStacks = target.GetPowerInstances<TDuration>()
+            .Where(d => d.Amount > 0 && d.Stacks > 0)
+            .Select(d => d.Stacks)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        if (maxStacks <= 0)
+        {
+            await PowerCmd.Remove(visible);
+            return;
+        }
+
+        int delta = maxStacks - visible.Amount;
+        if (delta != 0)
+            await PowerCmd.ModifyAmount(Throwing, visible, delta, target, null);
     }
 
     private static async Task GrantBreakStrengthReward(Creature applier, int bias, CardModel? source)
@@ -253,19 +319,11 @@ public static class TuneStrainState
     private static async Task UpdateResponsePowerFromCards(Player player, Creature? applier, CardModel? source)
     {
         int totalResponseCards = CountResponseCards(player);
-
-        int current = GetResponsePowerAmount(player.Creature);
-        int newAmount = Math.Max(current, totalResponseCards);
-
-        if (newAmount <= 0)
+        if (totalResponseCards <= 0)
             return;
 
-        int delta = newAmount - current;
-        if (delta > 0)
-            await PowerCmd.Apply<TuneStrainResponsePower>(Throwing, player.Creature, delta, applier ?? player.Creature, source);
-
-        await PowerCmd.Remove<TuneStrainResponseDurationPower>(player.Creature);
-        await PowerCmd.Apply<TuneStrainResponseDurationPower>(Throwing, player.Creature, InitialResponseDuration, applier ?? player.Creature, source);
+        await ApplyTimedEffect<TuneStrainResponsePower, TuneStrainResponseDurationPower>(
+            player.Creature, totalResponseCards, InitialResponseDuration, applier ?? player.Creature, source);
     }
 
     private static int CountResponseCards(Player player)

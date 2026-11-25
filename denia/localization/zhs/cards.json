@@ -104,7 +104,7 @@
   "DENIA-DENIA_MOONLIGHT_SWORD.title": "亚杜拉的月光剑",
   "DENIA-DENIA_MOONLIGHT_SWORD.description": "令所有没有[color=#9A6A18]冻伤[/color]的敌人失去其生命上限20%的血量。\n对所有敌人附加[color=#9A6A18]冻伤[/color]。",
   "DENIA-DENIA_OBEY.title": "听话",
-  "DENIA-DENIA_OBEY.description": "抽2张牌，选择最多{IfUpgraded:show:4|3}张手牌消耗。每消耗1张牌，给自己1层[color=#9A6A18]人工制品[/color]。",
+  "DENIA-DENIA_OBEY.description": "抽{IfUpgraded:show:4|2}张牌，选择最多3张手牌消耗。每消耗1张牌，消除自身1种负面效果（不足时随机消除）；溢出部分每张获得1层[color=#9A6A18]人工制品[/color]。",
   "DENIA-DENIA_ORANGE_CAKE.title": "橘子蛋糕",
   "DENIA-DENIA_ORANGE_CAKE.description": "获得{Block:diff()}点格挡，抽{IfUpgraded:show:3|2}张牌。\n黯核强化：再抽2张牌。",
   "DENIA-DENIA_PHANTOM_FORM.title": "幻灭之形",
