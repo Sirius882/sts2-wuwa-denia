@@ -20,12 +20,21 @@ public abstract class DeniaResourceRelic : CustomRelicModel, IOnAutoBurstRelic
     protected abstract int ResponseThreshold { get; }
     protected virtual int PinkReturnDrawThreshold => 7;
     protected virtual bool GainDarkCoreInBlack => false;
+    protected virtual int StartOfCombatNegativeTrajectory => 0;
 
     public static DeniaResourceRelic? Get(Creature creature)
     {
         if (creature.Player?.GetRelic<DeniaCounterfeitDwarfStar>() is { IsMelted: false } dwarf)
             return dwarf;
         return creature.Player?.GetRelic<DeniaTrickster>() is { IsMelted: false } trickster ? trickster : null;
+    }
+
+    public override Task BeforeCombatStart()
+    {
+        if (Get(Owner.Creature) != this || StartOfCombatNegativeTrajectory == 0)
+            return Task.CompletedTask;
+        return PowerCmd.Apply<DeniaNegativeTrajectoryPower>(
+            new ThrowingPlayerChoiceContext(), Owner.Creature, StartOfCombatNegativeTrajectory, Owner.Creature, null!);
     }
 
     public async Task OnFormChanged(bool toBlack, Creature applier, CardModel source, bool clearVM = true)
