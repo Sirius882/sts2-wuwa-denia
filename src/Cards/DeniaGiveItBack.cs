@@ -75,6 +75,12 @@ public sealed class DeniaGiveItBack : DeniaCard
             {
                 if (debuff.Value == 0) continue;
 
+                if (debuff.Key is TuneStrainInterferencePower)
+                {
+                    await TuneStrainState.ApplyInterference(enemy, debuff.Value, debuff.Key.Applier ?? Owner.Creature, this);
+                    continue;
+                }
+
                 var existing = PowerCmd.FindExistingInstanceForStacking(debuff.Key, enemy, debuff.Key.Applier);
                 if (existing != null)
                 {
@@ -84,11 +90,6 @@ public sealed class DeniaGiveItBack : DeniaCard
                 {
                     var cloned = (PowerModel)debuff.Key.ClonePreservingMutability();
                     await PowerCmd.Apply(ctx, cloned, enemy, debuff.Value, debuff.Key.Applier, this);
-                }
-                if (debuff.Key is TuneStrainInterferencePower)
-                {
-                    await PowerCmd.Remove<TuneStrainInterferenceDurationPower>(enemy);
-                    await PowerCmd.Apply<TuneStrainInterferenceDurationPower>(ctx, enemy, 3, Owner.Creature, this);
                 }
             }
         }
